@@ -1,0 +1,96 @@
+<?php
+
+namespace App\Http\Controllers\Api\Shop;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\User;
+use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
+
+class ShopController extends Controller
+{
+    use ApiResponse;
+    
+    public function allShops()
+    {
+        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner')->where('role','vendor')
+                    ->select('id', 'first_name', 'last_name','role', 'avatar')
+                    ->where('status', 'active')
+                    ->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([],'No shops found', 404);
+        }
+
+        return $this->success($data, 'All shops retrieved successfully',200);
+    }
+
+    public function shopDetails($id)
+    {
+        $shop = User::with(['shopInfo','shopInfo.address'])
+                    ->select('id', 'first_name', 'last_name', 'role', 'avatar')
+                    ->where('id', $id)
+                    ->where('role', 'vendor')
+                    ->where('status', 'active')
+                    ->first();
+
+        if (!$shop) {
+            return $this->error([],'Shop not found', 404);
+        }
+
+        return $this->success($shop, 'Shop details retrieved successfully', 200);
+    }
+
+    public function shopFeaturedProducts($id)
+    {
+        $data = Product::with('images')->where('shop_info_id', $id)
+                    ->where('is_featured', true)
+                    ->where('status', 'approved')
+                    ->select('id', 'shop_info_id','product_name', 'product_price', 'is_featured')
+                    ->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([],'No featured products found for this shop', 404);
+        }
+
+        return $this->success($data, 'Featured products retrieved successfully',200);
+    }
+
+    public function shopProducts(Request $request, $id)
+    {
+        $query = Product::with(['category','sub_category','images'])->where('shop_info_id', $id)
+                    ->where('status', 'approved')
+                    ->select('id', 'shop_info_id','category_id','sub_category_id','product_name', 'product_price');
+
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
+        if ($request->has('sub_category_id')) {
+            $query->where('sub_category_id', $request->input('sub_category_id'));
+        }
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has("short_by")) {
+            $shortBy = $request->input("short_by");
+            if ($shortBy === "recently_added") {
+                $query->latest();
+            } 
+        } 
+
+        $data = $query->paginate(15); // Paginate results, 10 per page
+
+        if ($data->isEmpty()) {
+            return $this->error([],'No products found for this shop', 404);
+        }
+
+        return $this->success($data, 'Products retrieved successfully',200);
+    }
+    
+}

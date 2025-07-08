@@ -18,6 +18,7 @@ class Product extends Model
         'shop_info_id' => 'integer',
         'unlimited_stock' => 'boolean',
         'out_of_stock' => 'boolean',
+        'is_featured' => 'boolean',
     ];
 
     public function shop()
@@ -33,5 +34,15 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class, 'product_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function sub_category()
+    {
+        return $this->belongsTo(SubCategory::class, 'sub_category_id');
     }
 }

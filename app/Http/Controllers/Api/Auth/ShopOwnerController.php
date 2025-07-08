@@ -25,7 +25,8 @@ class ShopOwnerController extends Controller
             'company_name'  => 'required|string|max:255',
             'shop_name'    => 'required|string|max:255',
             'shop_city'   => 'required|string|max:255',
-            'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max  
+            'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
+            'shop_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max  
             'shop_banner'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
             'shop_about'   => 'nullable|string|max:500',
             'shop_policie' => 'nullable|string|max:500',
@@ -69,6 +70,13 @@ class ShopOwnerController extends Controller
                 $avatarName = null;
             }
 
+            if ($request->file('shop_image')) {
+                $shopImage                        = $request->file('shop_image');
+                $shopImageName                    = uploadImage($shopImage, 'shops');
+            } else {
+                $shopImageName = null;
+            }
+
             if ($request->file('shop_banner')) {
                 $shopBanner                    = $request->file('shop_banner');
                 $shopBannerName                = uploadImage($shopBanner, 'shops');
@@ -93,6 +101,7 @@ class ShopOwnerController extends Controller
                 'shop_name' => $request->input('shop_name'),
                 'shop_city' => $request->input('shop_city'),
                 'shop_banner' => $shopBannerName,
+                'shop_image' => $shopImageName,
                 'shop_about' => $request->input('shop_about'),
                 'shop_policie' => $request->input('shop_policie'),
                 'faqs' => $request->input('faqs'),

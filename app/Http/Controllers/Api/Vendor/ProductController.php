@@ -31,6 +31,7 @@ class ProductController extends Controller
             'tags.*' => 'string|max:50',
             'product_image' => 'required|array',
             'product_image.*' => 'file|mimes:jpg,jpeg,png,gif|max:20480', // 20MB max per image
+            'is_featured' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -67,6 +68,7 @@ class ProductController extends Controller
                 'sub_category_id' => $request->sub_category_id,
                 'fulfillment' => $request->fulfillment,
                 'selling_option' => $request->selling_option,
+                'is_featured' => $request->is_featured ?? false,
                 'status' => 'listing',
             ]);
 
@@ -116,15 +118,29 @@ class ProductController extends Controller
                 'product_price',
                 'product_quantity',
                 'status',
-            ])
-            ->get();
+            ]);
 
-        if ($products->isEmpty()) {
+        if ($request->has('status')) {
+            $products->where('status', $request->status);
+        }
+
+        if($request->has('short_by') == 'a-z')
+        {
+            $products->orderBy('product_name', 'asc');
+        }
+        elseif($request->has('short_by') == 'z-a')
+        {
+            $products->where('product_name', 'desc');
+        }
+
+        $data = $products->get();
+
+        if ($data->isEmpty()) {
             return $this->error([],'No products found',404);
 
         }
 
-        return $this->success($products, 'Products retrieved successfully', 200);
+        return $this->success($data, 'Products retrieved successfully', 200);
     }
 
     public function productDetails($id)
@@ -187,6 +203,7 @@ class ProductController extends Controller
             'tags.*' => 'string|max:50',
             'product_image' => 'nullable|array',
             'product_image.*' => 'file|mimes:jpg,jpeg,png,gif|max:20480', // 20MB max per image
+            'is_featured' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -233,6 +250,7 @@ class ProductController extends Controller
                 'sub_category_id' => $request->sub_category_id,
                 'fulfillment' => $request->fulfillment,
                 'selling_option' => $request->selling_option,
+                'is_featured' => $request->is_featured,
             ]);
 
             if ($request->has('tags')) {
@@ -262,6 +280,53 @@ class ProductController extends Controller
 
 
         }catch(\Exception $e){
+            DB::rollBack();
+            return $this->error([],$e->getMessage(),500);
+        }
+    }
+
+    public function productDelete($id)
+    {
+        $user = auth()->user();
+
+        if(!$user)
+        {
+            return $this->error([],'User Not Found',400);
+        }
+
+        $product = Product::where('shop_info_id', $user->shopInfo->id)
+            ->find($id);
+
+        if (!$product) {
+            return $this->error([],'Product not found',404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete product images
+            foreach ($product->images as $image) {
+                if (file_exists(public_path($image->image))) {
+                    unlink(public_path($image->image));
+                }
+                $image->delete();
+            }
+
+            // Delete product video
+            if ($product->video && file_exists(public_path($product->video))) {
+                unlink(public_path($product->video));
+            }
+
+            // Delete product meta tags
+            $product->metaTags()->delete();
+
+            // Delete the product
+            $product->delete();
+
+            DB::commit();
+            return $this->success([],'Product deleted successfully',200);
+
+        } catch (\Exception $e) {
             DB::rollBack();
             return $this->error([],$e->getMessage(),500);
         }

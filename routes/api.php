@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
 use App\Http\Controllers\Api\DynamicPageController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\Product\ProductController;
+use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\SocialLinkController;
 use App\Http\Controllers\Api\UserController;
@@ -96,4 +98,20 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
 Route::controller(CategoryController::class)->group(function () {
     Route::get('/categories', 'allCategories');
+});
+
+
+//Shop Owner APIs
+
+Route::controller(ShopController::class)->group(function () {
+    Route::get('/shops', 'allShops');
+    Route::get('/shop/{id}', 'shopDetails');
+    Route::get('/shop/products/{id}', 'shopProducts');
+    Route::get('/shop/products/featured/{id}', 'shopFeaturedProducts');
+});
+
+//Category wise products
+Route::controller(ProductController::class)->group(function () {
+    Route::get('/category/wise/products', 'allProducts');
+    Route::get('/product-details/{id}', 'singleProduct');
 });

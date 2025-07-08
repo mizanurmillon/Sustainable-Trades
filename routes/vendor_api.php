@@ -13,6 +13,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/product/{id}', 'productDetails','');
             Route::get('/product/request-approval/{id}', 'productRequestApproval');
             Route::post('/product/update/{id}', 'productUpdate');
+            Route::delete('/product/delete/{id}', 'productDelete');
         });
 
     });
