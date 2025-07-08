@@ -1,21 +1,21 @@
 <p align="center">
-    <h1 align="center">❤️Laravel API🚀 Stater Kit❤️</h1>
+    <h1 align="center">❤️Laravel API🚀 Sustainable-Trades❤️</h1>
 </p>
 
 ## Introduction 😍
 
-<p> A Laravel starter kit with an awesome admin panel setup, user login & logout, registration, status, delete, profile settings and system information, and many more. </p>
+<p> A Sustainable-Trades with an awesome admin panel setup, user login & logout, registration, status, delete, profile settings and system information, and many more. </p>
 
 ## Contributor 😎
 
--   <a href="https://github.com/rhishi-kesh" target="_blank">Rhishi kesh</a>
+-   <a href="https://github.com/mizanurmillon" target="_blank">Md Mizanur Rahman</a>
 
 ## Installation 🤷‍♂
 
 To Install & Run This Project You Have To Follow the following Steps:
 
 ```sh
-git clone -b web-api https://github.com/rhishi-kesh/Laravel-Stater-Kit-Craft.git
+git clone https://github.com/mizanurmillon/Sustainable-Trades.git
 ```
 
 ```sh
