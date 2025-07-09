@@ -50,6 +50,21 @@
                     </div>
                 </div>
 
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.listing_requests.*') ? 'active' : '' }}"
+                        href="{{ route('admin.listing_requests.index') }}">
+                        <span class="menu-icon">
+                            <i class="ki-duotone ki-element-11 fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                                <span class="path3"></span>
+                                <span class="path4"></span>
+                            </i>
+                        </span>
+                        <span class="menu-title">Listing Requests</span>
+                    </a>
+                </div>
+
                 <div data-kt-menu-trigger="click"
                     class="menu-item {{ request()->routeIs(['admin.categories.*', 'admin.sub_categories.*']) ? 'active show' : '' }} menu-accordion">
                     <span class="menu-link">
@@ -101,6 +116,24 @@
                             </a>
                         </div>
                     </div>  --}}
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.tutorials.*') ? 'active' : '' }}"
+                        href="{{ route('admin.tutorials.index') }}">
+                        <span class="menu-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24"
+                                height="24" stroke-width="2">
+                                <path
+                                    d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z">
+                                </path>
+                                <path d="M12 16v.01"></path>
+                                <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483"></path>
+                            </svg>
+                        </span>
+                        <span class="menu-title">Tutorials</span>
+                    </a>
                 </div>
 
                 <div class="menu-item">

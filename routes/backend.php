@@ -3,8 +3,11 @@
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\FaqController;
+use App\Http\Controllers\Web\Backend\ListingController;
 use App\Http\Controllers\Web\Backend\SubCategoryController;
+use App\Http\Controllers\Web\Backend\TutorialsController;
 use Illuminate\Support\Facades\Route;
+
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
@@ -40,4 +43,20 @@ Route::controller(SubCategoryController::class)->group(function () {
     Route::post('/sub-categories/update/{id}', 'update')->name('admin.sub_categories.update');
     Route::post('/sub-categories/status/{id}', 'status')->name('admin.sub_categories.status');
     Route::post('/sub-categories/destroy/{id}', 'destroy')->name('admin.sub_categories.destroy');
+});
+
+Route::controller(TutorialsController::class)->group(function () {
+    Route::get('/tutorials', 'index')->name('admin.tutorials.index');
+    Route::get('/tutorials/create', 'create')->name('admin.tutorials.create');
+    Route::post('/tutorials/store', 'store')->name('admin.tutorials.store');
+    Route::get('/tutorials/edit/{id}', 'edit')->name('admin.tutorials.edit');
+    Route::post('/tutorials/update/{id}', 'update')->name('admin.tutorials.update');
+    Route::post('/tutorials/status/{id}', 'status')->name('admin.tutorials.status');
+    Route::post('/tutorials/destroy/{id}', 'destroy')->name('admin.tutorials.destroy');
+});
+
+//Route for the listing requests
+
+Route::controller(ListingController::class)->group(function () {
+    Route::get('/listings', 'index')->name('admin.listing_requests.index');
 });
