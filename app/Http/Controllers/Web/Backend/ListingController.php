@@ -11,7 +11,7 @@ class ListingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('images','shop.user');
+        $query = Product::with('images','shop.user')->whereNot('status', 'listing');
 
         // Status filter (pending / approved / denied)
         if ($request->filled('status')) {
