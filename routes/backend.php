@@ -59,4 +59,8 @@ Route::controller(TutorialsController::class)->group(function () {
 
 Route::controller(ListingController::class)->group(function () {
     Route::get('/listings', 'index')->name('admin.listing_requests.index');
+    Route::get('/listings/{id}', 'show')->name('admin.product.show');
+    Route::post('/admin/products/{id}/approve', 'approve')->name('admin.product.approve');
+    Route::post('/admin/products/{id}/reject', 'reject')->name('admin.product.reject');
+
 });
