@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Vendor\ProductController;
 use App\Http\Controllers\Api\Vendor\ShopTaxController;
+use App\Http\Controllers\Api\Auth\OnboardingController;
 use App\Http\Controllers\Api\Vendor\DiscountController;
 use App\Http\Controllers\Api\Vendor\ShippingController;
+use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
 
 Route::group(['middleware' => ['jwt.verify']], function () {
 
@@ -32,6 +34,15 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::post('/weight_ranges', 'weightRangeStore');
             Route::delete('/weight_range/{id}', 'weightRangeDelete');
 
+        });
+
+        Route::controller(OnboardingController::class)->group(function () {
+            Route::get('/paypal/onboard', 'onboard');
+            Route::get('/paypal/onboard/success','onboardSuccess')->name('paypal.success');
+        });
+
+        Route::controller(SpotlightApplicationController::class)->group(function () {
+            Route::post('/spotlight-applications', 'store');
         });
 
     });

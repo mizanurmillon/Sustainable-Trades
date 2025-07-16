@@ -1,12 +1,13 @@
 <?php
 
-use App\Http\Controllers\Web\Backend\CategoryController;
-use App\Http\Controllers\Web\Backend\DashboardController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\Backend\FaqController;
 use App\Http\Controllers\Web\Backend\ListingController;
-use App\Http\Controllers\Web\Backend\SubCategoryController;
+use App\Http\Controllers\Web\Backend\CategoryController;
+use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\TutorialsController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\Backend\SubCategoryController;
+use App\Http\Controllers\Web\Backend\SpotlightApplicationController;
 
 
 
@@ -63,4 +64,13 @@ Route::controller(ListingController::class)->group(function () {
     Route::post('/admin/products/{id}/approve', 'approve')->name('admin.product.approve');
     Route::post('/admin/products/{id}/reject', 'reject')->name('admin.product.reject');
 
+});
+
+//Route for the members spotlight
+Route::controller(SpotlightApplicationController::class)->group(function () {
+    Route::get('/member-spotlight','index')->name('admin.members_spotlight.index');
+    Route::get('/member-spotlight/{id}','show')->name('admin.members_spotlight.show');
+    Route::post('/admin/application/{id}/approve', 'approve')->name('admin.application.approve');
+    Route::post('/admin/application/{id}/pending', 'pending')->name('admin.application.pending');
+    Route::delete('/admin/application/{id}', 'destroy')->name('admin.application.destroy');
 });
