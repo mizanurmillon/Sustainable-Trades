@@ -18,16 +18,24 @@ class OnboardingController extends Controller
         $clientId = config('services.paypal.client_id');
         $clientSecret = config('services.paypal.client_secret');
 
+        // Get Access Token
         $accessToken = Http::withBasicAuth($clientId, $clientSecret)
             ->asForm()
             ->post('https://api-m.sandbox.paypal.com/v1/oauth2/token', [
                 'grant_type' => 'client_credentials'
             ])->json()['access_token'];
 
+        $trackingId = Str::uuid()->toString(); // Unique tracking ID per user
+
+        // Save trackingId to user (optional)
+        $vendor = auth()->user();
+        $vendor->paypal_tracking_id = $trackingId;
+        $vendor->save();
+
         $payload = [
-            "tracking_id" => Str::uuid(),
+            "tracking_id" => $trackingId,
             "partner_config_override" => [
-                "return_url" => route('paypal.success'),
+                "return_url" => route('paypal.success', ['tracking_id' => $trackingId]),
                 "return_url_description" => "The url to return the merchant after the PayPal onboarding process.",
                 "show_add_credit_card" => true
             ],
@@ -54,37 +62,56 @@ class OnboardingController extends Controller
             ->post('https://api-m.sandbox.paypal.com/v2/customer/partner-referrals', $payload);
 
         if (!$response->successful()) {
-            // Log the error or return it for debugging
-            return $this->error([
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ], 'PayPal onboarding API failed', 500);
+            return $this->error([], 'PayPal onboarding failed', 400);
         }
 
-        $links = $response['links'] ?? null;
-
-        if (!$links) {
-            return $this->error([], 'PayPal response does not contain action_url', 500);
-        }
-
-        $onboardingUrl = collect($links)->firstWhere('rel', 'action_url')['href'] ?? null;
-
-        if (!$onboardingUrl) {
-            return $this->error([], 'Onboarding URL not found in PayPal response', 500);
-        }
+        $onboardingUrl = collect($response->json('links'))->firstWhere('rel', 'action_url')['href'] ?? null;
 
         return redirect($onboardingUrl);
     }
 
     public function onboardSuccess(Request $request)
     {
-        $merchantId = $request->get('merchantIdInPayPal'); // Save this in DB
+        $trackingId = $request->get('tracking_id');
 
-        // Optional: Save to DB (auth()->user() or vendor logic)
-        $user = auth()->user();
-        $user->paypal_merchant_id = $merchantId;
-        $user->save();
+        if (!$trackingId) {
+            return $this->error([], 'Tracking ID not found', 400);
+        }
 
-        return $this->success($user, 'User authenticated successfully', 200);;
+        $clientId = config('services.paypal.client_id');
+        $clientSecret = config('services.paypal.client_secret');
+
+        // Get access token again
+        $accessToken = Http::withBasicAuth($clientId, $clientSecret)
+            ->asForm()
+            ->post('https://api-m.sandbox.paypal.com/v1/oauth2/token', [
+                'grant_type' => 'client_credentials'
+            ])->json()['access_token'];
+
+        // Fetch merchant info using the tracking ID
+        $response = Http::withToken($accessToken)
+            ->get("https://api-m.sandbox.paypal.com/v2/customer/partners/{$clientId}/merchant-integrations", [
+                'tracking_id' => $trackingId
+            ]);
+
+        if (!$response->successful()) {
+            return $this->error([], 'PayPal merchant info not found', 400);
+        }
+
+        $merchantId = $response['merchant_id'] ?? null;
+        $paymentsReceivable = $response['payments_receivable'] ?? false;
+        $email = $response['email'] ?? null;
+
+        if (!$merchantId || !$paymentsReceivable) {
+            return $this->error([], 'PayPal merchant info not found', 400);
+        }
+
+        // Save merchant PayPal info
+        $vendor = auth()->user();
+        $vendor->paypal_merchant_id = $merchantId;
+        $vendor->paypal_email = $email;
+        $vendor->save();
+
+        return $this->success($vendor, 'PayPal merchant info fetched successfully', 200);
     }
 }
