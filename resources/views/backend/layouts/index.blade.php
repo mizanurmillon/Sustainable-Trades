@@ -139,3 +139,17 @@
         </div>
     </section>
 @endsection
+@push('script')
+    <script>
+        $(document).ready(function() {
+            Echo.private('chat-channel.' + 1).listen('MessageSentEvent', (e) => {
+                console.log('Message Receiver:', e);
+            })
+
+            Echo.private('conversation-channel.' + 1).listen('ConversationEvent', (e) => {
+                console.log('Conversation and Unread Message count:', e);
+            })
+
+        });
+    </script>
+@endpush

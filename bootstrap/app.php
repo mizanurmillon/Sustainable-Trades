@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api')
                 ->group(base_path('routes/vendor_api.php'));
 
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/chat.php'));
+
             Route::middleware(['web', 'auth', 'admin'])
                 ->prefix('admin')
                 ->group(base_path('routes/backend.php'));
@@ -42,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'vendor' => VendorMiddleware::class,
         ]);
     })
+    ->withBroadcasting(__DIR__ . '/../routes/channels.php', ['prefix' => 'api', 'middleware' => ['jwt.verify']],)
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
