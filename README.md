@@ -19,7 +19,7 @@ git clone https://github.com/mizanurmillon/Sustainable-Trades.git
 ```
 
 ```sh
-cd Laravel-Stater-Kit-Craft
+cd sustainable_trades
 ```
 
 ```sh
