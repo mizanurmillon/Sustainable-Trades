@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
 use App\Http\Controllers\Api\DynamicPageController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\Product\ProductController;
 use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\SitesettingController;
@@ -93,6 +94,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::post('/password/change', 'passwordChange');
         Route::post('/logout', 'logoutUser');
         Route::delete('/delete', 'deleteUser');
+    });
+
+    Route::controller(GetNotificationController::class)->prefix('notifications')->group(function () {
+        Route::get('/', 'getNotifications');
     });
 });
 

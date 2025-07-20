@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Web\Backend;
 
 use Illuminate\Http\Request;
-use App\Enum\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\SpotlightApplication;
-use App\Notifications\UserNotification;
+use App\Notifications\SpotlightApplicationNotification;
 
 class SpotlightApplicationController extends Controller
 {
@@ -44,11 +43,11 @@ class SpotlightApplicationController extends Controller
         $application->status = 'approved';
         $application->save();
 
-        $application->user->notify(new UserNotification(
+        $application->user->notify(new SpotlightApplicationNotification(
             subject: 'Spotlight application approved',
             message: 'Your spotlight application has been approved.',
-            channels: ['database'],
-            type: NotificationType::SUCCESS,
+            type: 'success',
+            application: $application
         ));
 
         return response()->json([
@@ -63,11 +62,11 @@ class SpotlightApplicationController extends Controller
         $application->status = 'pending';
         $application->save();
 
-        $application->user->notify(new UserNotification(
-            subject: 'Spotlight application save for later',
-            message: 'Your spotlight application has been save for later.',
-            channels: ['database'],
-            type: NotificationType::INFO,
+        $application->user->notify(new SpotlightApplicationNotification(
+            subject:'Spotlight application save for later',
+            message:'Your spotlight application has been save for later.',
+            type: 'success',
+            application: $application
         ));
 
         return response()->json([
@@ -86,11 +85,11 @@ class SpotlightApplicationController extends Controller
 
         $data->delete();
 
-        $data->user->notify(new UserNotification(
+        $data->user->notify(new SpotlightApplicationNotification(
             subject: 'Spotlight application deleted',
             message: 'Your spotlight application has been deleted.',
-            channels: ['database'],
-            type: NotificationType::INFO,
+            type: 'success',
+            application: $data
         ));
         
         return response()->json([

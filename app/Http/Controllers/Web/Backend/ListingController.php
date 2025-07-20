@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
-use App\Enum\NotificationType;
+
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
-use App\Notifications\UserNotification;
+use App\Notifications\ProductNotification;
 use Illuminate\Http\Request;
 
 class ListingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('images','shop.user')->whereNot('status', 'listing');
+        $query = Product::with('images', 'shop.user')->whereNot('status', 'listing');
 
         // Status filter (pending / approved / denied)
         if ($request->filled('status')) {
@@ -28,15 +28,15 @@ class ListingController extends Controller
         $products = $query->latest()->get();
 
 
-        $product = Product::whereNot('status','listing')->count();
-        return view('backend.layouts.listing.index', compact('products','product'));
+        $product = Product::whereNot('status', 'listing')->count();
+        return view('backend.layouts.listing.index', compact('products', 'product'));
     }
 
     public function show($id)
     {
-        $product = Product::with('images', 'shop.user','category','sub_category','metaTags')->findOrFail($id);
+        $product = Product::with('images', 'shop.user', 'category', 'sub_category', 'metaTags')->findOrFail($id);
         $categories = Category::with('subcategories')->where('status', 'active')->get();
-        return view('backend.layouts.listing.show', compact('product','categories'));
+        return view('backend.layouts.listing.show', compact('product', 'categories'));
     }
 
     public function approve(Request $request, $id)
@@ -45,11 +45,11 @@ class ListingController extends Controller
         $product->status = 'approved';
         $product->save();
 
-        $product->shop->user->notify(new UserNotification(
-            subject: 'Product listing approved',
-            message: 'Your product listing has been approved.',
-            channels: ['database'],
-            type: NotificationType::SUCCESS,
+        $product->shop->user->notify(new ProductNotification(
+            message: 'Your product has been approved.',
+            subject: 'Product Approved',
+            type: 'success',
+            product: $product
         ));
 
         return response()->json([
@@ -64,11 +64,11 @@ class ListingController extends Controller
         $product->status = 'rejected';
         $product->save();
 
-        $product->shop->user->notify(new UserNotification(
-            subject: 'Product listing rejected',
-            message: 'Your product listing has been rejected.',
-            channels: ['database'],
-            type: NotificationType::DANGER,
+        $product->shop->user->notify(new ProductNotification(
+            message: 'Your product has been rejected.',
+            subject: 'Product Rejected',
+            type: 'danger',
+            product: $product
         ));
 
         return response()->json([
