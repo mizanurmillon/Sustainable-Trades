@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
+use App\Enum\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Notifications\UserNotification;
 use Illuminate\Http\Request;
 
 class ListingController extends Controller
@@ -43,6 +45,13 @@ class ListingController extends Controller
         $product->status = 'approved';
         $product->save();
 
+        $product->shop->user->notify(new UserNotification(
+            subject: 'Product listing approved',
+            message: 'Your product listing has been approved.',
+            channels: ['database'],
+            type: NotificationType::SUCCESS,
+        ));
+
         return response()->json([
             'success' => true,
             'message' => 'Product listing approved successfully.'
@@ -54,6 +63,13 @@ class ListingController extends Controller
         $product = Product::findOrFail($id);
         $product->status = 'rejected';
         $product->save();
+
+        $product->shop->user->notify(new UserNotification(
+            subject: 'Product listing rejected',
+            message: 'Your product listing has been rejected.',
+            channels: ['database'],
+            type: NotificationType::DANGER,
+        ));
 
         return response()->json([
             'success' => true,

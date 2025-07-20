@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
+use Illuminate\Http\Request;
+use App\Enum\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\SpotlightApplication;
-use Illuminate\Http\Request;
+use App\Notifications\UserNotification;
 
 class SpotlightApplicationController extends Controller
 {
@@ -38,9 +40,16 @@ class SpotlightApplicationController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $product = SpotlightApplication::findOrFail($id);
-        $product->status = 'approved';
-        $product->save();
+        $application = SpotlightApplication::findOrFail($id);
+        $application->status = 'approved';
+        $application->save();
+
+        $application->user->notify(new UserNotification(
+            subject: 'Spotlight application approved',
+            message: 'Your spotlight application has been approved.',
+            channels: ['database'],
+            type: NotificationType::SUCCESS,
+        ));
 
         return response()->json([
             'success' => true,
@@ -50,9 +59,16 @@ class SpotlightApplicationController extends Controller
 
     public function pending(Request $request, $id)
     {
-        $product = SpotlightApplication::findOrFail($id);
-        $product->status = 'pending';
-        $product->save();
+        $application = SpotlightApplication::findOrFail($id);
+        $application->status = 'pending';
+        $application->save();
+
+        $application->user->notify(new UserNotification(
+            subject: 'Spotlight application save for later',
+            message: 'Your spotlight application has been save for later.',
+            channels: ['database'],
+            type: NotificationType::INFO,
+        ));
 
         return response()->json([
             'success' => true,
@@ -69,6 +85,13 @@ class SpotlightApplicationController extends Controller
         }
 
         $data->delete();
+
+        $data->user->notify(new UserNotification(
+            subject: 'Spotlight application deleted',
+            message: 'Your spotlight application has been deleted.',
+            channels: ['database'],
+            type: NotificationType::INFO,
+        ));
         
         return response()->json([
             'success' => true,
