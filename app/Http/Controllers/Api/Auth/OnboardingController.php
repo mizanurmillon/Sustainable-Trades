@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 
 
@@ -24,6 +25,8 @@ class OnboardingController extends Controller
             ->post('https://api-m.sandbox.paypal.com/v1/oauth2/token', [
                 'grant_type' => 'client_credentials'
             ])->json()['access_token'];
+
+        // dd($accessToken);
 
         $trackingId = Str::uuid()->toString(); // Unique tracking ID per user
 
@@ -59,9 +62,12 @@ class OnboardingController extends Controller
         ];
 
         $response = Http::withToken($accessToken)
-            ->post('https://api-m.sandbox.paypal.com/v2/customer/partner-referrals', $payload);
+            ->post('https://api-m.sandbox.paypal.com/v1/customer/partner-referrals', $payload);
+
+        // dd($response);
 
         if (!$response->successful()) {
+            Log::error('PayPal Partner Referral Error', $response->json());
             return $this->error([], 'PayPal onboarding failed', 400);
         }
 

@@ -1,19 +1,21 @@
 <?php
 
-use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\Shop\ShopController;
+use App\Http\Controllers\Api\Auth\LoginController;
+use App\Http\Controllers\Api\MyFavoriteController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\SocialLinkController;
+use App\Http\Controllers\Api\DynamicPageController;
+use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
-use App\Http\Controllers\Api\DynamicPageController;
-use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\FollowShopController;
 use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\Product\ProductController;
-use App\Http\Controllers\Api\Shop\ShopController;
-use App\Http\Controllers\Api\SitesettingController;
-use App\Http\Controllers\Api\SocialLinkController;
-use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,6 +100,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::controller(GetNotificationController::class)->prefix('notifications')->group(function () {
         Route::get('/', 'getNotifications');
+    });
+
+    Route::controller(MyFavoriteController::class)->group(function () {
+        Route::get('/my-favorites', 'myFavorites');
+        Route::post('/add-favorites/{id}', 'addFavorite',);
+    });
+
+    Route::controller(FollowShopController::class)->group(function () {
+        Route::get('/follow-shops', 'followShops');
+        Route::post('/follow-shop/{id}', 'followShop');
     });
 });
 
