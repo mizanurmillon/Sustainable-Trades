@@ -1,21 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\FaqController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\MyFavoriteController;
-use App\Http\Controllers\Api\SocialAuthController;
-use App\Http\Controllers\Api\SocialLinkController;
-use App\Http\Controllers\Api\DynamicPageController;
-use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
+use App\Http\Controllers\Api\Cart\CartController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DynamicPageController;
+use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FollowShopController;
 use App\Http\Controllers\Api\GetNotificationController;
+use App\Http\Controllers\Api\MyFavoriteController;
 use App\Http\Controllers\Api\Product\ProductController;
+use App\Http\Controllers\Api\Shop\ShopController;
+use App\Http\Controllers\Api\SitesettingController;
+use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\SocialLinkController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -46,7 +48,7 @@ Route::controller(RegisterController::class)->prefix('users/register')->group(fu
 
 //Shop Owner Register API
 Route::controller(ShopOwnerController::class)->prefix('shop/owners')->group(function () {
-    Route::post('/','shopOwnerRegister');
+    Route::post('/', 'shopOwnerRegister');
 });
 
 //Login API
@@ -102,14 +104,26 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::get('/', 'getNotifications');
     });
 
-    Route::controller(MyFavoriteController::class)->group(function () {
-        Route::get('/my-favorites', 'myFavorites');
-        Route::post('/add-favorites/{id}', 'addFavorite',);
-    });
+    Route::group(['middleware' => ['customer']], function () {
 
-    Route::controller(FollowShopController::class)->group(function () {
-        Route::get('/follow-shops', 'followShops');
-        Route::post('/follow-shop/{id}', 'followShop');
+        Route::controller(MyFavoriteController::class)->group(function () {
+            Route::get('/my-favorites', 'myFavorites');
+            Route::post('/add-favorites/{id}', 'addFavorite',);
+        });
+
+        Route::controller(FollowShopController::class)->group(function () {
+            Route::get('/follow-shops', 'followShops');
+            Route::post('/follow-shop/{id}', 'followShop');
+        });
+
+        Route::controller(CartController::class)->group(function () {
+            Route::post('/add-to-cart/{id}', 'addToCart');
+            route::get('/cart', 'getCart');
+            route::post('/cart/update/{id}', 'updateCart');
+            route::delete('/cart/item/remove/{id}', 'deleteCartItem');
+            Route::delete('/cart/empty', 'emptyCart');
+            Route::delete('/cart/remove/{id}', 'deleteCart');
+        });
     });
 });
 
