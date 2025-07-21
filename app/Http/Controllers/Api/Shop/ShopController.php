@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Shop;
 
 use App\Http\Controllers\Controller;
+use App\Models\FollowShop;
+use App\Models\MyFavorit;
 use App\Models\Product;
 use App\Models\User;
 use App\Traits\ApiResponse;
@@ -11,32 +13,41 @@ use Illuminate\Http\Request;
 class ShopController extends Controller
 {
     use ApiResponse;
-    
+
     public function allShops()
     {
-        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner')->where('role','vendor')
-                    ->select('id', 'first_name', 'last_name','role', 'avatar')
-                    ->where('status', 'active')
-                    ->get();
+        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner')->where('role', 'vendor')
+            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
+            ->where('status', 'active')
+            ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([],'No shops found', 404);
+            return $this->error([], 'No shops found', 404);
         }
 
-        return $this->success($data, 'All shops retrieved successfully',200);
+        return $this->success($data, 'All shops retrieved successfully', 200);
     }
 
     public function shopDetails($id)
     {
-        $shop = User::with(['shopInfo','shopInfo.address'])
-                    ->select('id', 'first_name', 'last_name', 'role', 'avatar')
-                    ->where('id', $id)
-                    ->where('role', 'vendor')
-                    ->where('status', 'active')
-                    ->first();
+        if (auth()->user()) {
+            $shopFollow = FollowShop::where('user_id', auth()->user()->id)->where('shop_info_id', $id)->first(); // check if user follow 
+        }
+        $shop = User::with(['shopInfo', 'shopInfo.address'])
+            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
+            ->where('id', $id)
+            ->where('role', 'vendor')
+            ->where('status', 'active')
+            ->first();
+            
+        if (auth()->user()) {
+            $shop->is_followed = $shopFollow ? true : false;
+        } else {
+            $shop->is_followed = false;
+        }
 
         if (!$shop) {
-            return $this->error([],'Shop not found', 404);
+            return $this->error([], 'Shop not found', 404);
         }
 
         return $this->success($shop, 'Shop details retrieved successfully', 200);
@@ -45,23 +56,37 @@ class ShopController extends Controller
     public function shopFeaturedProducts($id)
     {
         $data = Product::with('images')->where('shop_info_id', $id)
-                    ->where('is_featured', true)
-                    ->where('status', 'approved')
-                    ->select('id', 'shop_info_id','product_name', 'product_price', 'is_featured')
-                    ->get();
+            ->where('is_featured', true)
+            ->where('status', 'approved')
+            ->select('id', 'shop_info_id', 'product_name', 'product_price', 'is_featured')
+            ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([],'No featured products found for this shop', 404);
+            return $this->error([], 'No featured products found for this shop', 404);
         }
 
-        return $this->success($data, 'Featured products retrieved successfully',200);
+        // If user is authenticated, fetch favorite products
+        $favorites = [];
+        if (auth()->user()) {
+            $favorites = MyFavorit::where('user_id', auth()->id())
+                ->whereIn('product_id', $data->pluck('id'))
+                ->pluck('product_id')
+                ->toArray(); // Get only the product IDs
+        }
+
+        // Attach `is_favorite` flag to each product
+        foreach ($data as $product) {
+            $product->is_favorite = in_array($product->id, $favorites);
+        }
+
+        return $this->success($data, 'Featured products retrieved successfully', 200);
     }
 
     public function shopProducts(Request $request, $id)
     {
-        $query = Product::with(['category','sub_category','images'])->where('shop_info_id', $id)
-                    ->where('status', 'approved')
-                    ->select('id', 'shop_info_id','category_id','sub_category_id','product_name', 'product_price');
+        $query = Product::with(['category', 'sub_category', 'images'])->where('shop_info_id', $id)
+            ->where('status', 'approved')
+            ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price');
 
         if ($request->has('category_id')) {
             $query->where('category_id', $request->input('category_id'));
@@ -72,7 +97,7 @@ class ShopController extends Controller
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('product_name', 'like', "%{$search}%");
             });
         }
@@ -81,16 +106,29 @@ class ShopController extends Controller
             $shortBy = $request->input("short_by");
             if ($shortBy === "recently_added") {
                 $query->latest();
-            } 
-        } 
+            }
+        }
 
         $data = $query->paginate(15); // Paginate results, 10 per page
 
         if ($data->isEmpty()) {
-            return $this->error([],'No products found for this shop', 404);
+            return $this->error([], 'No products found for this shop', 404);
         }
 
-        return $this->success($data, 'Products retrieved successfully',200);
+        // If user is authenticated, fetch favorite products
+        $favorites = [];
+        if (auth()->user()) {
+            $favorites = MyFavorit::where('user_id', auth()->id())
+                ->whereIn('product_id', $data->pluck('id'))
+                ->pluck('product_id')
+                ->toArray(); // Get only the product IDs
+        }
+
+        // Attach `is_favorite` flag to each product
+        foreach ($data as $product) {
+            $product->is_favorite = in_array($product->id, $favorites);
+        }
+
+        return $this->success($data, 'Products retrieved successfully', 200);
     }
-    
 }

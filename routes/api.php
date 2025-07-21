@@ -131,18 +131,18 @@ Route::controller(CategoryController::class)->group(function () {
     Route::get('/categories', 'allCategories');
 });
 
+Route::group(['middleware' => ['guest']], function () {
+    //Shop Owner APIs
+    Route::controller(ShopController::class)->group(function () {
+        Route::get('/shops', 'allShops');
+        Route::get('/shop/{id}', 'shopDetails');
+        Route::get('/shop/products/{id}', 'shopProducts');
+        Route::get('/shop/products/featured/{id}', 'shopFeaturedProducts');
+    });
 
-//Shop Owner APIs
-
-Route::controller(ShopController::class)->group(function () {
-    Route::get('/shops', 'allShops');
-    Route::get('/shop/{id}', 'shopDetails');
-    Route::get('/shop/products/{id}', 'shopProducts');
-    Route::get('/shop/products/featured/{id}', 'shopFeaturedProducts');
-});
-
-//Category wise products
-Route::controller(ProductController::class)->group(function () {
-    Route::get('/category/wise/products', 'allProducts');
-    Route::get('/product-details/{id}', 'singleProduct');
+    //Category wise products
+    Route::controller(ProductController::class)->group(function () {
+        Route::get('/category/wise/products', 'allProducts');
+        Route::get('/product-details/{id}', 'singleProduct');
+    });
 });

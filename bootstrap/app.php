@@ -1,13 +1,15 @@
 <?php
 
 use App\Http\Middleware\Admin;
-use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\JWTMiddleware;
-use Illuminate\Foundation\Application;
-use App\Http\Middleware\VendorMiddleware;
 use App\Http\Middleware\CustomerMiddleware;
+use App\Http\Middleware\GuestMiddleware;
+use App\Http\Middleware\JWTMiddleware;
+use App\Http\Middleware\VendorMiddleware;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
+
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -46,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => Admin::class,
             'vendor' => VendorMiddleware::class,
             'customer' => CustomerMiddleware::class,
+            'guest' => GuestMiddleware::class,
         ]);
     })
     ->withBroadcasting(__DIR__ . '/../routes/channels.php', ['prefix' => 'api', 'middleware' => ['jwt.verify']],)
