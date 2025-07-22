@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['private', 'group', 'self'])->comment('Private is 1-1 , group or channel, self is for self chat');
+            $table->enum('type', ['private', 'group', 'self', 'order'])->comment('Private is 1-1 , group or channel, self is for self chat');
             $table->timestamps();
         });
     }

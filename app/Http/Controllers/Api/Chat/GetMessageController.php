@@ -61,7 +61,7 @@ class GetMessageController extends Controller
             }
         }
 
-         if (!$conversation_id) {
+        if (!$conversation_id) {
             $conversation->load([
                 'participants' => function ($query) use ($user) {
                     $query->where('participant_id', '!=', $user->id)
@@ -85,8 +85,14 @@ class GetMessageController extends Controller
             ], 'group');
         }
 
+        // Mark messages as read
+        $conversation->messages()
+            ->where('receiver_id', $user->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         $messages = $conversation->messages()
-            ->with(['sender:id,first_name,last_name,avatar','parentMessage','attachments',])
+            ->with(['sender:id,first_name,last_name,avatar', 'parentMessage', 'attachments',])
             ->orderBy('created_at', 'desc')
             ->withTrashed()
             ->paginate(100);
