@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FollowShopController;
 use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\MyFavoriteController;
+use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\Product\ProductController;
 use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\SitesettingController;
@@ -135,6 +136,7 @@ Route::group(['middleware' => ['guest']], function () {
     //Shop Owner APIs
     Route::controller(ShopController::class)->group(function () {
         Route::get('/shops', 'allShops');
+        Route::get('/shops/featured', 'featuredShops');
         Route::get('/shop/{id}', 'shopDetails');
         Route::get('/shop/products/{id}', 'shopProducts');
         Route::get('/shop/products/featured/{id}', 'shopFeaturedProducts');
@@ -145,4 +147,8 @@ Route::group(['middleware' => ['guest']], function () {
         Route::get('/category/wise/products', 'allProducts');
         Route::get('/product-details/{id}', 'singleProduct');
     });
+});
+
+Route::controller(NewsletterController::class)->group(function () {
+    Route::post('/newsletter/subscribe', 'subscribe');
 });

@@ -28,6 +28,32 @@ class ShopController extends Controller
         return $this->success($data, 'All shops retrieved successfully', 200);
     }
 
+    /**
+     * Retrieve a list of featured shops.
+     *
+     * This function fetches all vendors with active status that have their shop marked as featured.
+     * It returns a success response with the shop data if found, otherwise an error response.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+    public function featuredShops()
+    {
+        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner,is_featured')->where('role', 'vendor')
+            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
+            ->whereHas('shopInfo', function ($q) {
+                $q->where('is_featured', true);
+            })
+            ->where('status', 'active')
+            ->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([], 'No shops found', 404);
+        }
+
+        return $this->success($data, 'All featured shops successfully', 200);
+    }
+
     public function shopDetails($id)
     {
         if (auth()->user()) {

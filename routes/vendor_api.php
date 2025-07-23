@@ -1,13 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\TradeOfferController;
-use App\Http\Controllers\Api\Vendor\ProductController;
-use App\Http\Controllers\Api\Vendor\ShopTaxController;
 use App\Http\Controllers\Api\Auth\OnboardingController;
+use App\Http\Controllers\Api\Product\ImportExportController;
+use App\Http\Controllers\Api\TradeOfferController;
 use App\Http\Controllers\Api\Vendor\DiscountController;
+use App\Http\Controllers\Api\Vendor\ProductController;
 use App\Http\Controllers\Api\Vendor\ShippingController;
+use App\Http\Controllers\Api\Vendor\ShopTaxController;
 use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
+use Illuminate\Support\Facades\Route;
+
 
 Route::group(['middleware' => ['jwt.verify']], function () {
 
@@ -20,6 +22,11 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/product/request-approval/{id}', 'productRequestApproval');
             Route::post('/product/update/{id}', 'productUpdate');
             Route::delete('/product/delete/{id}', 'productDelete');
+        });
+
+        Route::controller(ImportExportController::class)->group(function () {
+            Route::post('/import-products', 'importProducts');
+            Route::post('/export-products', 'exportProducts');
         });
 
         Route::controller(ShopTaxController::class)->group(function () {
