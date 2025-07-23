@@ -51,6 +51,34 @@
                 </div>
 
                 <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.shops.*') ? 'active' : '' }}"
+                        href="{{ route('admin.shops.index') }}">
+                        <span class="menu-icon">
+
+                            <svg width="32" height="32" viewBox="0 0 25 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M15.5 2H9.5C8.94772 2 8.5 2.44772 8.5 3V5C8.5 5.55228 8.94772 6 9.5 6H15.5C16.0523 6 16.5 5.55228 16.5 5V3C16.5 2.44772 16.0523 2 15.5 2Z"
+                                    stroke="#274F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path
+                                    d="M16.5 4H18.5C19.0304 4 19.5391 4.21071 19.9142 4.58579C20.2893 4.96086 20.5 5.46957 20.5 6V20C20.5 20.5304 20.2893 21.0391 19.9142 21.4142C19.5391 21.7893 19.0304 22 18.5 22H6.5C5.96957 22 5.46086 21.7893 5.08579 21.4142C4.71071 21.0391 4.5 20.5304 4.5 20V6C4.5 5.46957 4.71071 4.96086 5.08579 4.58579C5.46086 4.21071 5.96957 4 6.5 4H8.5"
+                                    stroke="#274F45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M12.5 11H16.5" stroke="#274F45" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M12.5 16H16.5" stroke="#274F45" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M8.5 11H8.51" stroke="#274F45" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M8.5 16H8.51" stroke="#274F45" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+
+                        </span>
+                        <span class="menu-title">Shops</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.listing_requests.*') ? 'active' : '' }}"
                         href="{{ route('admin.listing_requests.index') }}">
                         <span class="menu-icon">
@@ -100,9 +128,9 @@
                     <span class="menu-link">
                         <span class="menu-icon">
 
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round"
-                                stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1"
+                                stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M14 4h6v6h-6z" />
                                 <path d="M4 14h6v6h-6z" />
                                 <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
