@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api\Product;
 
+use App\Exports\ProductExport;
+use App\Http\Controllers\Controller;
+use App\Imports\ProductImport;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use App\Imports\ProductImport;
-use App\Http\Controllers\Controller;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ImportExportController extends Controller
 {
@@ -38,8 +39,18 @@ class ImportExportController extends Controller
         return $this->success($data, 'Products imported successfully', 200);
     }
 
-    public function exportProducts(Request $request)
+    public function exportProducts(Request $request, $id)
     {
-        // Logic for exporting products
+        $user = auth()->user();
+
+        if (!$user) {
+
+            return $this->error([], 'User not found', 401);   
+        }
+
+        return Excel::download(new ProductExport($id), 'products.csv');
+
+        // return $this->success([], 'Products exported successfully', 200);
+
     }
 }

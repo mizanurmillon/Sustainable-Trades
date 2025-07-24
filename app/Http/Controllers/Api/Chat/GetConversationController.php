@@ -36,6 +36,14 @@ class GetConversationController extends Controller
                 $query->where('participant_type', get_class($user))
                     ->where('participant_id', $user->id);
             })
+            ->when($name, function ($query, $name) {
+                $query->whereHas('participants.participant', function ($q) use ($name) {
+                    $q->where(function ($subQuery) use ($name) {
+                        $subQuery->where('first_name', 'LIKE', "%$name%")
+                                ->orWhere('last_name', 'LIKE', "%$name%");
+                    });
+                });
+            })
             ->withCount('unreadMessages')
             ->latest('updated_at')
             ->paginate(15);

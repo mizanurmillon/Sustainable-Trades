@@ -81,7 +81,7 @@ class ProductImport implements ToModel, WithHeadingRow
                     'tag' => trim($tag),
                 ]);
             }
-        }
+        } 
 
         // Save images (comma-separated)
         if (!empty($row['product_images'])) {

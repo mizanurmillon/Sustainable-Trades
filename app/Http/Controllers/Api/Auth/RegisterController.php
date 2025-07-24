@@ -53,6 +53,7 @@ class RegisterController extends Controller {
             'first_name'           => 'required|string|max:255',
             'last_name'=> 'nullable|string|max:255',
             'email'          => 'required|email|unique:users,email',
+            'role'          => 'required|in:customer,magic_maker',
             'password'       => [
                 'required',
                 'string',
@@ -62,11 +63,10 @@ class RegisterController extends Controller {
             'agree_to_terms' => 'required|boolean',
         ], [
             'password.min' => 'The password must be at least 8 characters long.',
-            'gender.in'    => 'The selected gender is invalid.',
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), "Validation Error", 422);
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
         }
 
         try {
@@ -75,14 +75,20 @@ class RegisterController extends Controller {
             $user->first_name     = $request->input('first_name');
             $user->last_name      = $request->input('last_name');
             $user->email          = $request->input('email');
+            $user->role           = $request->input('role');
             $user->password       = Hash::make($request->input('password')); // Hash the password
             $user->agree_to_terms = $request->input('agree_to_terms');
+            $user->email_verified_at = Carbon::now();
 
             $user->save();
 
-            $this->sendOtp($user);
+            $token = JWTAuth::fromUser($user);
 
-            return $this->success($user, 'Verification email sent', 201);
+            $user->setAttribute('token', $token);
+
+            // $this->sendOtp($user);
+
+            return $this->success($user, 'User registered successfully', 201);
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }

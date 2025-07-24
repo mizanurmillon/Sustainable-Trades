@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone')->nullable();
             $table->string('company_name')->nullable();
-            $table->enum('role', ['admin', 'customer', 'vendor'])->default('vendor');
+            $table->enum('role', ['admin', 'customer','magic_maker'. 'vendor'])->default('vendor');
             $table->string('avatar')->nullable();
             $table->string('provider')->nullable(); // Field to store social provider name (e.g., 'google', 'facebook')
             $table->string('provider_id')->nullable(); // Field to store the unique ID from the social provider

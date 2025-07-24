@@ -26,7 +26,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
         Route::controller(ImportExportController::class)->group(function () {
             Route::post('/import-products', 'importProducts');
-            Route::post('/export-products', 'exportProducts');
+            Route::get('/export-products/{id}', 'exportProducts');
         });
 
         Route::controller(ShopTaxController::class)->group(function () {
