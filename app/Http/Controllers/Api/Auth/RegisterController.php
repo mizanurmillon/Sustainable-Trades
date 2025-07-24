@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class RegisterController extends Controller {
+class RegisterController extends Controller
+{
 
     use ApiResponse;
 
@@ -25,7 +26,8 @@ class RegisterController extends Controller {
      * @return void
      */
 
-    private function sendOtp($user) {
+    private function sendOtp($user)
+    {
         $code = rand(1000, 9999);
 
         // Store verification code in the database
@@ -47,11 +49,12 @@ class RegisterController extends Controller {
      * @return \Illuminate\Http\JsonResponse  JSON response with success or error.
      */
 
-    public function userRegister(Request $request) {
+    public function userRegister(Request $request)
+    {
 
         $validator = Validator::make($request->all(), [
             'first_name'           => 'required|string|max:255',
-            'last_name'=> 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email'          => 'required|email|unique:users,email',
             'role'          => 'required|in:customer,magic_maker',
             'password'       => [
@@ -71,12 +74,28 @@ class RegisterController extends Controller {
 
         try {
             // Find the user by ID
-            $user                 = new User();
-            $user->first_name     = $request->input('first_name');
-            $user->last_name      = $request->input('last_name');
-            $user->email          = $request->input('email');
-            $user->role           = $request->input('role');
-            $user->password       = Hash::make($request->input('password')); // Hash the password
+            $user = new User();
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
+
+            // Generate base username
+            $baseUsername = strtolower(preg_replace('/[^a-z0-9_]/', '', str_replace(' ', '', $firstName . $lastName)));
+            $baseUsername = substr($baseUsername, 0, 20);
+
+            // Ensure username is unique
+            $username = $baseUsername;
+            $counter = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = substr($baseUsername, 0, 20 - strlen((string) $counter)) . $counter;
+                $counter++;
+            }
+
+            $user->first_name = $firstName;
+            $user->last_name = $lastName;
+            $user->username = $username;
+            $user->email = $request->input('email');
+            $user->role = $request->input('role');
+            $user->password = Hash::make($request->input('password'));
             $user->agree_to_terms = $request->input('agree_to_terms');
             $user->email_verified_at = Carbon::now();
 
@@ -100,7 +119,8 @@ class RegisterController extends Controller {
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function otpVerify(Request $request) {
+    public function otpVerify(Request $request)
+    {
 
         // Validate the request
         $validator = Validator::make($request->all(), [
@@ -117,9 +137,9 @@ class RegisterController extends Controller {
             $user = User::where('email', $request->input('email'))->first();
 
             $verification = EmailOtp::where('user_id', $user->id)
-            ->where('verification_code', $request->input('otp'))
-            ->where('expires_at', '>', Carbon::now())
-            ->first();
+                ->where('verification_code', $request->input('otp'))
+                ->where('expires_at', '>', Carbon::now())
+                ->first();
 
 
             if ($verification) {
@@ -150,7 +170,8 @@ class RegisterController extends Controller {
      * @return \Illuminate\Http\JsonResponse
      */
 
-    public function otpResend(Request $request) {
+    public function otpResend(Request $request)
+    {
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',

@@ -9,16 +9,22 @@ use Illuminate\Http\Request;
 class GetNotificationController extends Controller
 {
     use ApiResponse;
-    
-    public function getNotifications()
+
+    public function getNotifications(Request $request)
     {
         $user = auth()->user();
 
-        if(!$user) {
+        if (!$user) {
             return $this->error([], 'User not found', 200);
         }
 
-        $data = $user->notifications()->select('id','notifiable_id','data', 'read_at', 'created_at')->latest()->get();
+        $query = $user->notifications()->select('id', 'notifiable_id', 'data', 'read_at', 'created_at')->latest();
+
+        if ($request->has('status')) {
+            $query->where('data->status', $request->status); 
+        }
+
+        $data = $query->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'Notifications not found', 200);

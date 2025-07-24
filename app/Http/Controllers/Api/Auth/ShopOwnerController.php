@@ -84,9 +84,26 @@ class ShopOwnerController extends Controller
                 $shopBannerName = null;
             }
 
-            $user                 = new User();
-            $user->first_name     = $request->input('first_name');
-            $user->last_name      = $request->input('last_name');
+            // Find the user by ID
+            $user = new User();
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
+
+            // Generate base username
+            $baseUsername = strtolower(preg_replace('/[^a-z0-9_]/', '', str_replace(' ', '', $firstName . $lastName)));
+            $baseUsername = substr($baseUsername, 0, 20);
+
+            // Ensure username is unique
+            $username = $baseUsername;
+            $counter = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = substr($baseUsername, 0, 20 - strlen((string) $counter)) . $counter;
+                $counter++;
+            }
+
+            $user->first_name = $firstName;
+            $user->last_name = $lastName;
+            $user->username = $username;
             $user->email          = $request->input('email');
             $user->phone = $request->input('phone');
             $user->company_name = $request->input('company_name');

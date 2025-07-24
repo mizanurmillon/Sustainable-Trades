@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\TutorialsController;
 use App\Http\Controllers\Web\Backend\SubCategoryController;
+use App\Http\Controllers\Web\Backend\SubscriptionPlanController;
 use App\Http\Controllers\Web\Backend\SpotlightApplicationController;
 
 
@@ -80,4 +81,12 @@ Route::controller(SpotlightApplicationController::class)->group(function () {
 Route::controller(ShopController::class)->group(function () {
     Route::get('/shops', 'index')->name('admin.shops.index');
     Route::post('/shops/{id}/featured', 'featured')->name('admin.shops.featured');
+});
+
+
+//subscription plan routes
+Route::controller(SubscriptionPlanController::class)->group(function () {
+    Route::get('/subscription-plans', 'index')->name('admin.subscription.index');
+    Route::get('/subscription-plans/create', 'create')->name('admin.subscription.create');
+    Route::post('/subscription-plans/store', 'store')->name('admin.subscription.store');
 });

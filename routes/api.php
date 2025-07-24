@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\SocialLinkController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserSettingController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -99,6 +100,11 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::post('/password/change', 'passwordChange');
         Route::post('/logout', 'logoutUser');
         Route::delete('/delete', 'deleteUser');
+    });
+
+    Route::controller(UserSettingController::class)->group(function () {
+        Route::post('/push-notification/setting', 'pushNotificationSetting');
+        Route::post('/cookies-setting', 'cookiesSetting');
     });
 
     Route::controller(GetNotificationController::class)->prefix('notifications')->group(function () {

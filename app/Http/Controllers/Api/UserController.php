@@ -41,7 +41,9 @@ class UserController extends Controller {
 
         $validator = Validator::make($request->all(), [
             'avatar'  => 'nullable|image|mimes:jpeg,png,jpg,svg|max:5120',
-            'name'    => 'required|string|max:255',
+            'first_name'    => 'required|string|max:255',
+            'last_name'=> 'nullable|string|max:255',
+            'username' => 'nullable|string|max:255|unique:users,username,' . auth()->id(),
         ]);
 
         if ($validator->fails()) {
@@ -72,7 +74,9 @@ class UserController extends Controller {
                 $imageName = $user->avatar;
             }
 
-            $user->name    = $request->name;
+            $user->first_name    = $request->first_name;
+            $user->last_name     = $request->last_name;
+            $user->username      = $request->username;
             $user->avatar  = $imageName;
 
             $user->save();
