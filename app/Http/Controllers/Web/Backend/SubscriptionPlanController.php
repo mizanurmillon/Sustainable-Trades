@@ -2,16 +2,56 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
-use Illuminate\Http\Request;
-use App\Models\SubscriptionPlan;
 use App\Http\Controllers\Controller;
+use App\Models\SubscriptionPlan;
 use App\Service\PayPalSubscriptionService;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class SubscriptionPlanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Logic to display subscription plans
+        if ($request->ajax()) {
+
+            $data = SubscriptionPlan::latest()->get();
+            if (!empty($request->input('search.value'))) {
+                $searchTerm = $request->input('search.value');
+                $data->where('name', 'LIKE', "%$searchTerm%");
+            }
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('description', function ($data) {
+                    $description       = $data->description;
+                    $short_description = strlen($description) > 60 ? substr($description, 0, 60) . '...' : $description;
+                    return '<p>' . $short_description . '</p>';
+                })
+                ->addColumn('price', function ($data) {
+                    return '$' . number_format($data->price, 2);
+                })
+                // ->addColumn('status', function ($data) {
+                //     $status = ' <div class="form-check form-switch">';
+                //     $status .= ' <input onclick="showStatusChangeAlert(' . $data->id . ')" type="checkbox" class="form-check-input" id="customSwitch' . $data->id . '" getAreaid="' . $data->id . '" name="status"';
+                //     if ($data->status == "active") {
+                //         $status .= "checked";
+                //     }
+                //     $status .= '><label for="customSwitch' . $data->id . '" class="form-check-label" for="customSwitch"></label></div>';
+
+                //     return $status;
+                // })
+                ->addColumn('action', function ($data) {
+                    return '<div class="text-center"><div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                              <a href="' . route('admin.faqs.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
+                              <i class="bi bi-pencil"></i>
+                              </a>
+                              <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" type="button" class="text-white btn btn-danger" title="Delete">
+                              <i class="bi bi-trash"></i>
+                            </a>
+                            </div></div>';
+                })
+                ->rawColumns(['description', 'action','price'])
+                ->make(true);
+        }
         return view('backend.layouts.subscription.index');
     }
 
@@ -58,6 +98,4 @@ class SubscriptionPlanController extends Controller
             return redirect()->back()->with('t-error', 'Failed to create subscription plan: ' . $e->getMessage());
         }
     }
-
-    
 }
