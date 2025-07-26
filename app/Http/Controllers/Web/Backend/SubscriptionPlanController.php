@@ -58,4 +58,6 @@ class SubscriptionPlanController extends Controller
             return redirect()->back()->with('t-error', 'Failed to create subscription plan: ' . $e->getMessage());
         }
     }
+
+    
 }

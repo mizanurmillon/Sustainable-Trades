@@ -48,10 +48,6 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/paypal/onboard/success', 'onboardSuccess')->name('paypal.success');
         });
 
-        Route::controller(SpotlightApplicationController::class)->group(function () {
-            Route::post('/spotlight-applications', 'store');
-        });
-
         Route::controller(TradeOfferController::class)->group(function () {
             Route::post('/trade-offer/create', 'store');
             route::get('/trade-offers', 'getTradeOffers');
@@ -61,6 +57,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::post('/send-trade-counter-offer/{id}', 'sendTradeCounterOffer');
         });
     });
+    
+    Route::controller(SpotlightApplicationController::class)->group(function () {
+        Route::post('/spotlight-applications', 'store');
+    });
 });
-
-

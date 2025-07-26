@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 class PayPalSubscriptionService
@@ -97,4 +98,6 @@ class PayPalSubscriptionService
 
         return $response->json();
     }
+
+    
 }
