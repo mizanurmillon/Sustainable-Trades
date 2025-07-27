@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\Api\Auth\OnboardingController;
-use App\Http\Controllers\Api\Product\ImportExportController;
-use App\Http\Controllers\Api\TradeOfferController;
-use App\Http\Controllers\Api\Vendor\DiscountController;
-use App\Http\Controllers\Api\Vendor\ProductController;
-use App\Http\Controllers\Api\Vendor\ShippingController;
-use App\Http\Controllers\Api\Vendor\ShopTaxController;
-use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\MembershipController;
+use App\Http\Controllers\Api\TradeOfferController;
+use App\Http\Controllers\Api\Vendor\ProductController;
+use App\Http\Controllers\Api\Vendor\ShopTaxController;
+use App\Http\Controllers\Api\Auth\OnboardingController;
+use App\Http\Controllers\Api\Vendor\DiscountController;
+use App\Http\Controllers\Api\Vendor\ShippingController;
+use App\Http\Controllers\Api\Product\ImportExportController;
+use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
 
 
 Route::group(['middleware' => ['jwt.verify']], function () {
@@ -45,7 +46,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
         Route::controller(OnboardingController::class)->group(function () {
             Route::get('/paypal/onboard', 'onboard');
-            Route::get('/paypal/onboard/success', 'onboardSuccess')->name('paypal.success');
+           
         });
 
         Route::controller(TradeOfferController::class)->group(function () {
@@ -61,4 +62,17 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::controller(SpotlightApplicationController::class)->group(function () {
         Route::post('/spotlight-applications', 'store');
     });
+
+    route::controller(MembershipController::class)->group(function () {
+        Route::post('/membership/{id}', 'Membership');
+        Route::post('/membership/upgrade', 'upgradeMembership');
+        Route::post('/membership/cancel', 'cancelMembership');
+    });
+});
+
+Route::get('/paypal/onboard/success', [OnboardingController::class,'onboardSuccess'])->name('paypal.success');
+
+Route::controller(MembershipController::class)->group(function () {
+    Route::get('/membership-success', 'success')->name('payments.paypal.success');
+    Route::get('/membership-cancel', 'cancel')->name('payments.cancel');
 });

@@ -73,6 +73,22 @@
                                 @enderror
                             </div>
                             <div class="mt-4 mb-4">
+                                <label for="type" class="form-label">Type</label>
+                                <select name="type" id="type"
+                                    class="form-select @error('type') is-invalid @enderror">
+                                    <option value="">Select Type</option>
+                                    <option value="basic" {{ old('type') == 'basic' ? 'selected' : '' }}>Basic
+                                    </option>
+                                    <option value="pro" {{ old('type') == 'pro' ? 'selected' : '' }}>Pro
+                                    </option>
+                                </select>
+                                @error('interval')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                            <div class="mt-4 mb-4">
                                 <label for="interval" class="form-label">Plan Interval</label>
                                 <select name="interval" id="interval"
                                     class="form-select @error('interval') is-invalid @enderror">

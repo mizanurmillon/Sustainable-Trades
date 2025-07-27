@@ -70,6 +70,7 @@ class SubscriptionPlanController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'interval' => 'required|in:Month,Year',
+            'type' => 'required|in:basic,pro',
         ]);
 
         // dd($request->all());
@@ -89,6 +90,7 @@ class SubscriptionPlanController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'interval' => $request->interval,
+                'type'=> $request->type,
                 'paypal_plan_id' => $plan['id'],
                 'product_id' => $product['id'],
             ]);
