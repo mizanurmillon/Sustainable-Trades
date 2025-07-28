@@ -5,44 +5,40 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Membership;
 use App\Models\SubscriptionPlan;
-use App\Traits\ApiResponse;
+use App\Traits\ApiResponse; // Assuming this is your trait for API responses
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Srmklive\PayPal\Services\PayPal;
+use Illuminate\Support\Facades\Log;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class MembershipController extends Controller
 {
     use ApiResponse;
 
-    protected $provider;
+    protected $paypal;
 
     public function __construct()
     {
-        $this->provider = new PayPal();
-        return $this->provider;
-        $this->provider->setApiCredentials(config('services.paypal'));
-        $this->provider->getAccessToken();
+       $this->paypal = new PayPalClient;
+        $this->paypal->setApiCredentials(config('services.paypal'));
     }
 
     public function Membership(Request $request, $id)
     {
-        return "OK";
         $user = auth()->user();
 
         if (!$user) {
             return $this->error([], 'User not found', 200);
         }
 
-        $paypalPlanId = SubscriptionPlan::where('id', $id)->first();
+        $paypalPlan = SubscriptionPlan::where('id', $id)->first();
 
-        if (!$paypalPlanId) {
+        if (!$paypalPlan) {
             return $this->error([], 'Subscription plan not found', 404);
         }
 
-        // Prepare the data for subscription creation
-        // example data
         $data = [
-            'plan_id' => $paypalPlanId->paypal_plan_id,
+            'plan_id' => $paypalPlan->paypal_plan_id,
             'quantity' => '1',
             'shipping_amount' => [
                 'currency_code' => 'USD',
@@ -59,11 +55,11 @@ class MembershipController extends Controller
                         'full_name' => $user->id . '-' . $user->first_name . ' ' . $user->last_name,
                     ],
                     'address' => $user->address ? [
-                        'address_line_1' => $user->address ?: '',
-                        'admin_area_2' => $user->city ?: '',
-                        'admin_area_1' => $user->state ?: '',
-                        'postal_code' => $user->zip ?: '',
-                        'country_code' => $user->country ? $user->country : 'US',
+                        'address_line_1' => $user->address ?? '',
+                        'admin_area_2' => $user->city ?? '',
+                        'admin_area_1' => $user->state ?? '',
+                        'postal_code' => $user->zip ?? '',
+                        'country_code' => $user->country ?? 'US',
                     ] : [],
                 ],
             ],
@@ -81,7 +77,7 @@ class MembershipController extends Controller
             ],
         ];
 
-        // // Include additional data for subscription with a coupon
+        // Include additional data for subscription with a coupon
         if ($user->id != 0) {
             $data['plan'] = [
                 'billing_cycles' => [
@@ -90,7 +86,7 @@ class MembershipController extends Controller
                         'total_cycles' => 1,
                         'pricing_scheme' => [
                             'fixed_price' => [
-                                'value' => $paypalPlanId->price, // discounted amount
+                                'value' => $paypalPlan->price,
                                 'currency_code' => 'USD',
                             ],
                         ],
@@ -99,25 +95,23 @@ class MembershipController extends Controller
             ];
         }
 
-        // Send the request to create the subscription
-        $response = $this->provider->createSubscription($data);
+        try {
+            $response = $this->provider->createSubscription($data);
+            Log::info('PayPal Subscription Response: ', $response); // Debug response
 
-        if (isset($response['id']) && $response['id'] != null) {
-            // Redirect to PayPal approval URL
-            foreach ($response['links'] as $link) {
-                if ($link['rel'] == 'approve') {
-                    return redirect()->away($link['href']);
+            if (isset($response['id']) && $response['id'] != null) {
+                foreach ($response['links'] as $link) {
+                    if ($link['rel'] == 'approve') {
+                        return redirect()->away($link['href']);
+                    }
                 }
+                return $this->error([], 'No approval link found', 200);
             }
 
-            return $this->error([], 'No approval link found', 200);
-        } else {
-            // Handle error response
-            if (isset($response['message'])) {
-                return $this->error([], $response['message'], 200);
-            } else {
-                return $this->error([], 'An error occurred while creating the subscription', 200);
-            }
+            return $this->error([], $response['message'] ?? 'An error occurred while creating the subscription', 200);
+        } catch (\Exception $e) {
+            Log::error('PayPal Subscription Error: ', ['error' => $e->getMessage()]);
+            return $this->error([], 'Failed to create subscription: ' . $e->getMessage(), 500);
         }
     }
 
@@ -125,20 +119,35 @@ class MembershipController extends Controller
     {
         $subscription_id = $request->get('subscription_id');
 
-        $details = $this->provider->showSubscriptionDetails($subscription_id);
+        if (!$subscription_id) {
+            return $this->error([], 'Subscription ID not provided', 400);
+        }
 
-        // Save subscription to DB
-        $data = Membership::create([
-            'order_id' => rand(100000, 999999),
-            'user_id' => auth()->user()->id,
-            'plan_id' => $details['plan_id'],
-            'membership_type' => $details['membership_type'],
-            'type' => $details['type'],
-            'price' => $details['price'],
-            'start_at' => Carbon::now(),
-            'end_at' => Carbon::parse($details['billing_info']['next_billing_time'])->toDateTimeString(),
-        ]);
+        try {
+            $details = $this->provider->showSubscriptionDetails($subscription_id);
+            Log::info('PayPal Subscription Details: ', $details); // Debug response
 
-        return $this->success($data, 'Subscription created successfully', 200);
+            $plan = SubscriptionPlan::where('paypal_plan_id', $details['plan_id'])->first();
+
+            if (!$plan) {
+                return $this->error([], 'Plan not found', 404);
+            }
+
+            $data = Membership::create([
+                'order_id' => rand(100000, 999999),
+                'user_id' => auth()->user()->id,
+                'plan_id' => $plan->id,
+                'membership_type' => $plan->membership_type ?? 'default',
+                'type' => $details['status'] ?? 'active',
+                'price' => $plan->price,
+                'start_at' => Carbon::now(),
+                'end_at' => Carbon::parse($details['billing_info']['next_billing_time'] ?? now()->addMonth())->toDateTimeString(),
+            ]);
+
+            return $this->success($data, 'Subscription created successfully', 200);
+        } catch (\Exception $e) {
+            Log::error('PayPal Success Error: ', ['error' => $e->getMessage()]);
+            return $this->error([], 'Failed to process subscription: ' . $e->getMessage(), 500);
+        }
     }
 }
