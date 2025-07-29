@@ -16,8 +16,8 @@ class OnboardingController extends Controller
     use ApiResponse;
     public function onboard()
     {
-        $clientId = config('services.paypal.client_id');
-        $clientSecret = config('services.paypal.client_secret');
+        $clientId = config('services.paypal.sandbox.client_id');
+        $clientSecret = config('services.paypal.sandbox.client_secret');
 
         // Get Access Token
         $accessToken = Http::withBasicAuth($clientId, $clientSecret)

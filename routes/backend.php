@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\Backend\ShopController;
 use App\Http\Controllers\Web\Backend\ListingController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\DashboardController;
+use App\Http\Controllers\Web\Backend\OurMissoinController;
 use App\Http\Controllers\Web\Backend\TutorialsController;
 use App\Http\Controllers\Web\Backend\SubCategoryController;
 use App\Http\Controllers\Web\Backend\SubscriptionPlanController;
@@ -89,4 +90,15 @@ Route::controller(SubscriptionPlanController::class)->group(function () {
     Route::get('/subscription-plans', 'index')->name('admin.subscription.index');
     Route::get('/subscription-plans/create', 'create')->name('admin.subscription.create');
     Route::post('/subscription-plans/store', 'store')->name('admin.subscription.store');
+});
+
+//Our mission route
+Route::controller(OurMissoinController::class)->group(function () {
+    Route::get('/our-mission', 'index')->name('admin.our_missions.index');
+    Route::get('/our-mission/create', 'create')->name('admin.our_missions.create');
+    Route::post('/our-mission/store', 'store')->name('admin.our_missions.store');
+    Route::get('/our-mission/edit/{id}', 'edit')->name('admin.our_missions.edit');
+    Route::post('/our-mission/update/{id}', 'update')->name('admin.our_missions.update'); 
+    Route::delete('/our-mission/destroy/{id}', 'destroy')->name('admin.our_missions.destroy');
+    Route::post('/our-mission/status/{id}', 'status')->name('admin.our_missions.status');
 });

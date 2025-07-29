@@ -27,7 +27,18 @@ class PayPalSubscriptionService
                 'grant_type' => 'client_credentials',
             ]);
 
-        return $response->json()['access_token'];
+        $json = $response->json();
+
+        if (!isset($json['access_token'])) {
+            logger()->error('PayPal Access Token Error', [
+                'status' => $response->status(),
+                'body' => $json,
+            ]);
+
+            throw new \Exception('Failed to get access token from PayPal. Response: ' . json_encode($json));
+        }
+
+        return $json['access_token'];
     }
 
     public function createProduct($name, $description)
@@ -98,6 +109,4 @@ class PayPalSubscriptionService
 
         return $response->json();
     }
-
-    
 }

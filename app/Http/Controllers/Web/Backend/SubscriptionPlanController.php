@@ -90,7 +90,7 @@ class SubscriptionPlanController extends Controller
                 'description' => $request->description,
                 'price' => $request->price,
                 'interval' => $request->interval,
-                'type'=> $request->type,
+                'membership_type'=> $request->type,
                 'paypal_plan_id' => $plan['id'],
                 'product_id' => $product['id'],
             ]);

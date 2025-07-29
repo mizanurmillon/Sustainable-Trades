@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\FollowShopController;
 use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\MyFavoriteController;
 use App\Http\Controllers\Api\NewsletterController;
+use App\Http\Controllers\Api\OurMissionController;
 use App\Http\Controllers\Api\Product\ProductController;
 use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\SitesettingController;
@@ -157,4 +158,8 @@ Route::group(['middleware' => ['guest']], function () {
 
 Route::controller(NewsletterController::class)->group(function () {
     Route::post('/newsletter/subscribe', 'subscribe');
+});
+
+Route::controller(OurMissionController::class)->group(function () {
+    Route::get('/our-mission', 'ourMission');
 });

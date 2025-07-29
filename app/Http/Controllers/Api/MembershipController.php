@@ -19,7 +19,7 @@ class MembershipController extends Controller
 
     public function __construct()
     {
-       $this->paypal = new PayPalClient;
+        $this->paypal = new PayPalClient;
         $this->paypal->setApiCredentials(config('services.paypal'));
     }
 
