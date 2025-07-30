@@ -52,6 +52,10 @@ class PayPalSubscriptionService
             'category' => 'SOFTWARE',
         ]);
 
+        if (!$response->successful()) {
+            throw new \Exception("PayPal Product Creation Failed: " . $response->body());
+        }
+
         return $response->json();
     }
 
@@ -65,7 +69,7 @@ class PayPalSubscriptionService
             'description' => $description,
             'billing_cycles' => [[
                 'frequency' => [
-                    'interval_unit' => $interval,
+                    'interval_unit' => strtoupper($interval), // make sure it's 'MONTH' or 'YEAR'
                     'interval_count' => 1
                 ],
                 'tenure_type' => 'REGULAR',
@@ -89,8 +93,13 @@ class PayPalSubscriptionService
             ]
         ]);
 
+        if (!$response->successful()) {
+            throw new \Exception("PayPal Plan Creation Failed: " . $response->body());
+        }
+
         return $response->json();
     }
+
 
     public function createSubscription($planId)
     {
@@ -102,8 +111,8 @@ class PayPalSubscriptionService
                 'brand_name' => 'Sustainable Trades',
                 'locale' => 'en-US',
                 'user_action' => 'SUBSCRIBE_NOW',
-                'return_url' => route('paypal.subscription.success'),
-                'cancel_url' => route('paypal.subscription.cancel'),
+                // 'return_url' => route('paypal.subscription.success'),
+                // 'cancel_url' => route('paypal.subscription.cancel'),
             ]
         ]);
 

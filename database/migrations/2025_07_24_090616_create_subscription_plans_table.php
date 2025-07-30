@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('paypal_plan_id')->nullable(); 
             $table->string('product_id')->nullable(); 
             $table->decimal('price', 8, 2);
-            $table->enum('interval',['Month','Year'])->default('Month');
+            $table->enum('interval',['monthly','yearly'])->default('monthly');
             $table->integer('interval_count')->default(1);
             $table->timestamps();
         });

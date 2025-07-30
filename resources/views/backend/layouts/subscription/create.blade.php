@@ -93,9 +93,9 @@
                                 <select name="interval" id="interval"
                                     class="form-select @error('interval') is-invalid @enderror">
                                     <option value="">Select Interval</option>
-                                    <option value="Month" {{ old('interval') == 'Month' ? 'selected' : '' }}>Monthly
+                                    <option value="monthly" {{ old('interval') == 'monthly' ? 'selected' : '' }}>Monthly
                                     </option>
-                                    <option value="Year" {{ old('interval') == 'Year' ? 'selected' : '' }}>Yearly
+                                    <option value="yearly" {{ old('interval') == 'yearly' ? 'selected' : '' }}>Yearly
                                     </option>
                                 </select>
                                 @error('interval')

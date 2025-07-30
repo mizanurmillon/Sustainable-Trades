@@ -45,7 +45,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         });
 
         Route::controller(OnboardingController::class)->group(function () {
-            Route::get('/paypal/onboard', 'onboard');
+            Route::post('/paypal/onboard', 'onboard');
            
         });
 

@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 
-
-
 class OnboardingController extends Controller
 {
     use ApiResponse;
@@ -19,12 +17,13 @@ class OnboardingController extends Controller
         $clientId = config('services.paypal.sandbox.client_id');
         $clientSecret = config('services.paypal.sandbox.client_secret');
 
-        // Get Access Token
+
         $accessToken = Http::withBasicAuth($clientId, $clientSecret)
             ->asForm()
             ->post('https://api-m.sandbox.paypal.com/v1/oauth2/token', [
-                'grant_type' => 'client_credentials'
-            ])->json()['access_token'];
+                'grant_type' => 'client_credentials',
+            ]);
+
 
         // dd($accessToken);
 
@@ -61,10 +60,19 @@ class OnboardingController extends Controller
             ]]
         ];
 
+        // dd($payload);
+
+        $accessToken = $accessToken['access_token'];
+
         $response = Http::withToken($accessToken)
-            ->post('https://api-m.sandbox.paypal.com/v1/customer/partner-referrals', $payload);
+            ->withHeaders([
+                'Content-Type' => 'application/json'
+            ])
+            ->post('https://api-m.sandbox.paypal.com/v2/customer/partner-referrals', $payload);
 
         // dd($response);
+
+        return $response;
 
         if (!$response->successful()) {
             Log::error('PayPal Partner Referral Error', $response->json());
@@ -84,8 +92,8 @@ class OnboardingController extends Controller
             return $this->error([], 'Tracking ID not found', 400);
         }
 
-        $clientId = config('services.paypal.client_id');
-        $clientSecret = config('services.paypal.client_secret');
+        $clientId = config('services.paypal.sandbox.client_id');
+        $clientSecret = config('services.paypal.sandbox.client_secret');
 
         // Get access token again
         $accessToken = Http::withBasicAuth($clientId, $clientSecret)

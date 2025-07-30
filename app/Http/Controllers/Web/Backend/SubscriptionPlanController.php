@@ -66,10 +66,10 @@ class SubscriptionPlanController extends Controller
         // dd($request->all());
         // Logic to store a new subscription plan
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:subscription_plans',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'interval' => 'required|in:Month,Year',
+            'interval' => 'required|in:yearly,monthly',
             'type' => 'required|in:basic,pro',
         ]);
 
@@ -81,8 +81,10 @@ class SubscriptionPlanController extends Controller
             // 1. Create product
             $product = $paypal->createProduct($request->name, $request->description);
 
+             $interval = $request->interval === 'monthly' ? 'MONTH' : 'YEAR';
+
             // 2. Create plan
-            $plan = $paypal->createPlan($product['id'], $request->name, $request->description, $request->price, $request->interval);
+            $plan = $paypal->createPlan($product['id'], $request->name, $request->description, $request->price, $interval);
 
             // 3. Store locally
             SubscriptionPlan::create([
