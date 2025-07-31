@@ -4,9 +4,9 @@
     data-kt-drawer-toggle="#kt_aside_toggle">
 
     <!--begin::Brand-->
-    <div class="px-10 pb-5 aside-logo flex-column-auto pt-9" id="kt_aside_logo">
+    <div class="px-10 aside-logo flex-column-auto pt-9 bg-primary" style="padding-bottom: 1.2rem" id="kt_aside_logo">
         <!--begin::Logo-->
-        <a href="{{ route('admin.dashboard') }}" style="background:#274F45; border-radius: 10px; padding: 5px;">
+        <a href="{{ route('admin.dashboard') }}">
             <img alt="Logo" src="{{ asset($systemSetting->logo ?? 'backend/media/logos/logo-default.svg') }}"
                 class="max-h-50px logo-default theme-light-show" />
             <img alt="Logo" src="{{ asset($systemSetting->logo ?? 'backend/media/logos/logo-default.svg') }}"
@@ -164,10 +164,9 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="menu-item">
-                    <a class="menu-link {{ request()->routeIs('admin.subscription.*') ? 'active' : '' }}"
-                        href="{{ route('admin.subscription.index') }}">
+                <div data-kt-menu-trigger="click"
+                    class="menu-item {{ request()->routeIs(['admin.pro_members.*', 'admin.basic_members.*', 'admin.sustainable_shoppers.*']) ? 'active show' : '' }} menu-accordion">
+                    <span class="menu-link">
                         <span class="menu-icon">
 
                             <svg width="32" height="32" viewBox="0 0 25 24" fill="none"
@@ -176,6 +175,61 @@
                                     d="M21.3701 17.25L18.6601 12.57C19.2146 11.5515 19.5035 10.4097 19.5001 9.25C19.5001 7.39348 18.7626 5.61301 17.4498 4.30025C16.1371 2.9875 14.3566 2.25 12.5001 2.25C10.6436 2.25 8.86308 2.9875 7.55033 4.30025C6.23757 5.61301 5.50007 7.39348 5.50007 9.25C5.49663 10.4097 5.78553 11.5515 6.34007 12.57L3.63007 17.25C3.54213 17.4023 3.49592 17.5751 3.49609 17.751C3.49627 17.9269 3.54282 18.0996 3.63106 18.2517C3.7193 18.4039 3.84611 18.53 3.99868 18.6175C4.15125 18.705 4.3242 18.7507 4.50007 18.75H7.37007L8.83007 21.21C8.87929 21.2915 8.9399 21.3656 9.01007 21.43C9.19545 21.6087 9.4426 21.709 9.70007 21.71H9.84007C9.99104 21.6893 10.1353 21.6345 10.2618 21.5495C10.3883 21.4646 10.4938 21.3519 10.5701 21.22L12.5001 17.9L14.4301 21.25C14.5075 21.38 14.6134 21.4908 14.7399 21.5739C14.8663 21.6571 15.01 21.7104 15.1601 21.73H15.3001C15.561 21.7316 15.8122 21.6311 16.0001 21.45C16.0673 21.3893 16.1247 21.3184 16.1701 21.24L17.6301 18.78H20.5001C20.6763 18.7807 20.8495 18.7348 21.0023 18.647C21.1551 18.5592 21.282 18.4326 21.3701 18.28C21.4635 18.1245 21.5129 17.9464 21.5129 17.765C21.5129 17.5836 21.4635 17.4055 21.3701 17.25ZM9.69007 18.78L8.80007 17.29C8.71244 17.1422 8.58818 17.0194 8.4393 16.9336C8.29041 16.8478 8.12192 16.8018 7.95007 16.8H6.22007L7.65007 14.32C8.6348 15.2689 9.87589 15.9085 11.2201 16.16L9.69007 18.78ZM12.5001 14.25C11.5112 14.25 10.5445 13.9568 9.72222 13.4073C8.89998 12.8579 8.25911 12.077 7.88068 11.1634C7.50224 10.2498 7.40322 9.24445 7.59615 8.27455C7.78907 7.30464 8.26528 6.41373 8.96454 5.71447C9.6638 5.0152 10.5547 4.539 11.5246 4.34607C12.4945 4.15315 13.4999 4.25216 14.4135 4.6306C15.3271 5.00904 16.108 5.6499 16.6574 6.47215C17.2068 7.29439 17.5001 8.26109 17.5001 9.25C17.5001 10.5761 16.9733 11.8479 16.0356 12.7855C15.0979 13.7232 13.8262 14.25 12.5001 14.25ZM17.0501 16.8C16.8782 16.8018 16.7097 16.8478 16.5609 16.9336C16.412 17.0194 16.2877 17.1422 16.2001 17.29L15.3101 18.78L13.7901 16.13C15.1296 15.8734 16.366 15.2343 17.3501 14.29L18.7801 16.77L17.0501 16.8Z"
                                     fill="#274F45" />
                             </svg>
+
+                        </span>
+                        <span class="menu-title">Members</span>
+                        <span class="menu-arrow"></span>
+                    </span>
+                    <div class="menu-sub menu-sub-accordion">
+                        <div class="menu-item">
+                            <a href="{{ route('admin.pro_members.index') }}"
+                                class="menu-link {{ request()->routeIs('admin.pro_members.*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Pro Members</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="menu-sub menu-sub-accordion">
+                        <div class="menu-item">
+                            <a href="{{ route('admin.basic_members.index') }}"
+                                class="menu-link {{ request()->routeIs('admin.basic_members.*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Basic Members</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="menu-sub menu-sub-accordion">
+                        <div class="menu-item">
+                            <a href="{{ route('admin.sustainable_shoppers.index') }}"
+                                class="menu-link {{ request()->routeIs('admin.sustainable_shoppers.*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Sustainable Shoppers</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->routeIs('admin.subscription.*') ? 'active' : '' }}"
+                        href="{{ route('admin.subscription.index') }}">
+                        <span class="menu-icon">
+
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 9a10 10 0 1 0 20 0" />
+                                <path d="M12 19a10 10 0 0 1 10 -10" />
+                                <path d="M2 9a10 10 0 0 1 10 10" />
+                                <path d="M12 4a9.7 9.7 0 0 1 2.99 7.5" />
+                                <path d="M9.01 11.5a9.7 9.7 0 0 1 2.99 -7.5" />
+                            </svg>
+
 
                         </span>
                         <span class="menu-title">Subscription Plans</span>

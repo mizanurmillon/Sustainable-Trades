@@ -1,4 +1,4 @@
-<div id="kt_header" class="header " data-kt-sticky="true" data-kt-sticky-name="header"
+<div id="kt_header" class="header bg-primary" data-kt-sticky="true" data-kt-sticky-name="header"
     data-kt-sticky-offset="{default: '200px', lg: '300px'}">
 
     <div class=" container-fluid  d-flex align-items-stretch justify-content-between">
@@ -13,7 +13,7 @@
                 <img alt="Logo" src="{{ asset($systemSetting->logo ?? 'backend/media/logos/logo-default.svg') }}"
                     class="mh-40px" />
             </a>
-            <div class="btn btn-icon w-auto ps-0 btn-active-color-primary d-none d-lg-inline-flex me-2 me-lg-5 "
+            <div class="btn btn-icon w-auto ps-0 btn-active-color-white d-none d-lg-inline-flex me-2 me-lg-5 "
                 data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body"
                 data-kt-toggle-name="aside-minimize">
 

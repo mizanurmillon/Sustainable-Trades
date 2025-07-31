@@ -6,10 +6,13 @@ use App\Http\Controllers\Web\Backend\ShopController;
 use App\Http\Controllers\Web\Backend\ListingController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\DashboardController;
-use App\Http\Controllers\Web\Backend\OurMissoinController;
 use App\Http\Controllers\Web\Backend\TutorialsController;
+use App\Http\Controllers\Web\Backend\OurMissoinController;
+use App\Http\Controllers\Web\Backend\ProMembersController;
 use App\Http\Controllers\Web\Backend\SubCategoryController;
+use App\Http\Controllers\Web\Backend\BasicMembersController;
 use App\Http\Controllers\Web\Backend\SubscriptionPlanController;
+use App\Http\Controllers\Web\Backend\SustainableShoppersController;
 use App\Http\Controllers\Web\Backend\SpotlightApplicationController;
 
 
@@ -66,13 +69,12 @@ Route::controller(ListingController::class)->group(function () {
     Route::get('/listings/{id}', 'show')->name('admin.product.show');
     Route::post('/admin/products/{id}/approve', 'approve')->name('admin.product.approve');
     Route::post('/admin/products/{id}/reject', 'reject')->name('admin.product.reject');
-
 });
 
 //Route for the members spotlight
 Route::controller(SpotlightApplicationController::class)->group(function () {
-    Route::get('/member-spotlight','index')->name('admin.members_spotlight.index');
-    Route::get('/member-spotlight/{id}','show')->name('admin.members_spotlight.show');
+    Route::get('/member-spotlight', 'index')->name('admin.members_spotlight.index');
+    Route::get('/member-spotlight/{id}', 'show')->name('admin.members_spotlight.show');
     Route::post('/admin/application/{id}/approve', 'approve')->name('admin.application.approve');
     Route::post('/admin/application/{id}/pending', 'pending')->name('admin.application.pending');
     Route::delete('/admin/application/{id}', 'destroy')->name('admin.application.destroy');
@@ -98,7 +100,24 @@ Route::controller(OurMissoinController::class)->group(function () {
     Route::get('/our-mission/create', 'create')->name('admin.our_missions.create');
     Route::post('/our-mission/store', 'store')->name('admin.our_missions.store');
     Route::get('/our-mission/edit/{id}', 'edit')->name('admin.our_missions.edit');
-    Route::post('/our-mission/update/{id}', 'update')->name('admin.our_missions.update'); 
+    Route::post('/our-mission/update/{id}', 'update')->name('admin.our_missions.update');
     Route::delete('/our-mission/destroy/{id}', 'destroy')->name('admin.our_missions.destroy');
     Route::post('/our-mission/status/{id}', 'status')->name('admin.our_missions.status');
+});
+
+//Pro Members route
+Route::controller(ProMembersController::class)->group(function () {
+    Route::get('/pro-members', 'index')->name('admin.pro_members.index');
+});
+
+//Basic_members route
+Route::controller(BasicMembersController::class)->group(function () {
+    Route::get('/basic-members', 'index')->name('admin.basic_members.index');
+});
+
+//sustainable_shoppers route
+Route::controller(SustainableShoppersController::class)->group(function () {
+    Route::get('/sustainable-shoppers', 'index')->name('admin.sustainable_shoppers.index');
+    Route::post('/sustainable-shoppers/status/{id}', 'status')->name('admin.sustainable_shoppers.status');
+    Route::delete('/sustainable-shoppers/destroy/{id}', 'destroy')->name('admin.sustainable_shoppers.destroy');
 });

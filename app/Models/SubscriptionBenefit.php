@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SubscriptionPlan extends Model
+class SubscriptionBenefit extends Model
 {
     protected $guarded = [];
 
@@ -15,11 +15,11 @@ class SubscriptionPlan extends Model
 
     protected $casts = [
         'id' => 'integer',
+        'subscription_plan_id' => 'integer',
     ];
 
-    public function subscription_benefit()
+    public function subscription_plan()
     {
-        return $this->hasMany(SubscriptionBenefit::class);
+        return $this->belongsTo(SubscriptionPlan::class,'subscription_plan_id');
     }
-
 }

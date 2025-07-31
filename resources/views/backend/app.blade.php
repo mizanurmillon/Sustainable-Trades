@@ -21,7 +21,7 @@
             <!--end::Aside-->
 
             <!--begin::Wrapper-->
-            <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
+            <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper" style="padding-right: 0px;">
                 <!--begin::Header-->
                 @include('backend.partials.header')
                 <!--end::Header-->

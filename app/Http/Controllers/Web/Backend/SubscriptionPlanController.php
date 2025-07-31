@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
-use App\Http\Controllers\Controller;
-use App\Models\SubscriptionPlan;
-use App\Service\PayPalSubscriptionService;
 use Illuminate\Http\Request;
+use App\Models\SubscriptionPlan;
+use Illuminate\Support\Facades\DB;
+use App\Models\SubscriptionBenefit;
+use App\Http\Controllers\Controller;
 use Yajra\DataTables\Facades\DataTables;
+use App\Service\PayPalSubscriptionService;
 
 class SubscriptionPlanController extends Controller
 {
@@ -71,11 +73,14 @@ class SubscriptionPlanController extends Controller
             'price' => 'required|numeric|min:0',
             'interval' => 'required|in:yearly,monthly',
             'type' => 'required|in:basic,pro',
+            'subscription.*.benefit_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         // dd($request->all());
 
         try {
+            DB::beginTransaction();
+            
             $paypal = new PayPalSubscriptionService();
 
             // 1. Create product
@@ -87,7 +92,7 @@ class SubscriptionPlanController extends Controller
             $plan = $paypal->createPlan($product['id'], $request->name, $request->description, $request->price, $interval);
 
             // 3. Store locally
-            SubscriptionPlan::create([
+           $plan = SubscriptionPlan::create([
                 'name' => $request->name,
                 'description' => $request->description,
                 'price' => $request->price,
@@ -97,8 +102,27 @@ class SubscriptionPlanController extends Controller
                 'product_id' => $product['id'],
             ]);
 
+            if ($request->subscription) {
+                foreach ($request->subscription as $featureData) {
+                    if ($featureData['benefit_icon']) {
+                        $feature_image    = $featureData['benefit_icon'];
+                        $FeatureImageName = uploadImage($feature_image, 'subscription/features');
+                    } else {
+                        $FeatureImageName = null;
+                    }
+                    $benefit = SubscriptionBenefit::create([
+                        'subscription_plan_id'=> $plan['id'],
+                        'benefit_name'       => $featureData['benefit_name'],
+                        'benefit_description' => $featureData['benefit_description'],
+                        'benefit_icon'       => $FeatureImageName,
+                    ]);
+                }
+            }
+
+            DB::commit();
             return redirect()->route('admin.subscription.index')->with('t-success', 'Subscription plan created successfully.');
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()->with('t-error', 'Failed to create subscription plan: ' . $e->getMessage());
         }
     }
