@@ -1,25 +1,26 @@
 <?php
 
-use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\Auth\RegisterController;
-use App\Http\Controllers\Api\Auth\ShopOwnerController;
-use App\Http\Controllers\Api\Cart\CartController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\DynamicPageController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\Cart\CartController;
+use App\Http\Controllers\Api\Shop\ShopController;
+use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\FollowShopController;
-use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\MyFavoriteController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OurMissionController;
-use App\Http\Controllers\Api\Product\ProductController;
-use App\Http\Controllers\Api\Shop\ShopController;
-use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\SocialLinkController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DynamicPageController;
+use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\UserSettingController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\ShopOwnerController;
+use App\Http\Controllers\Api\GetNotificationController;
+use App\Http\Controllers\Api\Product\ProductController;
+use App\Http\Controllers\Api\SubscriptionPlanController;
 
 
 /*
@@ -162,4 +163,8 @@ Route::controller(NewsletterController::class)->group(function () {
 
 Route::controller(OurMissionController::class)->group(function () {
     Route::get('/our-mission', 'ourMission');
+});
+
+Route::controller(SubscriptionPlanController::class)->group(function () {
+    Route::get('/subscriptions', 'subscriptions');
 });
