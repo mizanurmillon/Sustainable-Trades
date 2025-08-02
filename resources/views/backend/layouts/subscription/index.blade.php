@@ -143,50 +143,6 @@
                     });
                 }
             });
-
-            // Status Change Confirm Alert
-            function showStatusChangeAlert(id) {
-                event.preventDefault();
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: 'You want to update the status?',
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        statusChange(id);
-                    }
-                });
-            }
-
-            // Status Change
-            function statusChange(id) {
-                let url = "{{ route('admin.sub_categories.status', ':id') }}";
-                $.ajax({
-                    type: "POST",
-                    url: url.replace(':id', id),
-                    success: function(resp) {
-                        console.log(resp);
-                        // Reloade DataTable
-                        $('#data-table').DataTable().ajax.reload();
-                        if (resp.success === true) {
-                            // show toast message
-                            toastr.success(resp.message);
-                        } else if (resp.errors) {
-                            toastr.error(resp.errors[0]);
-                        } else {
-                            toastr.error(resp.message);
-                        }
-                    },
-                    error: function(error) {
-                        // location.reload();
-                    }
-                });
-            }
-
             // delete Confirm
             function showDeleteConfirm(id) {
                 event.preventDefault();
@@ -207,7 +163,7 @@
 
             // Delete Button
             function deleteItem(id) {
-                let url = "{{ route('admin.sub_categories.destroy', ':id') }}";
+                let url = "{{ route('admin.subscription.destroy', ':id') }}";
                 let csrfToken = '{{ csrf_token() }}';
                 $.ajax({
                     type: "POST",

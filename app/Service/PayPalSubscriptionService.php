@@ -118,4 +118,44 @@ class PayPalSubscriptionService
 
         return $response->json();
     }
+
+    public function updateProduct($productId, $data)
+    {
+        $url = "{$this->baseUrl}/v1/catalogs/products/{$productId}";
+
+        $body = [];
+        foreach ($data as $key => $value) {
+            $body[] = [
+                'op' => 'replace',
+                'path' => "/{$key}",
+                'value' => $value
+            ];
+        }
+
+        try {
+            return $this->makeRequest('PATCH', $url, $body);
+        } catch (\Exception $e) {
+            Log::error('PayPal Product Update Failed', [
+                'product_id' => $productId,
+                'payload' => $body,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    public function makeRequest($method, $url, $body)
+    {
+        $token = $this->getAccessToken(); // Token যোগ করো
+
+        $response = Http::withToken($token)->send($method, $url, [
+            'json' => $body,
+        ]);
+
+        if (!$response->successful()) {
+            throw new \Exception("PayPal API Request Failed: " . $response->body());
+        }
+
+        return $response->json(); // Proper JSON return
+    }
 }

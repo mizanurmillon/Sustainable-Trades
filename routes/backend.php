@@ -92,6 +92,13 @@ Route::controller(SubscriptionPlanController::class)->group(function () {
     Route::get('/subscription-plans', 'index')->name('admin.subscription.index');
     Route::get('/subscription-plans/create', 'create')->name('admin.subscription.create');
     Route::post('/subscription-plans/store', 'store')->name('admin.subscription.store');
+    Route::get('/subscription-plans/edit/{id}', 'edit')->name('admin.subscription.edit');
+    Route::post('/subscription-plans/update/{id}', 'update')->name('admin.subscription.update');
+    Route::post('/subscription-plans/destroy/{id}', 'destroy')->name('admin.subscription.destroy');
+
+    Route::get('/subscription-plans/benefit/delete/{id}', 'deleteBenefit')->name('admin.subscription.benefit.delete');
+    Route::get('/subscription-plans/benefit/edit/{id}', 'editBenefit')->name('admin.subscription.benefit.edit');
+    Route::post('/subscription-plans/benefit/update/{id}', 'updateBenefit')->name('admin.subscription.benefit.update');
 });
 
 //Our mission route

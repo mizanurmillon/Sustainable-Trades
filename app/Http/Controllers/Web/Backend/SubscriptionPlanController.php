@@ -43,7 +43,7 @@ class SubscriptionPlanController extends Controller
                 // })
                 ->addColumn('action', function ($data) {
                     return '<div class="text-center"><div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-                              <a href="' . route('admin.faqs.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
+                              <a href="' . route('admin.subscription.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
                               <i class="bi bi-pencil"></i>
                               </a>
                               <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" type="button" class="text-white btn btn-danger" title="Delete">
@@ -51,7 +51,7 @@ class SubscriptionPlanController extends Controller
                             </a>
                             </div></div>';
                 })
-                ->rawColumns(['description', 'action','price'])
+                ->rawColumns(['description', 'action', 'price'])
                 ->make(true);
         }
         return view('backend.layouts.subscription.index');
@@ -80,41 +80,42 @@ class SubscriptionPlanController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             $paypal = new PayPalSubscriptionService();
 
             // 1. Create product
             $product = $paypal->createProduct($request->name, $request->description);
 
-             $interval = $request->interval === 'monthly' ? 'MONTH' : 'YEAR';
+            $interval = $request->interval === 'monthly' ? 'MONTH' : 'YEAR';
 
             // 2. Create plan
             $plan = $paypal->createPlan($product['id'], $request->name, $request->description, $request->price, $interval);
 
             // 3. Store locally
-           $plan = SubscriptionPlan::create([
+            $plan = SubscriptionPlan::create([
                 'name' => $request->name,
                 'description' => $request->description,
                 'price' => $request->price,
                 'interval' => $request->interval,
-                'membership_type'=> $request->type,
+                'membership_type' => $request->type,
                 'paypal_plan_id' => $plan['id'],
                 'product_id' => $product['id'],
             ]);
 
             if ($request->subscription) {
                 foreach ($request->subscription as $featureData) {
-                    if ($featureData['benefit_icon']) {
+                    if (isset($featureData['benefit_icon']) && $featureData['benefit_icon']) {
                         $feature_image    = $featureData['benefit_icon'];
                         $FeatureImageName = uploadImage($feature_image, 'subscription/features');
                     } else {
                         $FeatureImageName = null;
                     }
-                    $benefit = SubscriptionBenefit::create([
-                        'subscription_plan_id'=> $plan['id'],
-                        'benefit_name'       => $featureData['benefit_name'],
-                        'benefit_description' => $featureData['benefit_description'],
-                        'benefit_icon'       => $FeatureImageName,
+
+                    SubscriptionBenefit::create([
+                        'subscription_plan_id' => $plan['id'],
+                        'benefit_name'         => $featureData['benefit_name'],
+                        'benefit_description'  => $featureData['benefit_description'],
+                        'benefit_icon'         => $FeatureImageName,
                     ]);
                 }
             }
@@ -125,5 +126,145 @@ class SubscriptionPlanController extends Controller
             DB::rollBack();
             return redirect()->back()->with('t-error', 'Failed to create subscription plan: ' . $e->getMessage());
         }
+    }
+
+    public function edit($id)
+    {
+        // Logic to show form for editing a subscription plan
+        $data = SubscriptionPlan::with('subscription_benefit')->findOrFail($id);
+        return view('backend.layouts.subscription.edit', compact('data'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        // Logic to store a new subscription plan
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'interval' => 'required|in:yearly,monthly',
+            'type' => 'required|in:basic,pro',
+            'subscription.*.benefit_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $paypal = new PayPalSubscriptionService();
+            $plan = SubscriptionPlan::findOrFail($id);
+
+            // --- Update PayPal Product ---
+            $paypal->updateProduct($plan->product_id, [
+                'name' => $request->name,
+                'description' => $request->description,
+            ]);
+
+            // --- If price or interval changed, create new PayPal Plan ---
+            if ($request->price != $plan->price || $request->interval != $plan->interval) {
+                $interval = $request->interval === 'monthly' ? 'MONTH' : 'YEAR';
+
+                $newPlan = $paypal->createPlan(
+                    $plan->product_id,
+                    $request->name,
+                    $request->description,
+                    $request->price,
+                    $interval
+                );
+
+                $plan->paypal_plan_id = $newPlan['id'];
+            }
+
+            $plan->name = $request->name;
+            $plan->description = $request->description;
+            $plan->price = $request->price;
+            $plan->interval = $request->interval;
+            $plan->membership_type = $request->type;
+            $plan->save();
+
+            if ($request->subscription) {
+                foreach ($request->subscription as $featureData) {
+                    if (isset($featureData['benefit_icon']) && $featureData['benefit_icon']) {
+                        $feature_image    = $featureData['benefit_icon'];
+                        $FeatureImageName = uploadImage($feature_image, 'subscription/features');
+                    } else {
+                        $FeatureImageName = null;
+                    }
+
+                    SubscriptionBenefit::create([
+                        'subscription_plan_id' => $plan['id'],
+                        'benefit_name'         => $featureData['benefit_name'],
+                        'benefit_description'  => $featureData['benefit_description'],
+                        'benefit_icon'         => $FeatureImageName,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('admin.subscription.index')->with('t-success', 'Subscription plan updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('t-error', 'Failed to update subscription plan: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        // Logic to delete a subscription plan
+        $data = SubscriptionPlan::findOrFail($id);
+
+        $data->delete();
+
+        return response()->json([
+            't-success' => true,
+            'message'   => 'Deleted successfully.',
+        ]);
+    }
+
+    public function deleteBenefit($id)
+    {
+        $benefit = SubscriptionBenefit::findOrFail($id);
+
+        if ($benefit->benefit_icon) {
+            if (file_exists(public_path($benefit->benefit_icon))) {
+                unlink(public_path($benefit->benefit_icon));
+            }
+        }
+
+
+        $benefit->delete();
+        return redirect()->back()->with('t-error', 'Benefit deleted successfully.');
+    }
+
+    public function editBenefit($id)
+    {
+        $data = SubscriptionBenefit::findOrFail($id);
+        return view('backend.layouts.subscription.edit-benefit', compact('data'));
+    }
+
+    public function updateBenefit(Request $request, $id)
+    {
+        $request->validate([
+            'benefit_name' => 'required|string|max:255',
+            'benefit_description' => 'nullable|string',
+            'benefit_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $benefit = SubscriptionBenefit::findOrFail($id);
+        $benefit->benefit_name = $request->benefit_name;
+        $benefit->benefit_description = $request->benefit_description;
+        if ($request->benefit_icon) {
+            if ($benefit->benefit_icon) {
+                if (file_exists(public_path($benefit->benefit_icon))) {
+                    unlink(public_path($benefit->benefit_icon));
+                }
+            }
+            $feature_image    = $request->benefit_icon;
+            $FeatureImageName = uploadImage($feature_image, 'subscription/features');
+            $benefit->benefit_icon = $FeatureImageName;
+        } else {
+            $benefit->benefit_icon = $benefit->benefit_icon;
+        }
+        $benefit->save();
+        return redirect()->route('admin.subscription.edit', $benefit->subscription_plan_id)->with('t-success', 'Benefit updated successfully.');
     }
 }
