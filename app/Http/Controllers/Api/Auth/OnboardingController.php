@@ -64,6 +64,8 @@ class OnboardingController extends Controller
 
         $accessToken = $accessToken['access_token'];
 
+        
+
         $response = Http::withToken($accessToken)
             ->withHeaders([
                 'Content-Type' => 'application/json'
