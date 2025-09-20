@@ -43,6 +43,7 @@
                                         <th>#</th>
                                         <th>Name</th>
                                         <th>Image</th>
+                                        <th>Icon</th>
                                         <th>Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
@@ -112,6 +113,12 @@
                             {
                                 data: 'image',
                                 name: 'image',
+                                orderable: false,
+                                searchable: false
+                            },
+                            {
+                                data: 'icon',
+                                name: 'icon',
                                 orderable: false,
                                 searchable: false
                             },

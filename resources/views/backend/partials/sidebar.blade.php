@@ -334,6 +334,43 @@
                 </div>
 
                 <div data-kt-menu-trigger="click"
+                    class="menu-item {{ request()->routeIs(['admin.banners.*', 'admin.how_it_works.*']) ? 'active show' : '' }} menu-accordion">
+                    <span class="menu-link">
+                        <span class="menu-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                                <path d="M12 4v7l2 -2l2 2v-7" />
+                            </svg>
+                        </span>
+                        <span class="menu-title">CMS</span>
+                        <span class="menu-arrow"></span>
+                    </span>
+                    <div class="menu-sub menu-sub-accordion">
+                        <div class="menu-item">
+                            <a href="{{ route('admin.banners.index') }}"
+                                class="menu-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Banner</span>
+                            </a>
+                        </div>
+                        <div class="menu-item">
+                            <a href="{{ route('admin.how_it_works.index') }}"
+                                class="menu-link {{ request()->routeIs('admin.how_it_works.*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">How It Works</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-kt-menu-trigger="click"
                     class="menu-item {{ request()->routeIs(['profile.setting', 'stripe.setting', 'paypal.setting', 'dynamic_page.*', 'system.index', 'mail.setting', 'social.index']) ? 'active show' : '' }} menu-accordion">
                     <span class="menu-link">
                         <span class="menu-icon">

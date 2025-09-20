@@ -31,6 +31,13 @@ class SubscriptionPlanController extends Controller
                 ->addColumn('price', function ($data) {
                     return '$' . number_format($data->price, 2);
                 })
+                ->addColumn('image', function ($data) {
+                    $url = asset($data->image);
+                    if (empty($data->image)) {
+                        $url = asset('backend/images/placeholder/image_placeholder.png');
+                    }
+                    return '<img src="' . $url . '" class="img-fluid">';
+                })
                 // ->addColumn('status', function ($data) {
                 //     $status = ' <div class="form-check form-switch">';
                 //     $status .= ' <input onclick="showStatusChangeAlert(' . $data->id . ')" type="checkbox" class="form-check-input" id="customSwitch' . $data->id . '" getAreaid="' . $data->id . '" name="status"';
@@ -51,7 +58,7 @@ class SubscriptionPlanController extends Controller
                             </a>
                             </div></div>';
                 })
-                ->rawColumns(['description', 'action', 'price'])
+                ->rawColumns(['description', 'action', 'price', 'image'])
                 ->make(true);
         }
         return view('backend.layouts.subscription.index');
@@ -68,11 +75,12 @@ class SubscriptionPlanController extends Controller
         // dd($request->all());
         // Logic to store a new subscription plan
         $request->validate([
-            'name' => 'required|string|max:255|unique:subscription_plans',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'interval' => 'required|in:yearly,monthly',
             'type' => 'required|in:basic,pro',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
             'subscription.*.benefit_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -91,6 +99,11 @@ class SubscriptionPlanController extends Controller
             // 2. Create plan
             $plan = $paypal->createPlan($product['id'], $request->name, $request->description, $request->price, $interval);
 
+            if ($request->hasFile('image')) {
+                $image    = $request->image;
+                $imageName = uploadImage($image, 'subscription/plan');
+            }
+
             // 3. Store locally
             $plan = SubscriptionPlan::create([
                 'name' => $request->name,
@@ -100,6 +113,7 @@ class SubscriptionPlanController extends Controller
                 'membership_type' => $request->type,
                 'paypal_plan_id' => $plan['id'],
                 'product_id' => $product['id'],
+                'image' => isset($imageName) ? $imageName : null
             ]);
 
             if ($request->subscription) {
@@ -144,6 +158,7 @@ class SubscriptionPlanController extends Controller
             'price' => 'required|numeric|min:0',
             'interval' => 'required|in:yearly,monthly',
             'type' => 'required|in:basic,pro',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
             'subscription.*.benefit_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -174,15 +189,35 @@ class SubscriptionPlanController extends Controller
                 $plan->paypal_plan_id = $newPlan['id'];
             }
 
+            if ($request->hasFile('image')) {
+
+                if (!empty($plan->image) && file_exists(public_path($plan->image))) {
+                    @unlink(public_path($plan->image));
+                }
+
+                $image = $request->file('image');
+                $imageName = uploadImage($image, 'subscription/plan');
+            } else {
+
+                $imageName = $plan->image;
+            }
+
             $plan->name = $request->name;
             $plan->description = $request->description;
             $plan->price = $request->price;
             $plan->interval = $request->interval;
             $plan->membership_type = $request->type;
+            $plan->image = $imageName;
             $plan->save();
 
             if ($request->subscription) {
                 foreach ($request->subscription as $featureData) {
+
+                    if (empty($featureData['benefit_name']) && empty($featureData['benefit_description'])) {
+                        continue;
+                    }
+
+
                     if (isset($featureData['benefit_icon']) && $featureData['benefit_icon']) {
                         $feature_image    = $featureData['benefit_icon'];
                         $FeatureImageName = uploadImage($feature_image, 'subscription/features');
@@ -191,9 +226,9 @@ class SubscriptionPlanController extends Controller
                     }
 
                     SubscriptionBenefit::create([
-                        'subscription_plan_id' => $plan['id'],
-                        'benefit_name'         => $featureData['benefit_name'],
-                        'benefit_description'  => $featureData['benefit_description'],
+                        'subscription_plan_id' => $plan->id,
+                        'benefit_name'         => $featureData['benefit_name'] ?? null,
+                        'benefit_description'  => $featureData['benefit_description'] ?? null,
                         'benefit_icon'         => $FeatureImageName,
                     ]);
                 }
@@ -211,6 +246,12 @@ class SubscriptionPlanController extends Controller
     {
         // Logic to delete a subscription plan
         $data = SubscriptionPlan::findOrFail($id);
+
+        if ($data->image) {
+            if (file_exists(public_path($data->image))) {
+                unlink(public_path($data->image));
+            }
+        }
 
         $data->delete();
 

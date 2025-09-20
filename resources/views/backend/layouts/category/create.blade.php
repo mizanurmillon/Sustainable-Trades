@@ -40,8 +40,8 @@
                             <div class="mt-4">
                                 <label for="name" class="form-label">Category Name</label>
                                 <input type="text" name="name" id="name"
-                                    class="form-control @error('name') is-invalid @enderror" placeholder="Enter Category Name"
-                                    value="{{ old('name') }}">
+                                    class="form-control @error('name') is-invalid @enderror"
+                                    placeholder="Enter Category Name" value="{{ old('name') }}">
                                 @error('name')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -49,15 +49,32 @@
                                 @enderror
                             </div>
 
-                            <div class="mt-4">
-                                <label for="image" class="form-label">Image</label>
-                                <input type="file" name="image" id="image"
-                                    class="dropify form-control @error('image') is-invalid @enderror" placeholder="Upload Image" data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
-                                @error('name')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
+                            <div class="row">
+                                <div class="mt-4 col-md-6">
+                                    <label for="image" class="form-label">Image</label>
+                                    <input type="file" name="image" id="image"
+                                        class="dropify form-control @error('image') is-invalid @enderror"
+                                        placeholder="Upload Image"
+                                        data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
+                                    @error('image')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+
+                                <div class="mt-4 col-md-6">
+                                    <label for="icon" class="form-label">Icon</label>
+                                    <input type="file" name="icon" id="icon"
+                                        class="dropify form-control @error('icon') is-invalid @enderror"
+                                        placeholder="Upload icon"
+                                        data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
+                                    @error('icon')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div class="mt-4">

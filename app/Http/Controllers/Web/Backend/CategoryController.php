@@ -29,6 +29,16 @@ class CategoryController extends Controller
                         $url = asset('backend/images/placeholder/image_placeholder.png');
                     }
 
+                    return '<img src="' . $url . '" class="img-fluid" style="width: 50px; height: auto;">';
+                })
+                ->addColumn('icon', function ($data) {
+
+                    $url = asset($data->icon);
+
+                    if(empty($data->icon)){
+                        $url = asset('backend/images/placeholder/image_placeholder.png');
+                    }
+
                     return '<img src="' . $url . '">';
                 })
                 ->addColumn('status', function ($data) {
@@ -51,7 +61,7 @@ class CategoryController extends Controller
                             </a>
                             </div></div>';
                 })
-                ->rawColumns(['image','action', 'status'])
+                ->rawColumns(['image','action', 'status', 'icon'])
                 ->make(true);
         }
         return view('backend.layouts.category.index');
@@ -67,6 +77,7 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
+            'icon' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
         ]);
 
         if ($request->hasFile('image')) {
@@ -74,9 +85,14 @@ class CategoryController extends Controller
             $imageName                    = uploadImage($image, 'categories');
         }
 
+        if ($request->hasFile('icon')) {
+            $icon                        = $request->file('icon');
+            $iconName                    = uploadImage($icon, 'categories/icon');
+        }
         $category = new Category();
         $category->name = $request->name;
         $category->image = $imageName;
+        $category->icon = $iconName;
 
         $category->save();
 
@@ -94,6 +110,7 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
         ]);
 
         $category = Category::findOrFail($id);
@@ -110,8 +127,21 @@ class CategoryController extends Controller
             $imageName = $category->image;
         }
 
+        if ($request->hasFile('icon')) {
+            // Delete the old image if it exists
+            if(file_exists(public_path($category->icon))){
+                unlink(public_path($category->icon));
+            }
+            $icon = $request->file('icon');
+            $iconName = uploadImage($icon, 'categories/icon');
+        }else{
+            // If no new image is uploaded, keep the old image
+            $iconName = $category->icon;
+        }
+
         $category->name = $request->name;
         $category->image = $imageName;
+        $category->icon = $iconName;
 
         $category->save();
 
@@ -146,6 +176,10 @@ class CategoryController extends Controller
 
         if(file_exists(public_path($data->image))){
             unlink(public_path($data->image));
+        }
+
+        if(file_exists(public_path($data->icon))){
+            unlink(public_path($data->icon));
         }
 
         $data->delete();

@@ -1,19 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\Backend\FaqController;
-use App\Http\Controllers\Web\Backend\ShopController;
-use App\Http\Controllers\Web\Backend\ListingController;
+use App\Http\Controllers\Web\Backend\BannerController;
+use App\Http\Controllers\Web\Backend\BasicMembersController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\DashboardController;
-use App\Http\Controllers\Web\Backend\TutorialsController;
+use App\Http\Controllers\Web\Backend\FaqController;
+use App\Http\Controllers\Web\Backend\HowItWorkController;
+use App\Http\Controllers\Web\Backend\ListingController;
 use App\Http\Controllers\Web\Backend\OurMissoinController;
 use App\Http\Controllers\Web\Backend\ProMembersController;
+use App\Http\Controllers\Web\Backend\ShopController;
+use App\Http\Controllers\Web\Backend\SpotlightApplicationController;
 use App\Http\Controllers\Web\Backend\SubCategoryController;
-use App\Http\Controllers\Web\Backend\BasicMembersController;
 use App\Http\Controllers\Web\Backend\SubscriptionPlanController;
 use App\Http\Controllers\Web\Backend\SustainableShoppersController;
-use App\Http\Controllers\Web\Backend\SpotlightApplicationController;
+use App\Http\Controllers\Web\Backend\TutorialsController;
+use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -127,4 +130,21 @@ Route::controller(SustainableShoppersController::class)->group(function () {
     Route::get('/sustainable-shoppers', 'index')->name('admin.sustainable_shoppers.index');
     Route::post('/sustainable-shoppers/status/{id}', 'status')->name('admin.sustainable_shoppers.status');
     Route::delete('/sustainable-shoppers/destroy/{id}', 'destroy')->name('admin.sustainable_shoppers.destroy');
+});
+
+// Hero section and banner add option route
+Route::controller(BannerController::class)->group(function () {
+    Route::get('/banner', 'index')->name('admin.banners.index');
+    Route::get('/banner/create', 'create')->name('admin.banners.create');
+    Route::post('/banner/store', 'store')->name('admin.banners.store');
+    Route::get('/banner/edit/{id}', 'edit')->name('admin.banners.edit');
+    Route::post('/banner/update/{id}', 'update')->name('admin.banners.update');
+    Route::delete('/banner/destroy/{id}', 'destroy')->name('admin.banners.destroy');
+    Route::post('/banner/status/{id}', 'status')->name('admin.banners.status');
+});
+
+Route::controller(HowItWorkController::class)->group(function () {
+    Route::get('/how-it-works', 'index')->name('admin.how_it_works.index');
+    Route::get('/how-it-works/edit/{id}', 'edit')->name('admin.how_it_works.edit');
+    Route::post('/how-it-works/update/{id}', 'update')->name('admin.how_it_works.update');
 });

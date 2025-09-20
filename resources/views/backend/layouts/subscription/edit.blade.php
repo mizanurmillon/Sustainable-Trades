@@ -104,6 +104,16 @@
                             </div>
 
                             <div class="mt-4">
+                                <label for="image">Icon</label>
+                                <input type="file" name="image" id="image" class="dropify form-control @error('image') is-invalid @enderror" data-default-file="{{ asset( $data->image ?? 'backend/images/placeholder/image_placeholder.png') }}">
+                                @error('image')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+
+                            <div class="mt-4">
                                 <input type="submit" class="btn btn-primary btn-lg" value="Submit">
                                 <a href="{{ route('admin.subscription.index') }}" class="btn btn-danger btn-lg">Back</a>
                             </div>

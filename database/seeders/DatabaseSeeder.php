@@ -19,5 +19,8 @@ class DatabaseSeeder extends Seeder
         $this->call(DynamicPageSeeder::class);
         $this->call(FaqSeeder::class);
         $this->call(CategoryTableSeeder::class);
+        $this->call(BannerSeeder::class);
+        $this->call(OurMissionSeeder::class);
+        $this->call(HowItWorkSeeder::class);
     }
 }

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\UserSettingController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\Product\ProductController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
@@ -137,7 +138,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 });
 
 Route::controller(CategoryController::class)->group(function () {
-    Route::get('/categories', 'allCategories');
+    Route::get('/categories', 'categories');
+    Route::get('/category-and-subcategories', 'categoryAndSubCategories');
 });
 
 Route::group(['middleware' => ['guest']], function () {
@@ -167,4 +169,9 @@ Route::controller(OurMissionController::class)->group(function () {
 
 Route::controller(SubscriptionPlanController::class)->group(function () {
     Route::get('/subscriptions', 'subscriptions');
+});
+
+Route::controller(BannerController::class)->group(function () {
+    Route::get('/banners', 'banners');
+    Route::get('/how-it-works', 'howItWorks');
 });

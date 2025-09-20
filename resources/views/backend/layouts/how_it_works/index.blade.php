@@ -1,5 +1,5 @@
 @extends('backend.app')
-@section('title', 'Subscription List')
+@section('title', 'How It Works')
 @section('content')
     <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
@@ -18,7 +18,7 @@
                         <a href="{{ route('admin.dashboard') }}" class="text-muted text-hover-primary"> Home </a>
                     </li>
 
-                    <li class="breadcrumb-item text-muted"> Subscription List </li>
+                    <li class="breadcrumb-item text-muted"> How It Works </li>
 
                 </ul>
                 <!--end::Breadcrumb-->
@@ -33,19 +33,17 @@
             <div class="row">
                 <div class="col-12">
                     <div class="bg-white p-5">
-                        <div class="d-flex justify-content-start mb-5">
-                            <a href="{{ route('admin.subscription.create') }}" class="btn btn-primary">Add Subscription</a>
-                        </div>
+                        {{--  <div class="d-flex justify-content-start mb-5">
+                            <a href="{{ route('admin.banners.create') }}" class="btn btn-primary">Add Banner</a>
+                        </div>  --}}
                         <div class="table-wrapper table-responsive mt-5">
                             <table id="data-table" class="table table-bordered mt-5">
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Icon</th>
-                                        <th>Plan Name</th>
+                                        <th>Title</th>
                                         <th>Description</th>
-                                        <th>Price</th>
-                                        <th>Interval</th>
+                                        <th>Image</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -95,7 +93,7 @@
                         pagingType: "full_numbers",
                         dom: "<'row justify-content-between table-topbar'<'col-md-2 col-sm-4 px-0'l><'col-md-2 col-sm-4 px-0'f>>tipr",
                         ajax: {
-                            url: "{{ route('admin.subscription.index') }}",
+                            url: "{{ route('admin.how_it_works.index') }}",
                             type: "get",
                         },
 
@@ -106,32 +104,20 @@
                                 searchable: false
                             },
                             {
-                                data: 'image',
-                                name: 'image',
-                                orderable: false,
-                                searchable: false
-                            },
-                            {
-                                data: 'name',
-                                name: 'name',
+                                data: 'title',
+                                name: 'title',
                                 orderable: true,
                                 searchable: true
                             },
                             {
                                 data: 'description',
                                 name: 'description',
-                                orderable: true,
-                                searchable: true
-                            },
-                            {
-                                data: 'price',
-                                name: 'price',
                                 orderable: false,
                                 searchable: false
                             },
                             {
-                                data: 'interval',
-                                name: 'interval',
+                                data: 'image',
+                                name: 'image',
                                 orderable: false,
                                 searchable: false
                             },
@@ -150,6 +136,50 @@
                     });
                 }
             });
+
+            // Status Change Confirm Alert
+            function showStatusChangeAlert(id) {
+                event.preventDefault();
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You want to update the status?',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        statusChange(id);
+                    }
+                });
+            }
+
+            // Status Change
+            function statusChange(id) {
+                let url = "{{ route('admin.banners.status', ':id') }}";
+                $.ajax({
+                    type: "POST",
+                    url: url.replace(':id', id),
+                    success: function(resp) {
+                        console.log(resp);
+                        // Reloade DataTable
+                        $('#data-table').DataTable().ajax.reload();
+                        if (resp.success === true) {
+                            // show toast message
+                            toastr.success(resp.message);
+                        } else if (resp.errors) {
+                            toastr.error(resp.errors[0]);
+                        } else {
+                            toastr.error(resp.message);
+                        }
+                    },
+                    error: function(error) {
+                        // location.reload();
+                    }
+                });
+            }
+
             // delete Confirm
             function showDeleteConfirm(id) {
                 event.preventDefault();
@@ -170,10 +200,10 @@
 
             // Delete Button
             function deleteItem(id) {
-                let url = "{{ route('admin.subscription.destroy', ':id') }}";
+                let url = "{{ route('admin.banners.destroy', ':id') }}";
                 let csrfToken = '{{ csrf_token() }}';
                 $.ajax({
-                    type: "POST",
+                    type: "DELETE",
                     url: url.replace(':id', id),
                     headers: {
                         'X-CSRF-TOKEN': csrfToken

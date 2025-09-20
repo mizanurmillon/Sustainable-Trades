@@ -52,6 +52,7 @@
                                 <label for="description" class="form-label">Description</label>
                                 <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
                                     placeholder="Enter Description" rows="7">{{ $data->description ?? old('description') }}</textarea>
+                                    <p class="text-muted">Max 255 words</p>
                                 @error('description')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>

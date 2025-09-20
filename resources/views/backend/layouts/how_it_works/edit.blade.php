@@ -1,5 +1,5 @@
 @extends('backend.app')
-@section('title', 'Add mission')
+@section('title', 'Edit How It Works')
 @section('content')
     <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
@@ -18,7 +18,7 @@
                         <a href="{{ route('admin.dashboard') }}" class="text-muted text-hover-primary"> Home </a>
                     </li>
 
-                    <li class="breadcrumb-item text-muted"> Create Mission </li>
+                    <li class="breadcrumb-item text-muted"> Edit How It Works </li>
 
                 </ul>
                 <!--end::Breadcrumb-->
@@ -33,26 +33,30 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card card-body">
-                        <h1 class="mb-4">Add New Mission</h1>
-                        <form action="{{ route('admin.our_missions.store') }}" method="POST" enctype="multipart/form-data">
+                        <h1 class="mb-4">Edit How It Works</h1>
+                        <form action="{{ route('admin.how_it_works.update', $data->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
 
-                            <div class="mt-4">
-                                <label for="name" class="form-label">Name</label>
-                                <input type="text" name="name" id="name"
-                                    class="form-control @error('name') is-invalid @enderror" placeholder="Enter Mission Name"
-                                    value="{{ old('name') }}">
-                                @error('name')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
+                            <div class="row">
+                                <div class="mt-4 col-md-12">
+                                    <label for="title" class="form-label">Banner Title</label>
+                                    <input type="text" name="title" id="title"
+                                        class="form-control @error('title') is-invalid @enderror"
+                                        placeholder="Enter Banner Title" value="{{ $data->title ?? old('title') }}">
+                                    @error('title')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+                                
                             </div>
+
                             <div class="mt-4">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
-                                    placeholder="Enter Description" rows="7">{{ old('description') }}</textarea>
-                                     <p class="text-muted">Max 255 words</p>
+                                <label for="description">Description</label>
+                                <textarea name="description" id="description" rows="4"
+                                    class="form-control @error('description') is-invalid @enderror" placeholder="Enter Description">{{ $data->description ?? old('description') }}</textarea>
+                                    <p>Max 255 words</p>
                                 @error('description')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -61,11 +65,13 @@
                             </div>
 
                             <div class="mt-4">
-                                <label for="image" class="form-label">Image</label>
+                                <label for="image" class="form-label">Banner Image</label>
                                 <input type="file" name="image" id="image"
-                                    class="dropify form-control @error('image') is-invalid @enderror" placeholder="Upload Image" data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
-                                @error('name')
-                                    <span class="invalid-feedback" role="alert">
+                                    class="dropify form-control @error('image') is-invalid @enderror"
+                                    placeholder="Upload Image"
+                                    data-default-file="{{ asset( $data->image ?? 'backend/images/placeholder/image_placeholder.png') }}">
+                                @error('image')
+                                    <span class="text-danger" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
@@ -73,7 +79,7 @@
 
                             <div class="mt-4">
                                 <input type="submit" class="btn btn-primary btn-lg" value="Submit">
-                                <a href="{{ route('admin.our_missions.index') }}" class="btn btn-danger btn-lg">Back</a>
+                                <a href="{{ route('admin.how_it_works.index') }}" class="btn btn-danger btn-lg">Back</a>
                             </div>
                         </form>
                     </div>
