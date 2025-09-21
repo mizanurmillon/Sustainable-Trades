@@ -33,9 +33,9 @@
             <div class="row">
                 <div class="col-12">
                     <div class="bg-white p-5">
-                        <div class="d-flex justify-content-start mb-5">
+                        {{--  <div class="d-flex justify-content-start mb-5">
                             <a href="{{ route('admin.banners.create') }}" class="btn btn-primary">Add Banner</a>
-                        </div>
+                        </div>  --}}
                         <div class="table-wrapper table-responsive mt-5">
                             <table id="data-table" class="table table-bordered mt-5">
                                 <thead>

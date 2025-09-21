@@ -51,9 +51,6 @@ class BannerController extends Controller
                               <a href="' . route('admin.banners.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
                               <i class="bi bi-pencil"></i>
                               </a>
-                              <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" type="button" class="text-white btn btn-danger" title="Delete">
-                              <i class="bi bi-trash"></i>
-                            </a>
                             </div></div>';
                 })
                 ->rawColumns(['image', 'action', 'status', 'description'])
