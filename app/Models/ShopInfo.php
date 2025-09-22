@@ -38,4 +38,19 @@ class ShopInfo extends Model
     {
         return $this->hasMany(Product::class, 'shop_info_id');
     }
+
+    public function policies()
+    {
+        return $this->hasOne(ShopPolicies::class, 'shop_info_id');
+    }
+
+    public function faqs()
+    {
+        return $this->hasMany(ShopFaq::class, 'shop_info_id');
+    }
+
+    public function about()
+    {
+        return $this->hasOne(AboutShop::class, 'shop_info_id');
+    }
 }

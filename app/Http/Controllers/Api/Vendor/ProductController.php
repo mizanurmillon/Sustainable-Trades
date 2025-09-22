@@ -36,6 +36,8 @@ class ProductController extends Controller
             'is_featured' => 'nullable|boolean',
         ]);
 
+        // dd($request->all());
+
         if ($validator->fails()) {
             return $this->error($validator->errors(),$validator->errors()->first(), 422);
         }

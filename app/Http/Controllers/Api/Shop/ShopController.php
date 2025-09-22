@@ -16,9 +16,11 @@ class ShopController extends Controller
 
     public function allShops()
     {
-        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner')->where('role', 'vendor')
-            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
+        $data = User::with('shopInfo:id,user_id,shop_name,shop_image,shop_banner')
+            ->where('role', 'vendor')
             ->where('status', 'active')
+            ->whereHas('shopInfo')
+            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->get();
 
         if ($data->isEmpty()) {
@@ -59,13 +61,13 @@ class ShopController extends Controller
         if (auth()->user()) {
             $shopFollow = FollowShop::where('user_id', auth()->user()->id)->where('shop_info_id', $id)->first(); // check if user follow 
         }
-        $shop = User::with(['shopInfo', 'shopInfo.address'])
+        $shop = User::with(['shopInfo','shopInfo.about','shopInfo.policies','shopInfo.policies','shopInfo.faqs', 'shopInfo.address'])
             ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->where('id', $id)
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->first();
-            
+
         if (auth()->user()) {
             $shop->is_followed = $shopFollow ? true : false;
         } else {

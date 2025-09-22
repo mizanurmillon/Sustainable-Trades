@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\shopOwnerRegisterRequest;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -15,79 +16,45 @@ class ShopOwnerController extends Controller
 {
     use ApiResponse;
 
-    public function shopOwnerRegister(Request $request)
+    public function shopOwnerRegister(shopOwnerRegisterRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'first_name'           => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'email'          => 'required|email|unique:users,email',
-            'phone'          => 'required|string|max:15|unique:users,phone',
-            'company_name'  => 'required|string|max:255',
-            'shop_name'    => 'required|string|max:255',
-            'shop_city'   => 'required|string|max:255',
-            'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
-            'shop_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max  
-            'shop_banner'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
-            'shop_about'   => 'nullable|string|max:500',
-            'shop_policie' => 'nullable|string|max:500',
-            'faqs'         => 'nullable|string|max:500',
-            'platforms'    => 'nullable|array',
-            'platforms'             => 'nullable|array',
-            'platforms.*' => 'string|max:255',
-            'urls'         => 'nullable|array',
-            'urls.*'       => 'nullable|url|max:255',
-            'address_line_1' => 'required|string|max:255',
-            'address_line_2' => 'nullable|string|max:255',
-            'city'          => 'required|string|max:255',
-            'state'         => 'required|string|max:255',
-            'zip_code'      => 'required|string|max:20',
-            'display_my_address' => 'boolean',
-            'address_10_mile' => 'boolean',
-            'do_not_display' => 'boolean',
-            'password'       => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
-            'agree_to_terms' => 'required|boolean',
-        ], [
-            'password.min' => 'The password must be at least 8 characters long.',
-            'gender.in'    => 'The selected gender is invalid.',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->error($validator->errors(), $validator->errors()->first(), 422);
-        }
+        $validated = $request->validated();
 
         try {
             DB::beginTransaction();
 
-            if ($request->file('avatar')) {
-                $avatar                        = $request->file('avatar');
-                $avatarName                    = uploadImage($avatar, 'users');
+            if ($request->hasFile('avatar')) {
+                $avatar = $request->file('avatar');
+                $avatarName = uploadImage($avatar, 'users');
             } else {
                 $avatarName = null;
             }
 
-            if ($request->file('shop_image')) {
-                $shopImage                        = $request->file('shop_image');
-                $shopImageName                    = uploadImage($shopImage, 'shops');
+            if ($request->hasFile('shop_image')) {
+                $shopImage = $request->file('shop_image');
+                $shopImageName = uploadImage($shopImage, 'shops');
             } else {
                 $shopImageName = null;
             }
 
-            if ($request->file('shop_banner')) {
-                $shopBanner                    = $request->file('shop_banner');
-                $shopBannerName                = uploadImage($shopBanner, 'shops');
+            if ($request->hasFile('shop_banner')) {
+                $shopBanner = $request->file('shop_banner');
+                $shopBannerName = uploadImage($shopBanner, 'shops');
             } else {
                 $shopBannerName = null;
             }
 
+            if ($request->hasFile('about_image')) {
+                $aboutImage = $request->file('about_image');
+                $aboutImageName = uploadImage($aboutImage, 'shops');
+            } else {
+                $aboutImageName = null;
+            }
+
             // Find the user by ID
             $user = new User();
-            $firstName = $request->input('first_name');
-            $lastName = $request->input('last_name');
+            $firstName = $validated['first_name'];
+            $lastName = $validated['last_name'];
 
             // Generate base username
             $baseUsername = strtolower(preg_replace('/[^a-z0-9_]/', '', str_replace(' ', '', $firstName . $lastName)));
@@ -104,47 +71,66 @@ class ShopOwnerController extends Controller
             $user->first_name = $firstName;
             $user->last_name = $lastName;
             $user->username = $username;
-            $user->email          = $request->input('email');
-            $user->phone = $request->input('phone');
-            $user->company_name = $request->input('company_name');
-            $user->password       = Hash::make($request->input('password')); // Hash the password
-            $user->agree_to_terms = $request->input('agree_to_terms');
+            $user->email = $validated['email'];
+            $user->phone = $validated['phone'];
+            $user->company_name = $validated['company_name'];
+            $user->password = Hash::make($validated['password']); // Hash the password
+            $user->agree_to_terms = $validated['agree_to_terms'];
             $user->role = 'vendor'; // Set the role to 'vendor'
             $user->avatar = $avatarName;
             $user->email_verified_at = now(); // Automatically verify email for shop owners
             $user->save();
 
             $shopInfo = $user->shopInfo()->create([
-                'shop_name' => $request->input('shop_name'),
-                'shop_city' => $request->input('shop_city'),
+                'shop_name' => $validated['shop_name'],
+                'shop_city' => $validated['shop_city'],
                 'shop_banner' => $shopBannerName,
                 'shop_image' => $shopImageName,
-                'shop_about' => $request->input('shop_about'),
-                'shop_policie' => $request->input('shop_policie'),
-                'faqs' => $request->input('faqs'),
             ]);
 
+            $shopInfo->about()->create([
+                'tagline' => $validated['tagline'],
+                'statement' => $validated['statement'],
+                'our_story' => $validated['our_story'],
+                'about_image' => $aboutImageName,
+            ]);
+
+            $shopInfo->policies()->create([
+                'shipping_information' => $validated['shipping_information'],
+                'return_policy' => $validated['return_policy'],
+                'payment_methods' => json_encode($validated['payment_methods']),
+            ]);
+
+            if (isset($validated['answers']) && is_array($validated['answers']) && is_array($validated['questions'])) {
+                foreach ($validated['answers'] as $index => $answer) {
+                    $shopInfo->faqs()->create([
+                        'question' => $validated['questions'][$index] ?? '',
+                        'answer' => $answer,
+                    ]);
+                }
+            }
+
             // Save platforms and URLs if provided
-            if ($request->has('platforms') && is_array($request->platforms) && is_array($request->urls)) {
-                foreach ($request->input('platforms') as $index => $platform) {
+            if (isset($validated['platforms']) && is_array($validated['platforms']) && is_array($validated['urls'])) {
+                foreach ($validated['platforms'] as $index => $platform) {
                     $shopInfo->socialLinks()->create([
                         'platform' => $platform,
-                        'url' => $request->urls[$index] ?? null,
+                        'url' => $validated['urls'][$index] ?? null,
                     ]);
                 }
             }
 
             $shopInfo->address()->create([
-                'address_line_1' => $request->input('address_line_1'),
-                'address_line_2' => $request->input('address_line_2'),
-                'latitude' => $request->input('latitude', null),
-                'longitude' => $request->input('longitude', null),
-                'city' => $request->input('city'),
-                'state' => $request->input('state'),
-                'postal_code' => $request->input('zip_code'),
-                'display_my_address' => $request->input('display_my_address', false),
-                'address_10_mile' => $request->input('address_10_mile', false),
-                'do_not_display' => $request->input('do_not_display', false),
+                'address_line_1' => $validated['address_line_1'],
+                'address_line_2' => $validated['address_line_2'],
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'postal_code' => $validated['zip_code'],
+                'display_my_address' => $validated['display_my_address'] ?? false,
+                'address_10_mile' => $validated['address_10_mile'] ?? false,
+                'do_not_display' => $validated['do_not_display'] ?? false,
             ]);
 
             DB::commit();

@@ -17,9 +17,6 @@ return new class extends Migration
             $table->string('shop_name')->unique();
             $table->string('shop_city')->nullable();
             $table->string('shop_banner')->nullable();
-            $table->text('shop_about')->nullable();
-            $table->text('shop_policie')->nullable();
-            $table->text('faqs')->nullable();
             $table->timestamps();
         });
     }
