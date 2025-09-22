@@ -32,11 +32,10 @@ class shopOwnerRegisterRequest extends FormRequest
             'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
             'shop_image'    => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
             'shop_banner'  => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
-            'platforms'    => 'nullable|array',
-            'platforms'             => 'nullable|array',
-            'platforms.*' => 'string|max:255',
-            'urls'         => 'nullable|array',
-            'urls.*'       => 'nullable|url|max:255',
+            'website_url'  => 'nullable|url|max:255',
+            'facebook_url' => 'nullable|url|max:255',
+            'instagram_url' => 'nullable|url|max:255',
+            'pinterest_url'  => 'nullable|url|max:255',
             'address_line_1' => 'required|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
             'latitude'      => 'nullable|numeric',

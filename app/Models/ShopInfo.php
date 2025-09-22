@@ -31,7 +31,7 @@ class ShopInfo extends Model
 
     public function socialLinks()
     {
-        return $this->hasMany(ShopSocialLink::class, 'shop_info_id');
+        return $this->hasOne(ShopSocialLink::class, 'shop_info_id');
     }
 
     public function products()

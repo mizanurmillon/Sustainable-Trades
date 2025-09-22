@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('shop_infos', function (Blueprint $table) {
-            $table->boolean('is_featured')->default(false)->after('faqs')->comment('Indicates if the shop is featured');
+            $table->boolean('is_featured')->default(false)->after('shop_image')->comment('Indicates if the shop is featured');
         });
     }
 

@@ -98,7 +98,7 @@ class ShopOwnerController extends Controller
             $shopInfo->policies()->create([
                 'shipping_information' => $validated['shipping_information'],
                 'return_policy' => $validated['return_policy'],
-                'payment_methods' => json_encode($validated['payment_methods']),
+                'payment_methods' => ($validated['payment_methods']),
             ]);
 
             if (isset($validated['answers']) && is_array($validated['answers']) && is_array($validated['questions'])) {
@@ -110,15 +110,13 @@ class ShopOwnerController extends Controller
                 }
             }
 
-            // Save platforms and URLs if provided
-            if (isset($validated['platforms']) && is_array($validated['platforms']) && is_array($validated['urls'])) {
-                foreach ($validated['platforms'] as $index => $platform) {
-                    $shopInfo->socialLinks()->create([
-                        'platform' => $platform,
-                        'url' => $validated['urls'][$index] ?? null,
-                    ]);
-                }
-            }
+            // Save Social Links
+            $shopInfo->socialLinks()->create([
+                'website_url' => $validated['website_url'] ?? null,
+                'facebook_url' => $validated['facebook_url'] ?? null,
+                'instagram_url' => $validated['instagram_url'] ?? null,
+                'pinterest_url' => $validated['pinterest_url'] ?? null,
+            ]);
 
             $shopInfo->address()->create([
                 'address_line_1' => $validated['address_line_1'],
@@ -137,6 +135,8 @@ class ShopOwnerController extends Controller
 
             $token = JWTAuth::fromUser($user);
             $user->setAttribute('token', $token);
+
+            $user->load('shopInfo.address', 'shopInfo.socialLinks', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.faqs');
 
             return $this->success($user, 'Shop owner registered successfully', 200);
         } catch (\Exception $e) {
