@@ -75,7 +75,6 @@ class ShopOwnerController extends Controller
             $user->phone = $validated['phone'];
             $user->company_name = $validated['company_name'];
             $user->password = Hash::make($validated['password']); // Hash the password
-            $user->agree_to_terms = $validated['agree_to_terms'];
             $user->role = 'vendor'; // Set the role to 'vendor'
             $user->avatar = $avatarName;
             $user->email_verified_at = now(); // Automatically verify email for shop owners
