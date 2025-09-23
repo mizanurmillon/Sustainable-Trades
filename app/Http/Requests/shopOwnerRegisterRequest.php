@@ -27,7 +27,7 @@ class shopOwnerRegisterRequest extends FormRequest
             'email'          => 'required|email|unique:users,email',
             'phone'          => 'required|string|max:15|unique:users,phone',
             'company_name'  => 'required|string|max:255',
-            'shop_name'    => 'required|string|max:255',
+            'shop_name'    => 'required|string|max:255|unique:shop_infos,shop_name',
             'shop_city'   => 'required|string|max:255',
             'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
             'shop_image'    => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
