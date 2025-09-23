@@ -52,7 +52,6 @@ class shopOwnerRegisterRequest extends FormRequest
                 'min:8',
                 'confirmed',
             ],
-            'agree_to_terms' => 'required|boolean',
             'tagline' => 'required|string|max:50',
             'statement' => 'required|string|max:500',
             'our_story' => 'required|string|max:450',
