@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use Carbon\Carbon;
-use App\Models\Membership;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Models\SubscriptionPlan;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\Membership;
 use App\Models\MembershipHistory;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
-use Srmklive\PayPal\Services\PayPal as PayPalClient;
 use App\Traits\ApiResponse; // Assuming this is your trait for API responses
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class MembershipController extends Controller
 {
@@ -28,6 +29,16 @@ class MembershipController extends Controller
 
     public function Membership(Request $request, $id)
     {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'success_url' => 'required|url',
+            'cancel_url' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
+        }
+        
         $user = auth()->user();
 
         if (!$user) return $this->error([], 'User not found', 200);
@@ -54,8 +65,8 @@ class MembershipController extends Controller
                     'payer_selected' => 'PAYPAL',
                     'payee_preferred' => 'IMMEDIATE_PAYMENT_REQUIRED',
                 ],
-                'return_url' => route('payments.paypal.success',['user_id' => $user->id]),
-                'cancel_url' => route('payments.cancel'),
+                'return_url' => $request->get('success_url') . '?user_id=' . $user->id,
+                'cancel_url' => $request->get('cancel_url'),
             ],
         ];
 
@@ -143,15 +154,17 @@ class MembershipController extends Controller
                 'end_at'=> Carbon::parse($details['billing_info']['next_billing_time'] ?? now()->addMonth())->toDateTimeString(),
             ]);
 
-            return redirect('/payment/success');
+            return redirect($request->get('success_url'));
         } catch (\Exception $e) {
             Log::error('PayPal Success Error: ', ['error' => $e->getMessage()]);
             return $this->error([], 'Failed to process subscription: ' . $e->getMessage(), 500);
         }
     }
 
-    public function paypalCancel()
+    public function paypalCancel(Request $request)
     {
-        return $this->error([], 'User cancelled the subscription', 200);
+        // Handle the cancellation logic here
+
+        return redirect($request->get('cancel_url'));
     }
 }
