@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('shop_social_links', function (Blueprint $table) {
             $table->id();
             $table->foreignId('shop_info_id')->constrained('shop_infos')->onDelete('cascade');
-            $table->string('website_url')->comment('The URL of the website');
-            $table->string('facebook_url')->comment('The URL of the Facebook profile');
-            $table->string('instagram_url')->comment('The URL of the Instagram profile');
-            $table->string('pinterest_url')->comment('The URL of the Pinterest profile');
+            $table->string('website_url')->nullable()->comment('The URL of the website');
+            $table->string('facebook_url')->nullable()->comment('The URL of the Facebook profile');
+            $table->string('instagram_url')->nullable()->comment('The URL of the Instagram profile');
+            $table->string('pinterest_url')->nullable()->comment('The URL of the Pinterest profile');
             $table->timestamps();
         });
     }
