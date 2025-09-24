@@ -97,7 +97,9 @@ class LoginController extends Controller {
                     return $this->error([], 'Invalid credentials', 401);
                 }
 
-                $userData = auth()->user();
+                $user = auth()->user();
+
+                $userData = User::with('membership:id,user_id,membership_type')->where('id', $user->id)->first();
 
                 $userData->setAttribute('token', $token);
             }

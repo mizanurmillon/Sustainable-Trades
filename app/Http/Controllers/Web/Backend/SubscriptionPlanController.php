@@ -131,6 +131,7 @@ class SubscriptionPlanController extends Controller
                         'benefit_description'  => $featureData['benefit_description'],
                         'benefit_icon'         => $FeatureImageName,
                     ]);
+                    
                 }
             }
 
