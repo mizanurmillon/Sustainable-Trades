@@ -27,7 +27,7 @@ class MembershipController extends Controller
         $this->provider->setApiCredentials(config('paypal'));
     }
 
-    public function Membership(Request $request, $id)
+    public function createMembership(Request $request, $id)
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
@@ -38,61 +38,63 @@ class MembershipController extends Controller
         if ($validator->fails()) {
             return $this->error($validator->errors(), $validator->errors()->first(), 422);
         }
-        
-        $user = auth()->user();
 
-        if (!$user) return $this->error([], 'User not found', 200);
+        $user = auth()->user();
+        if (!$user) return $this->error([], 'User not found', 404);
 
         $paypalPlan = SubscriptionPlan::find($id);
-
         if (!$paypalPlan) return $this->error([], 'Subscription plan not found', 404);
 
         $data = [
             'plan_id' => $paypalPlan->paypal_plan_id,
             'subscriber' => [
                 'name' => [
-                    'given_name' => $user->first_name,
-                    'surname' => $user->last_name,
+                    'given_name' => $user->first_name ?? '',
+                    'surname'   => $user->last_name ?? '',
                 ],
                 'email_address' => $user->email,
             ],
             'application_context' => [
-                'brand_name' => config('app.name'),
-                'locale' => 'en-US',
+                'brand_name'          => config('app.name'),
+                'locale'              => 'en-US',
                 'shipping_preference' => 'NO_SHIPPING',
-                'user_action' => 'SUBSCRIBE_NOW',
+                'user_action'         => 'SUBSCRIBE_NOW',
                 'payment_method' => [
-                    'payer_selected' => 'PAYPAL',
+                    'payer_selected'  => 'PAYPAL',
                     'payee_preferred' => 'IMMEDIATE_PAYMENT_REQUIRED',
                 ],
-                'return_url' => $request->get('success_url') . '?user_id=' . $user->id,
-                'cancel_url' => $request->get('cancel_url'),
+                'return_url' => route('payments.paypal.success', [
+                    'user_id' => $user->id,
+                    'success_url' => $request->get('success_url') // pass it here
+                ]),
+                'cancel_url' => route('payments.cancel') . '?cancel_url=' . urlencode($request->get('cancel_url')),
             ],
         ];
 
+
         try {
             $provider = new PayPalClient;
-            $provider->setApiCredentials(config('paypal'));  // Make sure config has correct credentials
+            $provider->setApiCredentials(config('paypal'));
             $token = $provider->getAccessToken();
             $provider->setAccessToken($token);
 
             $response = $provider->createSubscription($data);
 
+            // Log::info('PayPal Subscription Creation Response: ' . json_encode($response));
+
+
             if (isset($response['id'])) {
-                // Find the approval URL and redirect user there
                 foreach ($response['links'] as $link) {
                     if ($link['rel'] == 'approve') {
-                        // return $link['href'];
                         return response()->json([
                             'success' => true,
                             'message' => 'Subscription created successfully',
-                            'data' => ['url' => $link['href']],
+                            'data'    => ['url' => $link['href']],
                         ], 200);
                     }
                 }
                 return $this->error([], 'Approval link not found', 500);
             }
-
             return $this->error($response, 'Subscription creation failed', 500);
         } catch (\Exception $e) {
             Log::error('PayPal Subscription Creation Error: ' . $e->getMessage());
@@ -104,66 +106,74 @@ class MembershipController extends Controller
     {
         $subscription_id = $request->get('subscription_id');
         $userId = $request->get('user_id');
+        $successUrl = $request->get('success_url');
 
         if (!$subscription_id) {
             return $this->error([], 'Subscription ID not provided', 400);
         }
 
         try {
-            $this->provider = new PayPalClient();
-            $this->provider->setApiCredentials(config('paypal'));
-            $this->provider->getAccessToken();
+            $provider = new PayPalClient();
+            $provider->setApiCredentials(config('paypal'));
+            $provider->getAccessToken();
 
-            $details = $this->provider->showSubscriptionDetails($subscription_id);
+            $details = $provider->showSubscriptionDetails($subscription_id);
 
             $plan = SubscriptionPlan::where('paypal_plan_id', $details['plan_id'])->first();
-
             if (!$plan) {
                 return $this->error([], 'Plan not found', 404);
             }
 
-            User::where('id', $userId)->update([
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->error([], 'User not found', 404);
+            }
+
+            // User premium update
+            $user->update([
                 'is_premium' => true,
             ]);
 
+            // Billing info
+            $nextBilling = $details['billing_info']['next_billing_time'] ?? null;
+            $endDate = $nextBilling
+                ? Carbon::parse($nextBilling)->toDateTimeString()
+                : Carbon::now()->addMonth()->toDateTimeString();
 
+            // Save Membership
             $membership = Membership::create([
-                'order_id' => 'ORD-' . strtoupper(Str::random(10)),
-                'user_id' => $userId,
-                'plan_id' => $plan->id,
+                'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
+                'user_id'         => $user->id,
+                'plan_id'         => $plan->id,
                 'membership_type' => $plan->membership_type ?? '',
-                'type' => $plan->interval ?? '',
-                'price' => $plan->price,
-                'start_at' => Carbon::now(),
-                'end_at' => Carbon::parse($details['billing_info']['next_billing_time'] ?? now()->addMonth())->toDateTimeString(),
+                'type'            => $plan->interval ?? '',
+                'price'           => $plan->price,
+                'start_at'        => Carbon::now(),
+                'end_at'          => $endDate,
             ]);
 
-            if (!$membership) {
-                return $this->error([], 'Failed to create membership', 500);
-            }
-
+            // Save History
             MembershipHistory::create([
-                'order_id' => $membership->order_id,
-                'user_id' => $membership->user_id,
-                'membership_id'=> $membership->id,
-                'plan_id'=> $plan->id,
-                'membership_type'=> $plan->membership_type,
-                'type'=> $plan->interval,
-                'price'=> $plan->price,
-                'start_at'=> Carbon::now(),
-                'end_at'=> Carbon::parse($details['billing_info']['next_billing_time'] ?? now()->addMonth())->toDateTimeString(),
+                'order_id'        => $membership->order_id,
+                'user_id'         => $membership->user_id,
+                'membership_id'   => $membership->id,
+                'plan_id'         => $plan->id,
+                'membership_type' => $plan->membership_type,
+                'type'            => $plan->interval,
+                'price'           => $plan->price,
+                'start_at'        => Carbon::now(),
+                'end_at'          => $endDate,
             ]);
 
-            return redirect($request->get('success_url'));
+            return redirect($successUrl);
         } catch (\Exception $e) {
-            Log::error('PayPal Success Error: ', ['error' => $e->getMessage()]);
+            Log::error('PayPal Success Error: ' . $e->getMessage());
             return $this->error([], 'Failed to process subscription: ' . $e->getMessage(), 500);
         }
     }
 
     public function paypalCancel(Request $request)
     {
-        // Handle the cancellation logic here
 
         return redirect($request->get('cancel_url'));
     }

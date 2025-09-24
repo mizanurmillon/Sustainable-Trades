@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -72,6 +73,11 @@ class User extends Authenticatable implements JWTSubject
     public function shopInfo()
     {
         return $this->hasOne(ShopInfo::class);
+    }
+
+    public function membership(): HasOne
+    {
+        return $this->hasOne(Membership::class);
     }
 
 }

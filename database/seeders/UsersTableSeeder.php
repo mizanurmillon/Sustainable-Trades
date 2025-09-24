@@ -42,7 +42,7 @@ class UsersTableSeeder extends Seeder
                 'first_name' => 'Vendor',
                 'last_name'=> null,
                 'email' => 'vendor@vendor.com',
-                'is_premium' => 1,
+                'is_premium' => 0,
                 'email_verified_at' => now(),
                 'password' => Hash::make('12345678'),
                 'role' => 'vendor',

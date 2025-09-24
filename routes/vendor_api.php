@@ -64,7 +64,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 
     route::controller(MembershipController::class)->group(function () {
-        Route::post('/membership/{id}', 'Membership');
+        Route::post('/membership/{id}', 'createMembership');
         Route::post('/membership/upgrade', 'upgradeMembership');
         Route::post('/membership/cancel', 'cancelMembership');
     });
@@ -74,5 +74,5 @@ Route::get('/paypal/onboard/success', [OnboardingController::class,'onboardSucce
 
 Route::controller(MembershipController::class)->group(function () {
     Route::get('/membership-success', 'success')->name('payments.paypal.success');
-    Route::get('/membership-cancel', 'cancel')->name('payments.cancel');
+    Route::get('/membership-cancel', 'paypalCancel')->name('payments.cancel');
 });
