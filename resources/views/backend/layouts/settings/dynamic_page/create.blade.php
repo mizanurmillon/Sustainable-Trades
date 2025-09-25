@@ -37,7 +37,7 @@
             <div class="col-lg-12">
                 <div class="card-style mb-4">
                     <div class="card card-body">
-                        <form method="POST" action="{{ route('dynamic_page.store') }}">
+                        <form method="POST" action="{{ route('dynamic_page.store') }}" enctype="multipart/form-data">
                             @csrf
                             <div class="input-style-1 mt-4">
                                 <label for="page_title">Title:</label>
@@ -50,7 +50,7 @@
                                     </span>
                                 @enderror
                             </div>
-                             <div class="input-style-1 mt-4">
+                            <div class="input-style-1 mt-4">
                                 <label for="sub_title">Sub Title:</label>
                                 <input type="text" placeholder="Enter Sub Title" id="sub_title"
                                     class="form-control @error('sub_title') is-invalid @enderror" name="sub_title"
@@ -62,15 +62,32 @@
                                 @enderror
                             </div>
 
-                            <div class="mt-4">
-                                <label for="image" class="form-label">Image</label>
-                                <input type="file" name="page_image" id="image"
-                                    class="dropify form-control @error('image') is-invalid @enderror" placeholder="Upload Image" data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
-                                @error('page_image')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
+                            <div class="row">
+                                <div class="mt-4 col-md-6">
+                                    <label for="icon" class="form-label">Page Icon</label>
+                                    <input type="file" name="icon" id="icon"
+                                        class="dropify form-control @error('icon') is-invalid @enderror"
+                                        placeholder="Upload Icon"
+                                        data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
+                                    @error('icon')
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
+
+                                <div class="mt-4 col-md-6">
+                                    <label for="image" class="form-label">Image</label>
+                                    <input type="file" name="page_image" id="image"
+                                        class="dropify form-control @error('image') is-invalid @enderror"
+                                        placeholder="Upload Image"
+                                        data-default-file="{{ asset('backend/images/placeholder/image_placeholder.png') }}">
+                                    @error('page_image')
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div class="input-style-1 mt-4">

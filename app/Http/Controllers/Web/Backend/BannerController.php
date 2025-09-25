@@ -36,16 +36,6 @@ class BannerController extends Controller
                     $short_description = strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description;
                     return '<p>' . $short_description . '</p>';
                 })
-                ->addColumn('status', function ($data) {
-                    $status = ' <div class="form-check form-switch">';
-                    $status .= ' <input onclick="showStatusChangeAlert(' . $data->id . ')" type="checkbox" class="form-check-input" id="customSwitch' . $data->id . '" getAreaid="' . $data->id . '" name="status"';
-                    if ($data->status == "active") {
-                        $status .= "checked";
-                    }
-                    $status .= '><label for="customSwitch' . $data->id . '" class="form-check-label" for="customSwitch"></label></div>';
-
-                    return $status;
-                })
                 ->addColumn('action', function ($data) {
                     return '<div class="text-center"><div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
                               <a href="' . route('admin.banners.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
@@ -53,7 +43,7 @@ class BannerController extends Controller
                               </a>
                             </div></div>';
                 })
-                ->rawColumns(['image', 'action', 'status', 'description'])
+                ->rawColumns(['image', 'action', 'description'])
                 ->make(true);
         }
 

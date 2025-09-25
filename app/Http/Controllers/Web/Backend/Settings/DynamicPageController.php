@@ -95,6 +95,7 @@ class DynamicPageController extends Controller {
                     'page_title'   => 'required|string',
                     'sub_title'    => 'nullable|string',
                     'page_content' => 'required|string',
+                    'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
                     'page_image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
                 ]);
 
@@ -109,11 +110,19 @@ class DynamicPageController extends Controller {
                     $imageName = null; // Set a default value if no image is uploaded
                 }
 
+                if($request->hasFile('icon')) {
+                    $image                        = $request->file('icon');
+                    $iconName                    = uploadImage($image, 'dynamic_pages');
+                }else {
+                    $iconName = null; // Set a default value if no image is uploaded
+                }
+
                 $data               = new DynamicPage();
                 $data->page_title   = $request->page_title;
                 $data->sub_title = $request->sub_title;
                 $data->page_slug    = Str::slug($request->page_title);
                 $data->page_content = $request->page_content;
+                $data->icon = $iconName;
                 $data->page_image = $imageName;
                 $data->save();
             }
@@ -151,6 +160,7 @@ class DynamicPageController extends Controller {
                    'page_title'   => 'required|string',
                     'sub_title'    => 'nullable|string',
                     'page_content' => 'required|string',
+                    'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
                     'page_image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120', // 5MB max
                 ]);
 
@@ -170,10 +180,23 @@ class DynamicPageController extends Controller {
                     // If no new image is uploaded, keep the old image
                     $imageName = $data->page_image;
                 }
+
+                if ($request->hasFile('icon')) {
+                    // Delete the old image if it exists
+                    if (file_exists(public_path($data->icon))) {
+                        unlink(public_path($data->icon));
+                    }
+                    $image = $request->file('icon');
+                    $iconName = uploadImage($image, 'dynamic_pages');
+                } else {
+                    // If no new image is uploaded, keep the old image
+                    $iconName = $data->icon;
+                }
                 $data->update([
                     'page_title'   => $request->page_title,
                     'page_slug'    => Str::slug($request->page_title),
                     'page_content' => $request->page_content,
+                    'icon' => $iconName,
                     'page_image' => $imageName,
                     'sub_title' => $request->sub_title,
                 ]);
@@ -223,7 +246,17 @@ class DynamicPageController extends Controller {
      */
     public function destroy(int $id): JsonResponse {
         $page = DynamicPage::findOrFail($id);
+
+        if (file_exists(public_path($page->page_image))) {
+            unlink(public_path($page->page_image));
+        }
+        
+        if (file_exists(public_path($page->icon))) {
+            unlink(public_path($page->icon));
+        }
+
         $page->delete();
+
         return response()->json([
             't-success' => true,
             'message'   => 'Deleted successfully.',

@@ -45,7 +45,6 @@
                                         <th>Sub Title</th>
                                         <th>Description</th>
                                         <th>Image</th>
-                                        <th>Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -126,12 +125,6 @@
                             {
                                 data: 'image',
                                 name: 'image',
-                                orderable: false,
-                                searchable: false
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
                                 orderable: false,
                                 searchable: false
                             },

@@ -14,7 +14,7 @@ class BannerController extends Controller
     
     public function banners() 
     {
-        $data = Banner::where('status', 'active')->latest()->get();
+        $data = Banner::latest()->get();
 
         if($data->isEmpty()) {
             return $this->error([], 'No banners found', 404);
