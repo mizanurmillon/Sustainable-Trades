@@ -1,27 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\FaqController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\Cart\CartController;
-use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\FollowShopController;
-use App\Http\Controllers\Api\MyFavoriteController;
-use App\Http\Controllers\Api\NewsletterController;
-use App\Http\Controllers\Api\OurMissionController;
-use App\Http\Controllers\Api\SocialAuthController;
-use App\Http\Controllers\Api\SocialLinkController;
-use App\Http\Controllers\Api\DynamicPageController;
-use App\Http\Controllers\Api\SitesettingController;
-use App\Http\Controllers\Api\UserSettingController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\Cart\CartController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\DynamicPageController;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\FollowShopController;
 use App\Http\Controllers\Api\GetNotificationController;
+use App\Http\Controllers\Api\MyFavoriteController;
+use App\Http\Controllers\Api\NewsletterController;
+use App\Http\Controllers\Api\OurMissionController;
 use App\Http\Controllers\Api\Product\ProductController;
+use App\Http\Controllers\Api\Shop\ShopController;
+use App\Http\Controllers\Api\SitesettingController;
+use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\SocialLinkController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
+use App\Http\Controllers\Api\TutorialsController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserSettingController;
+use Illuminate\Support\Facades\Route;
+
 
 
 /*
@@ -174,4 +177,14 @@ Route::controller(SubscriptionPlanController::class)->group(function () {
 Route::controller(BannerController::class)->group(function () {
     Route::get('/banners', 'banners');
     Route::get('/how-it-works', 'howItWorks');
+});
+
+Route::controller(TutorialsController::class)->group(function () {
+    Route::get('/tutorials', 'tutorials');
+});
+
+Route::controller(ContactController::class)->group(function () {
+    Route::get('/contact', 'contact');
+    Route::get('/terms-and-conditions', 'termsAndConditions');
+    Route::get('/infringement-report', 'InfringementReport');
 });
