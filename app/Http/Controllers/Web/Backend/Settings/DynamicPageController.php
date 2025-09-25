@@ -36,6 +36,14 @@ class DynamicPageController extends Controller {
                     $short_page_content = strlen($page_content) > 100 ? substr($page_content, 0, 100) . '...' : $page_content;
                     return '<p>' . $short_page_content . '</p>';
                 })
+                ->addColumn('icon', function ($data) {
+                    $url = asset($data->icon);
+
+                    if (empty($data->icon)) {
+                        $url = asset('backend/images/placeholder/image_placeholder.png');
+                    }
+                    return '<img src="' . $url . '" class="img-fluid" style="width: 25px; height: auto;">';
+                })
                 ->addColumn('status', function ($data) {
                     $status = ' <div class="form-check form-switch">';
                     $status .= ' <input onclick="showStatusChangeAlert(' . $data->id . ')" type="checkbox" class="form-check-input" id="customSwitch' . $data->id . '" getAreaid="' . $data->id . '" name="status"';
@@ -56,7 +64,7 @@ class DynamicPageController extends Controller {
                             </a>
                             </div>';
                 })
-                ->rawColumns(['page_content', 'status', 'action'])
+                ->rawColumns(['page_content', 'status', 'action', 'icon'])
                 ->make();
         }
         return view('backend.layouts.settings.dynamic_page.index');

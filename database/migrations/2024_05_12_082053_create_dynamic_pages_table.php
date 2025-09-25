@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('page_slug')->nullable();
             $table->string('sub_title')->nullable();
             $table->longText('page_content')->nullable();
+            $table->string('icon')->nullable();
             $table->string('page_image')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active')->nullable();
             $table->timestamps();

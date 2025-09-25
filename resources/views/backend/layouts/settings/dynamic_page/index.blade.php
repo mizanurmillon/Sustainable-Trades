@@ -48,6 +48,7 @@
                                         <th>#</th>
                                         <th>Page Title</th>
                                         <th>Page Content</th>
+                                        <th>Icon</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -120,6 +121,12 @@
                             name: 'page_content',
                             orderable: true,
                             searchable: true
+                        },
+                        {
+                            data: 'icon',
+                            name: 'icon',
+                            orderable: false,
+                            searchable: false
                         },
                         {
                             data: 'status',
