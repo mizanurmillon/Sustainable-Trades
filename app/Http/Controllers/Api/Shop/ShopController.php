@@ -58,31 +58,28 @@ class ShopController extends Controller
 
     public function shopDetails($id)
     {
-        if (auth()->user()) {
-            $shopFollow = FollowShop::where('user_id', auth()->user()->id)->where('shop_info_id', $id)->first(); // check if user follow 
-        }
-        $shop = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address'])
+
+        $data = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address'])
             ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->where('id', $id)
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->first();
 
-        if (auth()->user()) {
-            if (auth()->user()->role == "customer") {
-                if (auth()->user()) {
-                    $shop->is_followed = $shopFollow ? true : false;
-                } else {
-                    $shop->is_followed = false;
-                }
-            }
+        if (auth()->check()) {
+            $shopFollow = FollowShop::where('user_id', auth()->id())
+                ->where('shop_info_id', $data->shopInfo->id)
+                ->exists(); // more efficient
+            $data->is_followed = $shopFollow;
+        } else {
+            $data->is_followed = false;
         }
 
-        if (!$shop) {
+        if (!$data) {
             return $this->error([], 'Shop not found', 404);
         }
 
-        return $this->success($shop, 'Shop details retrieved successfully', 200);
+        return $this->success($data, 'Shop details retrieved successfully', 200);
     }
 
     public function shopFeaturedProducts($id)
@@ -141,7 +138,7 @@ class ShopController extends Controller
             }
         }
 
-        $data = $query->paginate(15); // Paginate results, 10 per page
+        $data = $query->paginate(15); // Paginate results, 15 per page
 
         if ($data->isEmpty()) {
             return $this->error([], 'No products found for this shop', 404);
