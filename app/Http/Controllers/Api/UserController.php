@@ -23,7 +23,7 @@ class UserController extends Controller {
 
         $user = auth()->user();
 
-        $data = User::with('membership')->where('id', $user->id)->first();
+        $data = User::with('membership','shopInfo:id,user_id,shop_name')->where('id', $user->id)->first();
 
         if (!$data) {
             return $this->error([], 'User Not Found', 404);
