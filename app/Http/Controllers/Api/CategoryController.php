@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\SubCategory;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
@@ -36,5 +37,16 @@ class CategoryController extends Controller
         }
 
         return $this->success($data, 'Categories retrieved successfully', 200);
+    }
+
+    public function subCategories()
+    {
+        $data = SubCategory::where('status', 'active')->latest()->get();
+
+        if($data->isEmpty()) {
+            return $this->error([], 'No subcategories found', 404);
+        }
+
+        return $this->success($data, 'Subcategories retrieved successfully', 200);
     }
 }

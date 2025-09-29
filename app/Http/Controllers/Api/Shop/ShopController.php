@@ -136,6 +136,12 @@ class ShopController extends Controller
             if ($shortBy === "recently_added") {
                 $query->latest();
             }
+            if ($shortBy === "ascending") {
+                $query->orderBy('product_price', 'asc');
+            }
+            if ($shortBy === "descending") {
+                $query->orderBy('product_price', 'desc');
+            }
         }
 
         $data = $query->paginate(15); // Paginate results, 15 per page
