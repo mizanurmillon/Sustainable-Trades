@@ -113,6 +113,7 @@ class ShopController extends Controller
 
     public function shopProducts(Request $request, $id)
     {
+        $item = $request->input('item', 15);
         $query = Product::with(['category', 'sub_category', 'images'])->where('shop_info_id', $id)
             ->where('status', 'approved')
             ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price');
@@ -147,7 +148,7 @@ class ShopController extends Controller
             }
         }
 
-        $data = $query->paginate(15); // Paginate results, 15 per page
+        $data = $query->paginate($item); // Paginate results, 15 per page
 
         if ($data->isEmpty()) {
             return $this->error([], 'No products found for this shop', 404);
