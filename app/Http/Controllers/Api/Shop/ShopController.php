@@ -117,10 +117,13 @@ class ShopController extends Controller
             ->where('status', 'approved')
             ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price');
 
-        if ($request->has('category_id')) {
+        // Filter by category
+        if ($request->filled('category_id')) {
             $query->where('category_id', $request->input('category_id'));
         }
-        if ($request->has('sub_category_id')) {
+
+        // Filter by sub-category
+        if ($request->filled('sub_category_id')) {
             $query->where('sub_category_id', $request->input('sub_category_id'));
         }
 
