@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\OnboardingController;
+use App\Http\Controllers\Api\Auth\ShopImageAndBannerController;
 use App\Http\Controllers\Api\Auth\ShopOwnerController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\Product\ImportExportController;
@@ -14,12 +15,18 @@ use Illuminate\Support\Facades\Route;
 
 
 
+
 Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::group(['middleware' => ['vendor']], function () {
 
         Route::controller(ShopOwnerController::class)->group(function () {
             Route::post('/shop/owner-data-update', 'shopOwnerDataUpdate');
+        });
+
+        Route::controller(ShopImageAndBannerController::class)->group(function () {
+            Route::post('/shop/image-update', 'shopImageUpdate');
+            Route::post('/shop/banner-update', 'shopBannerUpdate');
         });
 
         Route::controller(ProductController::class)->group(function () {

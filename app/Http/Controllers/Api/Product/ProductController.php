@@ -84,6 +84,15 @@ class ProductController extends Controller
             $data->shop->is_followed = false;
         }
 
+        $moreProducts = Product::with(['images'])
+            ->where('shop_info_id', $data->shop_info_id)
+            ->where('id', '!=', $id)
+            ->where('status', 'approved')
+            ->take(5) // Limit to 5 products
+            ->get();
+
+        $data->more_products_from_shop = $moreProducts;
+
         return $this->success($data, 'Product retrieved successfully', 200);
     }
 }
