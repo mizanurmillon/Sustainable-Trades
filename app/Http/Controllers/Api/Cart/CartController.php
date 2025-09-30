@@ -98,9 +98,15 @@ class CartController extends Controller
 
         $cart = Cart::where('user_id', $user->id)->with(['shop:id,shop_name,shop_image', 'shop.address', 'CartItems.product:id,product_name,product_price,product_quantity', 'CartItems.product.images'])->get();
 
+        $totalCartItems = $cart->sum(function ($item) {
+            return $item->CartItems->sum('quantity');
+        });
+
         if (!$cart) {
             return $this->error([], 'Cart is empty', 404);
         }
+
+        $cart->$totalCartItems = $totalCartItems;
 
         return $this->success($cart, 'Cart retrieved successfully', 200);
     }
