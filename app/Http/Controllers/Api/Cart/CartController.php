@@ -96,20 +96,33 @@ class CartController extends Controller
             return $this->error([], 'Unauthorized', 401);
         }
 
-        $cart = Cart::where('user_id', $user->id)->with(['shop:id,shop_name,shop_image', 'shop.address', 'CartItems.product:id,product_name,product_price,product_quantity', 'CartItems.product.images'])->get();
+        $cart = Cart::where('user_id', $user->id)
+            ->with([
+                'shop:id,shop_name,shop_image',
+                'shop.address',
+                'CartItems.product:id,product_name,product_price,product_quantity',
+                'CartItems.product.images'
+            ])
+            ->get();
 
-        $totalCartItems = $cart->sum(function ($item) {
-            return $item->CartItems->sum('quantity');
-        });
-
-        if (!$cart) {
+        if ($cart->isEmpty()) {
             return $this->error([], 'Cart is empty', 404);
         }
 
-        $cart->$totalCartItems = $totalCartItems;
+        $totalCartItems = $cart->sum(function ($c) {
+            return $c->CartItems->count();
+        });
 
-        return $this->success($cart, 'Cart retrieved successfully', 200);
+        return $this->success(
+            [
+                'total_cart_items' => $totalCartItems,
+                'cart' => $cart
+            ],
+            'Cart retrieved successfully',
+            200
+        );
     }
+
 
     public function deleteCartItem($id)
     {
@@ -165,7 +178,7 @@ class CartController extends Controller
         if (!$cart) {
             return $this->error([], 'Cart not found', 404);
         }
-        
+
         $cart->delete(); // delete cart row
 
         return $this->success([], 'Cart deleted successfully', 200);
