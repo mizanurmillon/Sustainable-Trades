@@ -11,6 +11,24 @@ use Illuminate\Support\Facades\Validator;
 class SpotlightApplicationController extends Controller
 {
     use ApiResponse;
+
+    public function index(Request $request)
+    {
+        $query = SpotlightApplication::where('status', 'approved');
+
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $data = $query->latest()->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([], 'Data not found', 200);
+        }
+
+        return $this->success($data, 'Spotlight applications retrieved successfully', 200);
+        
+    }
      
     public function store(Request $request)
     {

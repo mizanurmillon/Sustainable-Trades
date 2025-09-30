@@ -23,7 +23,9 @@ use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TutorialsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserSettingController;
+use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -188,4 +190,8 @@ Route::controller(ContactController::class)->group(function () {
     Route::get('/contact', 'contact');
     Route::get('/terms-and-conditions', 'termsAndConditions');
     Route::get('/infringement-report', 'InfringementReport');
+});
+
+Route::controller(SpotlightApplicationController::class)->group(function () {
+    Route::get('/spotlight-applications', 'index');
 });

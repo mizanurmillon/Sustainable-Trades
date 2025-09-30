@@ -24,14 +24,14 @@ class shopOwnerRegisterRequest extends FormRequest
         return [
             'first_name'  => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email'          => 'required|email|unique:users,email',
-            'phone'          => 'required|string|max:15|unique:users,phone',
+            'email'          => 'required|email|unique:users,email,' . (auth()->user()->id ?? 'null'),
+            'phone'          => 'required|string|max:15|unique:users,phone,' . (auth()->user()->id ?? 'null'),
             'company_name'  => 'required|string|max:255',
-            'shop_name'    => 'required|string|max:255|unique:shop_infos,shop_name',
+            'shop_name'    => 'required|string|max:255|unique:shop_infos,shop_name,' . (auth()->user()->shopInfo->id ?? 'null'),
             'shop_city'   => 'required|string|max:255',
             'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
-            'shop_image'    => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
-            'shop_banner'  => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
+            'shop_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
+            'shop_banner'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
             'website_url'  => 'nullable|url|max:255',
             'facebook_url' => 'nullable|url|max:255',
             'instagram_url' => 'nullable|url|max:255',
