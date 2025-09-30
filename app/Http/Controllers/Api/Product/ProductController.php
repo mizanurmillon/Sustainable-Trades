@@ -89,6 +89,7 @@ class ProductController extends Controller
             ->where('id', '!=', $id)
             ->where('status', 'approved')
             ->select('id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity','selling_option')
+            ->inRandomOrder()
             ->take(5) // Limit to 5 products
             ->get();
 
