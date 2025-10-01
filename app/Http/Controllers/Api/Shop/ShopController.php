@@ -87,7 +87,7 @@ class ShopController extends Controller
         $data = Product::with('images')->where('shop_info_id', $id)
             ->where('is_featured', true)
             ->where('status', 'approved')
-            ->select('id', 'shop_info_id', 'product_name', 'product_price', 'is_featured')
+            ->select('id', 'shop_info_id', 'product_name', 'product_price', 'is_featured','product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option')
             ->get();
 
         if ($data->isEmpty()) {
@@ -116,7 +116,7 @@ class ShopController extends Controller
         $item = $request->input('item', 15);
         $query = Product::with(['category', 'sub_category', 'images'])->where('shop_info_id', $id)
             ->where('status', 'approved')
-            ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price');
+            ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price','product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option');
 
         // Filter by category
         if ($request->filled('category_id')) {
