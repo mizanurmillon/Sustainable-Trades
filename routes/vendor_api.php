@@ -82,6 +82,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 });
 
+Route::get('/trade-shop-product/{id}', [TradeOfferController::class, 'tradeShopProduct']);
+
 Route::get('/paypal/onboard/success', [OnboardingController::class,'onboardSuccess'])->name('paypal.success');
 
 Route::controller(MembershipController::class)->group(function () {

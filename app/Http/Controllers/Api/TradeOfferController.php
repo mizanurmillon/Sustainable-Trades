@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
-use Carbon\Carbon;
+use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\TradeOffer;
 use App\Traits\ApiResponse;
-use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class TradeOfferController extends Controller
 {
@@ -295,5 +296,23 @@ class TradeOfferController extends Controller
             DB::rollBack();
             return $this->error([], 'Failed to send trade counter offer: ' . $e->getMessage(), 500);
         }
+    }
+
+
+    public function tradeShopProduct($id)
+    {
+        $query = Product::with(['category', 'sub_category', 'images'])->where('shop_info_id', $id)
+            ->where('status', 'approved')
+            ->whereNot('selling_option', 'For Sale')
+            ->where('product_quantity', '>', 0)
+            ->select('id', 'shop_info_id', 'product_name', 'product_price','product_quantity', 'selling_option');
+
+        $data = $query->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([], 'No products found for this shop', 404);
+        }
+
+        return $this->success($data, 'Products retrieved successfully', 200);
     }
 }
