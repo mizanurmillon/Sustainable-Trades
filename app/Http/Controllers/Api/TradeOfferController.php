@@ -20,10 +20,11 @@ class TradeOfferController extends Controller
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'offered_items' => 'required|array',
-            'offered_items.*' => 'required|integer|exists:products,id',
+            'offered_items.*.product_id' => 'required|integer|exists:products,id',
+            'offered_items.*.quantity' => 'required|integer|min:1',
             'requested_items' => 'required|array',
-            'requested_items.*' => 'required|integer|exists:products,id',
-            'quantity' => 'required|numeric|min:0',
+            'requested_items.*.product_id' => 'required|integer|exists:products,id',
+            'requested_items.*.quantity' => 'required|integer|min:1',
             'message' => 'nullable|string|max:500',
             'receiver_id' => 'required|integer|exists:users,id',
             'attachments' => 'nullable|array',
@@ -51,17 +52,17 @@ class TradeOfferController extends Controller
 
             foreach ($request->offered_items as $item) {
                 $offer->items()->create([
-                    'product_id' => $item,
+                    'product_id' => $item['product_id'],
                     'type' => 'offered',
-                    'quantity' => $request->quantity,
+                    'quantity' => $item['quantity'],
                 ]);
             }
 
             foreach ($request->requested_items as $item) {
                 $offer->items()->create([
-                    'product_id' => $item,
+                    'product_id' => $item['product_id'],
                     'type' => 'requested',
-                    'quantity' => $request->quantity,
+                    'quantity' => $item['quantity'],
                 ]);
             }
 
