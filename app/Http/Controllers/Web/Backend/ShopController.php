@@ -41,7 +41,7 @@ class ShopController extends Controller
                     if (empty($data->shop_image)) {
                         $url = asset('backend/images/placeholder/image_placeholder.png');
                     }
-                    return '<img src="' . $url . '" class="img-fluid rounded object-fit-cover" style="width: 100px;">';
+                    return '<img src="' . $url . '" class="img-fluid rounded object-fit-cover" style="width: 100px; height: 70px;">';
                 })
                 ->addColumn('is_featured', function ($data) {
                     $status = ' <div class="form-check form-switch">';
