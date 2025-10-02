@@ -301,7 +301,7 @@ class TradeOfferController extends Controller
 
     public function tradeShopProduct($id)
     {
-        $query = Product::with(['category', 'sub_category', 'images'])->where('shop_info_id', $id)
+        $query = Product::where('shop_info_id', $id)
             ->where('status', 'approved')
             ->whereNot('selling_option', 'For Sale')
             ->where('product_quantity', '>', 0)
