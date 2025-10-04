@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\shopOwnerRegisterRequest;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Requests\shopOwnerUpdateRequest;
+use App\Http\Requests\shopOwnerRegisterRequest;
 
 class ShopOwnerController extends Controller
 {
@@ -145,7 +146,7 @@ class ShopOwnerController extends Controller
     }
 
 
-    public function shopOwnerDataUpdate(shopOwnerRegisterRequest $request)
+    public function shopOwnerDataUpdate(shopOwnerUpdateRequest $request)
     {
 
         $user = auth()->user();

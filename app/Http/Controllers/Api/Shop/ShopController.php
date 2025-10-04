@@ -60,7 +60,7 @@ class ShopController extends Controller
     {
 
         $data = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address', 'shopInfo.socialLinks'])
-            ->select('id', 'first_name', 'last_name', 'phone', 'role', 'avatar','company_name')
+            ->select('id', 'first_name', 'last_name', 'phone', 'email', 'role', 'avatar','company_name')
             ->where('id', $id)
             ->where('role', 'vendor')
             ->where('status', 'active')

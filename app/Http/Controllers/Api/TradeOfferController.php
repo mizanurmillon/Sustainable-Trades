@@ -215,10 +215,10 @@ class TradeOfferController extends Controller
             $query->where('sender_id', $user->id);
         })->count();
 
-        $previousCount = TradeOffer::where(function ($query) use ($user) {
+        $acceptedCount = TradeOffer::where(function ($query) use ($user) {
             $query->where('receiver_id', $user->id)
                 ->orWhere('sender_id', $user->id);
-        })->where('created_at', '<', Carbon::today())->count();
+        })->where('status', 'accepted')->count();
 
         $tradeCount = $tradeCount ?: 0; // Ensure trade count is at least 0
         $pendingCount = $pendingCount ?: 0; // Ensure pending count is at least 0
@@ -228,7 +228,7 @@ class TradeOfferController extends Controller
             'pending_count' => $pendingCount,
             'cancelled_count' => $cancelledCount,
             'sent_count' => $sentCount,
-            'previous_count' => $previousCount,
+            'accepted_count' => $acceptedCount,
         ];
 
         return $this->success($tradeCount, 'Trade count retrieved successfully', 200);
