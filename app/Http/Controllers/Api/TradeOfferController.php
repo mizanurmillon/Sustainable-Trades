@@ -143,7 +143,7 @@ class TradeOfferController extends Controller
         }
 
         if ($offer->receiver_id !== $user->id) {
-            return $this->error([], 'Unauthorized action', 403);
+            return $this->error([], 'This trade offer is your offer and you cannot approve it', 404);
         }
 
         // Logic to approve the trade offer
