@@ -59,7 +59,7 @@ class ShopController extends Controller
     public function shopDetails($id)
     {
 
-        $data = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address'])
+        $data = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address', 'shopInfo.socialLinks'])
             ->select('id', 'first_name', 'last_name', 'phone', 'role', 'avatar','company_name')
             ->where('id', $id)
             ->where('role', 'vendor')
