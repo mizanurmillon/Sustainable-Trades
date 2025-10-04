@@ -19,7 +19,7 @@ class FollowShopController extends Controller
            return $this->error([], "User Unauthorized", 401); 
         }
 
-        $data = FollowShop::where('user_id', $user->id)->with('shop:id,shop_name,shop_image')->latest()->get();
+        $data = FollowShop::where('user_id', $user->id)->with('shop:id,user_id,shop_name,shop_image')->latest()->get();
 
         return $this->success($data, "Followed Shops", 200);
     }
