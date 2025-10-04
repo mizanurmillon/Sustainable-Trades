@@ -121,16 +121,6 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::group(['middleware' => ['customer']], function () {
 
-        Route::controller(MyFavoriteController::class)->group(function () {
-            Route::get('/my-favorites', 'myFavorites');
-            Route::post('/add-favorites/{id}', 'addFavorite',);
-        });
-
-        Route::controller(FollowShopController::class)->group(function () {
-            Route::get('/follow-shops', 'followShops');
-            Route::post('/follow-shop/{id}', 'followShop');
-        });
-
         Route::controller(CartController::class)->group(function () {
             Route::post('/add-to-cart/{id}', 'addToCart');
             route::get('/cart', 'getCart');
@@ -139,6 +129,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::delete('/cart/empty', 'emptyCart');
             Route::delete('/cart/remove/{id}', 'deleteCart');
         });
+    });
+
+    Route::controller(MyFavoriteController::class)->group(function () {
+            Route::get('/my-favorites', 'myFavorites');
+            Route::post('/add-favorites/{id}', 'addFavorite',);
+        });
+
+    Route::controller(FollowShopController::class)->group(function () {
+        Route::get('/follow-shops', 'followShops');
+        Route::post('/follow-shop/{id}', 'followShop');
     });
 });
 

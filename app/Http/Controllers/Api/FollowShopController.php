@@ -13,7 +13,15 @@ class FollowShopController extends Controller
 
     public function followShops()
     {
+        $user = auth()->user();
 
+        if(!$user){
+           return $this->error([], "User Unauthorized", 401); 
+        }
+
+        $data = FollowShop::where('user_id', $user->id)->with('shop:id,shop_name,shop_image')->latest()->get();
+
+        return $this->success($data, "Followed Shops", 200);
     }
 
     public function followShop(Request $request, $id)
