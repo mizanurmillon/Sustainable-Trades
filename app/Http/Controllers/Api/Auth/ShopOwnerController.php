@@ -252,13 +252,13 @@ class ShopOwnerController extends Controller
             ]);
 
             $user->shopInfo->address()->update([
-                'address_line_1' => $validated['address_line_1'],
-                'address_line_2' => $validated['address_line_2'],
+                'address_line_1' => $validated['address_line_1'] ?? null,
+                'address_line_2' => $validated['address_line_2'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
-                'city' => $validated['city'],
-                'state' => $validated['state'],
-                'postal_code' => $validated['zip_code'],
+                'city' => $validated['city'] ?? null,
+                'state' => $validated['state'] ?? null,
+                'postal_code' => $validated['zip_code'] ?? null,
                 'display_my_address' => $validated['display_my_address'] ?? false,
                 'address_10_mile' => $validated['address_10_mile'] ?? false,
                 'do_not_display' => $validated['do_not_display'] ?? false,
