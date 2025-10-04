@@ -227,11 +227,11 @@ class ShopOwnerController extends Controller
                 'about_image' => $aboutImageName
             ]);
 
-            $user->shopInfo->policies()->update([
-                'shipping_information' => $validated['shipping_information'],
-                'return_policy' => $validated['return_policy'],
-                'payment_methods' => ($validated['payment_methods']),
-            ]);
+            // $user->shopInfo->policies()->update([
+            //     'shipping_information' => $validated['shipping_information'],
+            //     'return_policy' => $validated['return_policy'],
+            //     'payment_methods' => ($validated['payment_methods']),
+            // ]);
 
             if (isset($validated['answers']) && is_array($validated['answers']) && is_array($validated['questions'])) {
                 $user->shopInfo->faqs()->delete(); // Remove existing FAQs
@@ -251,18 +251,18 @@ class ShopOwnerController extends Controller
                 'pinterest_url' => $validated['pinterest_url'] ?? null,
             ]);
 
-            $user->shopInfo->address()->update([
-                'address_line_1' => $validated['address_line_1'] ?? null,
-                'address_line_2' => $validated['address_line_2'] ?? null,
-                'latitude' => $validated['latitude'] ?? null,
-                'longitude' => $validated['longitude'] ?? null,
-                'city' => $validated['city'] ?? null,
-                'state' => $validated['state'] ?? null,
-                'postal_code' => $validated['zip_code'] ?? null,
-                'display_my_address' => $validated['display_my_address'] ?? false,
-                'address_10_mile' => $validated['address_10_mile'] ?? false,
-                'do_not_display' => $validated['do_not_display'] ?? false,
-            ]);
+            // $user->shopInfo->address()->update([
+            //     'address_line_1' => $validated['address_line_1'] ?? null,
+            //     'address_line_2' => $validated['address_line_2'] ?? null,
+            //     'latitude' => $validated['latitude'] ?? null,
+            //     'longitude' => $validated['longitude'] ?? null,
+            //     'city' => $validated['city'] ?? null,
+            //     'state' => $validated['state'] ?? null,
+            //     'postal_code' => $validated['zip_code'] ?? null,
+            //     'display_my_address' => $validated['display_my_address'] ?? false,
+            //     'address_10_mile' => $validated['address_10_mile'] ?? false,
+            //     'do_not_display' => $validated['do_not_display'] ?? false,
+            // ]);
 
             DB::commit();
             $user->load('shopInfo.address', 'shopInfo.socialLinks', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.faqs');
