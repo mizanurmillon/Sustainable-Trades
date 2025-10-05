@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\MyFavoriteController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OurMissionController;
 use App\Http\Controllers\Api\Product\ProductController;
+use App\Http\Controllers\Api\AllProductController;
 use App\Http\Controllers\Api\Shop\ShopController;
 use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\SocialAuthController;
@@ -165,6 +166,11 @@ Route::group(['middleware' => ['guest']], function () {
         Route::get('/category/{id}', 'singleCategory');
         Route::get('/category-and-subcategories', 'categoryAndSubCategories');
         Route::get('/sub-categories', 'subCategories');
+    });
+
+    Route::controller(AllProductController::class)->group(function () {
+        Route::get('/all-products', 'allProducts');
+        Route::get('/is-featured-product', 'isFeaturedProduct');
     });
 });
 
