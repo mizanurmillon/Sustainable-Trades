@@ -26,7 +26,7 @@ class CategoryController extends Controller
 
     public function singleCategory($id)
     {
-        $data = Category::with('products:id,category_id,shop_info_id,product_name,product_price,product_quantity,selling_option')
+        $data = Category::with('products:id,category_id,shop_info_id,product_name,product_price,product_quantity,selling_option','products.images')
             ->find($id);
 
         if (!$data) {
