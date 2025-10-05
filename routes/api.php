@@ -142,11 +142,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 });
 
-Route::controller(CategoryController::class)->group(function () {
-    Route::get('/categories', 'categories');
-    Route::get('/category-and-subcategories', 'categoryAndSubCategories');
-    Route::get('/sub-categories', 'subCategories');
-});
+
 
 Route::group(['middleware' => ['guest']], function () {
     //Shop Owner APIs
@@ -162,6 +158,13 @@ Route::group(['middleware' => ['guest']], function () {
     Route::controller(ProductController::class)->group(function () {
         Route::get('/category/wise/products', 'allProducts');
         Route::get('/product-details/{id}', 'singleProduct');
+    });
+
+    Route::controller(CategoryController::class)->group(function () {
+        Route::get('/categories', 'categories');
+        Route::get('/category/{id}', 'singleCategory');
+        Route::get('/category-and-subcategories', 'categoryAndSubCategories');
+        Route::get('/sub-categories', 'subCategories');
     });
 });
 
