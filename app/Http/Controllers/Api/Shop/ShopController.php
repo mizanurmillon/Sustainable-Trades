@@ -14,14 +14,28 @@ class ShopController extends Controller
 {
     use ApiResponse;
 
-    public function allShops()
+    public function allShops(Request $request)
     {
-        $data = User::with('shopInfo:id,user_id,shop_name,shop_image,shop_banner')
+        $query = User::with('shopInfo:id,user_id,shop_name,shop_image,shop_banner','shopInfo.address')
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->whereHas('shopInfo')
-            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
-            ->get();
+            ->select('id', 'first_name', 'last_name', 'role', 'avatar');
+        
+            if ($request->has('address')) {
+                $address = $request->input('address');
+
+                $query->whereHas('shopInfo.address', function ($q) use ($address) {
+                    $q->where(function ($subQuery) use ($address) {
+                        $subQuery->where('address_line_1', 'like', "%{$address}%")
+                                ->orWhere('address_line_2', 'like', "%{$address}%")
+                                ->orWhere('postal_code', 'like', "%{$address}%");
+                    });
+                });
+            }
+            
+
+        $data = $query->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'No shops found', 404);

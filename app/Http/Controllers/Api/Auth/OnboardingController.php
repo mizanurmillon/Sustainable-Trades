@@ -28,7 +28,7 @@ class OnboardingController extends Controller
                 'grant_type' => 'client_credentials',
             ]);
 
-        dd($tokenResponse->json());
+        // dd($tokenResponse->json());
 
         if (!$tokenResponse->successful()) {
             return $this->error([], 'Failed to get PayPal access token', 400);
@@ -82,7 +82,7 @@ class OnboardingController extends Controller
             ->withHeaders(['Content-Type' => 'application/json'])
             ->post('https://api-m.sandbox.paypal.com/v2/customer/partner-referrals', $payload);
         
-        dd($response->json());
+        // dd($response->json());
 
         if (!$response->successful()) {
             Log::error('PayPal Partner Referral Error', $response->json());
