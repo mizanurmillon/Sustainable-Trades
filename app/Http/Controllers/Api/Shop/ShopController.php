@@ -54,23 +54,36 @@ class ShopController extends Controller
      */
     public function nearbyProduct(Request $request)
     {
-        $query = Product::with('images')
-            ->where('status', 'approved');
+        $lat = $request->input('lat');
+        $lng = $request->input('lng');
 
-        // ✅ Filter by address (optional)
-        if ($request->has('address')) {
-            $address = $request->input('address');
-
-            $query->whereHas('shop.address', function ($q) use ($address) {
-                $q->where(function ($subQuery) use ($address) {
-                    $subQuery->where('address_line_1', 'like', "%{$address}%")
-                        ->orWhere('address_line_2', 'like', "%{$address}%")
-                        ->orWhere('postal_code', 'like', "%{$address}%");
-                });
-            });
+        if (!$lat || !$lng) {
+            return $this->error([], 'Latitude and longitude are required', 400);
         }
 
-        $data = $query->select('id', 'shop_info_id', 'product_name', 'product_price','selling_option')
+        $radius = 10; // 10 km
+
+        $query = Product::with('images', 'shopInfo')
+            ->join('shop_info', 'products.shop_info_id', '=', 'shop_info.id')
+            ->selectRaw(
+                'products.id, products.shop_info_id, products.product_name, products.product_price, products.selling_option,
+            (6371 * acos(cos(radians(?)) * cos(radians(shop.address.latitude)) * cos(radians(shop.address.longitude) - radians(?)) + sin(radians(?)) * sin(radians(shop.address.latitude)))) AS distance',
+                [$lat, $lng, $lat]
+            )
+            ->where('products.status', 'approved');
+
+        // // Optional address filter
+        // if ($request->has('address')) {
+        //     $address = $request->input('address');
+        //     $query->where(function ($q) use ($address) {
+        //         $q->where('shop_info.address_line_1', 'like', "%{$address}%")
+        //             ->orWhere('shop_info.address_line_2', 'like', "%{$address}%")
+        //             ->orWhere('shop_info.postal_code', 'like', "%{$address}%");
+        //     });
+        // }
+
+        $data = $query->having('distance', '<=', $radius)
+            ->orderBy('distance', 'ASC')
             ->limit(10)
             ->get();
 
@@ -80,6 +93,7 @@ class ShopController extends Controller
 
         return $this->success($data, 'Nearby products retrieved successfully', 200);
     }
+
 
 
     /**
