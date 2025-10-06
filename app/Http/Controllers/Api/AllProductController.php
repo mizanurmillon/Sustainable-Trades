@@ -14,7 +14,7 @@ class AllProductController extends Controller
 
     public function allProducts(Request $request) {
         
-        $query = Product::with('images','shop.address')->where('status', 'approved')->select('id','shop_info_id','product_name', 'product_price', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option');
+        $query = Product::with('images', 'shop:id,user_id,shop_name','shop.address')->where('status', 'approved')->select('id','shop_info_id','product_name', 'product_price', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option');
 
         if($request->has('search')) {
             $query->where('product_name', 'like', '%' . $request->search . '%');
