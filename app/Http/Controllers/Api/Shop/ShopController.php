@@ -61,7 +61,7 @@ class ShopController extends Controller
             return $this->error([], 'Latitude and longitude are required', 400);
         }
 
-        $radius = 10; // 10 km
+        $radius = 5;
 
         $query = Product::with('images', 'shop')
             ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')
