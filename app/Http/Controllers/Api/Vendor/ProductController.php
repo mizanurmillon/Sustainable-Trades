@@ -75,7 +75,7 @@ class ProductController extends Controller
                 'fulfillment' => $request->fulfillment,
                 'selling_option' => $request->selling_option,
                 'is_featured' => $request->is_featured ?? false,
-                'status' => 'listing',
+                'status' => 'padding',
             ]);
 
             if ($request->has('tags')) {
@@ -99,7 +99,7 @@ class ProductController extends Controller
 
             $data->load(['images', 'metaTags']);
 
-            return $this->success($data,'Product created successfully',201);
+            return $this->success($data,'Product created successfully and waiting for approval',201);
 
         }catch (\Exception $e) {
             DB::rollBack();
@@ -117,12 +117,14 @@ class ProductController extends Controller
         }
 
         $products = Product::where('shop_info_id', $user->shopInfo->id)
-            ->with(['images'])
+            ->with(['images','category'])
             ->select([
                 'id',
+                'category_id',
                 'product_name',
                 'product_price',
                 'product_quantity',
+                'cost',
                 'status',
             ]);
 
@@ -261,6 +263,7 @@ class ProductController extends Controller
                 'fulfillment' => $request->fulfillment,
                 'selling_option' => $request->selling_option,
                 'is_featured' => $request->is_featured,
+                'status' => 'pending'
             ]);
 
             if ($request->has('tags')) {
@@ -286,7 +289,7 @@ class ProductController extends Controller
             
             DB::commit();
             $product->load(['images', 'metaTags']);
-            return $this->success($product, 'Product updated successfully', 200);
+            return $this->success($product, 'Product updated successfully and waiting for approval', 200);
 
 
         }catch(\Exception $e){
