@@ -54,8 +54,8 @@ class ShopController extends Controller
      */
     public function nearbyProduct(Request $request)
     {
-        $query = Product::with('shopInfo:id,user_id,shop_name,shop_image', 'shopInfo.address')
-            ->where('status', 'active');
+        $query = Product::with('images')
+            ->where('status', 'approved');
 
         // ✅ Filter by address (optional)
         if ($request->has('address')) {
@@ -70,7 +70,7 @@ class ShopController extends Controller
             });
         }
 
-        $data = $query->select('id', 'shop_info_id', 'product_name', 'product_price', 'product_image', 'selling_option')
+        $data = $query->select('id', 'shop_info_id', 'product_name', 'product_price','selling_option')
             ->limit(10)
             ->get();
 
