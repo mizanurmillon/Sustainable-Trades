@@ -61,7 +61,7 @@ class ShopController extends Controller
         if ($request->has('address')) {
             $address = $request->input('address');
 
-            $query->whereHas('shopInfo.address', function ($q) use ($address) {
+            $query->whereHas('shop.address', function ($q) use ($address) {
                 $q->where(function ($subQuery) use ($address) {
                     $subQuery->where('address_line_1', 'like', "%{$address}%")
                         ->orWhere('address_line_2', 'like', "%{$address}%")
