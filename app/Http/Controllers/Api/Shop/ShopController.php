@@ -16,24 +16,24 @@ class ShopController extends Controller
 
     public function allShops(Request $request)
     {
-        $query = User::with('shopInfo:id,user_id,shop_name,shop_image,shop_banner','shopInfo.address')
+        $query = User::with('shopInfo:id,user_id,shop_name,shop_image,shop_banner', 'shopInfo.address')
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->whereHas('shopInfo')
             ->select('id', 'first_name', 'last_name', 'role', 'avatar');
-        
-            if ($request->has('address')) {
-                $address = $request->input('address');
 
-                $query->whereHas('shopInfo.address', function ($q) use ($address) {
-                    $q->where(function ($subQuery) use ($address) {
-                        $subQuery->where('address_line_1', 'like', "%{$address}%")
-                                ->orWhere('address_line_2', 'like', "%{$address}%")
-                                ->orWhere('postal_code', 'like', "%{$address}%");
-                    });
+        if ($request->has('address')) {
+            $address = $request->input('address');
+
+            $query->whereHas('shopInfo.address', function ($q) use ($address) {
+                $q->where(function ($subQuery) use ($address) {
+                    $subQuery->where('address_line_1', 'like', "%{$address}%")
+                        ->orWhere('address_line_2', 'like', "%{$address}%")
+                        ->orWhere('postal_code', 'like', "%{$address}%");
                 });
-            }
-            
+            });
+        }
+
 
         $data = $query->get();
 
@@ -43,6 +43,44 @@ class ShopController extends Controller
 
         return $this->success($data, 'All shops retrieved successfully', 200);
     }
+
+    /**
+     * Retrieves nearby products based on the provided address.
+     * 
+     * If no address is provided, it will return the latest 10 products.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function nearbyProduct(Request $request)
+    {
+        $query = Product::with('shopInfo:id,user_id,shop_name,shop_image', 'shopInfo.address')
+            ->where('status', 'active');
+
+        // ✅ Filter by address (optional)
+        if ($request->has('address')) {
+            $address = $request->input('address');
+
+            $query->whereHas('shopInfo.address', function ($q) use ($address) {
+                $q->where(function ($subQuery) use ($address) {
+                    $subQuery->where('address_line_1', 'like', "%{$address}%")
+                        ->orWhere('address_line_2', 'like', "%{$address}%")
+                        ->orWhere('postal_code', 'like', "%{$address}%");
+                });
+            });
+        }
+
+        $data = $query->select('id', 'shop_info_id', 'product_name', 'product_price', 'product_image', 'selling_option')
+            ->limit(10)
+            ->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([], 'No nearby products found', 404);
+        }
+
+        return $this->success($data, 'Nearby products retrieved successfully', 200);
+    }
+
 
     /**
      * Retrieve a list of featured shops.
@@ -74,7 +112,7 @@ class ShopController extends Controller
     {
 
         $data = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address', 'shopInfo.socialLinks'])
-            ->select('id', 'first_name', 'last_name', 'phone', 'email', 'role', 'avatar','company_name')
+            ->select('id', 'first_name', 'last_name', 'phone', 'email', 'role', 'avatar', 'company_name')
             ->where('id', $id)
             ->where('role', 'vendor')
             ->where('status', 'active')
@@ -101,7 +139,7 @@ class ShopController extends Controller
         $data = Product::with('images')->where('shop_info_id', $id)
             ->where('is_featured', true)
             ->where('status', 'approved')
-            ->select('id', 'shop_info_id', 'product_name', 'product_price', 'is_featured','product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option')
+            ->select('id', 'shop_info_id', 'product_name', 'product_price', 'is_featured', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option')
             ->get();
 
         if ($data->isEmpty()) {
@@ -130,7 +168,7 @@ class ShopController extends Controller
         $item = $request->input('item', 15);
         $query = Product::with(['category', 'sub_category', 'images'])->where('shop_info_id', $id)
             ->where('status', 'approved')
-            ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price','product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option');
+            ->select('id', 'shop_info_id', 'category_id', 'sub_category_id', 'product_name', 'product_price', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option');
 
         // Filter by category
         if ($request->filled('category_id')) {
