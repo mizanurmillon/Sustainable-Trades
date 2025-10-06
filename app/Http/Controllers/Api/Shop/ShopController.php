@@ -64,7 +64,7 @@ class ShopController extends Controller
         $radius = 10; // 10 km
 
         $query = Product::with('images', 'shopInfo')
-            ->join('shop_info', 'products.shop_info_id', '=', 'shop_info.id')
+            ->join('shop', 'products.shop_info_id', '=', 'shop.id')
             ->selectRaw(
                 'products.id, products.shop_info_id, products.product_name, products.product_price, products.selling_option,
             (6371 * acos(cos(radians(?)) * cos(radians(shop.address.latitude)) * cos(radians(shop.address.longitude) - radians(?)) + sin(radians(?)) * sin(radians(shop.address.latitude)))) AS distance',
