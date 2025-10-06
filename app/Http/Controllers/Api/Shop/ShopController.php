@@ -63,24 +63,28 @@ class ShopController extends Controller
 
         $radius = 10; // 10 km
 
-        $query = Product::with('images', 'shopInfo')
-            ->join('shop', 'products.shop_info_id', '=', 'shop.id')
+        $query = Product::with('images', 'shop')
+            ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')
             ->selectRaw(
                 'products.id, products.shop_info_id, products.product_name, products.product_price, products.selling_option,
-            (6371 * acos(cos(radians(?)) * cos(radians(shop.address.latitude)) * cos(radians(shop.address.longitude) - radians(?)) + sin(radians(?)) * sin(radians(shop.address.latitude)))) AS distance',
+            (6371 * acos(
+                cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
+                cos(radians(shop_addresses.longitude) - radians(?)) +
+                sin(radians(?)) * sin(radians(shop_addresses.latitude))
+            )) AS distance',
                 [$lat, $lng, $lat]
             )
             ->where('products.status', 'approved');
 
-        // // Optional address filter
-        // if ($request->has('address')) {
-        //     $address = $request->input('address');
-        //     $query->where(function ($q) use ($address) {
-        //         $q->where('shop_info.address_line_1', 'like', "%{$address}%")
-        //             ->orWhere('shop_info.address_line_2', 'like', "%{$address}%")
-        //             ->orWhere('shop_info.postal_code', 'like', "%{$address}%");
-        //     });
-        // }
+        // Optional address filter
+        if ($request->has('address')) {
+            $address = $request->input('address');
+            $query->where(function ($q) use ($address) {
+                $q->where('shop_addresses.address_line_1', 'like', "%{$address}%")
+                    ->orWhere('shop_addresses.address_line_2', 'like', "%{$address}%")
+                    ->orWhere('shop_addresses.postal_code', 'like', "%{$address}%");
+            });
+        }
 
         $data = $query->having('distance', '<=', $radius)
             ->orderBy('distance', 'ASC')
@@ -93,6 +97,7 @@ class ShopController extends Controller
 
         return $this->success($data, 'Nearby products retrieved successfully', 200);
     }
+
 
 
 
