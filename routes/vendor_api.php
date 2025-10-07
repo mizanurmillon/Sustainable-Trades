@@ -55,6 +55,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::controller(ShippingController::class)->group(function () {
             Route::post('/flat-rates', 'flatRateStore');
             Route::post('/weight_ranges', 'weightRangeStore');
+            Route::get('/weight_ranges', 'weightRangeList');
             Route::delete('/weight_range/{id}', 'weightRangeDelete');
         });
 

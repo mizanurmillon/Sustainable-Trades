@@ -90,6 +90,21 @@ class ShippingController extends Controller
         
     }
 
+    public function weightRangeList()
+    {
+        $user = auth()->user();
+        if(!$user) {
+            return $this->error([], 'User not found', 404);
+        }
+
+        $data = WeightRangeRat::where('shop_id', $user->shopInfo->id)->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([], 'Failed to fetch weight range shipping', 500);
+        }
+        return $this->success($data,'Weight range shipping fetched successfully', 200);
+    }
+
     public function weightRangeDelete($id)
     {
         $user = auth()->user();
