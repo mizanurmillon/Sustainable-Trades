@@ -17,11 +17,17 @@ class Discount extends Model
         'id' => 'integer',
         'shop_id' => 'integer',
         'never_expires' => 'boolean',
+        'product_id' => 'integer',
     ];
 
     public function shop()
     {
         return $this->belongsTo(ShopInfo::class, 'shop_id');
+    }
+
+    public function product()
+    {
+        return $this->belongsToMany(Product::class, 'product_id');
     }
 
     public function discountProducts()
