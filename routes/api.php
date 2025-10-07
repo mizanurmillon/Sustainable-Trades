@@ -1,31 +1,32 @@
 <?php
 
-use App\Http\Controllers\Api\Auth\LoginController;
-use App\Http\Controllers\Api\Auth\RegisterController;
-use App\Http\Controllers\Api\Auth\ShopOwnerController;
-use App\Http\Controllers\Api\BannerController;
-use App\Http\Controllers\Api\Cart\CartController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ContactController;
-use App\Http\Controllers\Api\DynamicPageController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\Cart\CartController;
+use App\Http\Controllers\Api\Shop\ShopController;
+use App\Http\Controllers\Api\TopVendorController;
+use App\Http\Controllers\Api\TutorialsController;
+use App\Http\Controllers\Api\AllProductController;
+use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\FollowShopController;
-use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\MyFavoriteController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OurMissionController;
-use App\Http\Controllers\Api\Product\ProductController;
-use App\Http\Controllers\Api\AllProductController;
-use App\Http\Controllers\Api\Shop\ShopController;
-use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\SocialLinkController;
-use App\Http\Controllers\Api\SubscriptionPlanController;
-use App\Http\Controllers\Api\TutorialsController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DynamicPageController;
+use App\Http\Controllers\Api\SitesettingController;
 use App\Http\Controllers\Api\UserSettingController;
+use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\ShopOwnerController;
+use App\Http\Controllers\Api\GetNotificationController;
+use App\Http\Controllers\Api\Product\ProductController;
+use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
-use Illuminate\Support\Facades\Route;
 
 
 
@@ -172,6 +173,10 @@ Route::group(['middleware' => ['guest']], function () {
     Route::controller(AllProductController::class)->group(function () {
         Route::get('/all-products', 'allProducts');
         Route::get('/is-featured-product', 'isFeaturedProduct');
+    });
+
+    Route::controller(TopVendorController::class)->group(function () {
+        Route::get('/top-vendors', 'topVendors');
     });
 });
 
