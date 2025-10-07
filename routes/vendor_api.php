@@ -48,6 +48,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         });
 
         Route::controller(DiscountController::class)->group(function () {
+            Route::get('/discounts', 'index');
             Route::post('/discounts', 'store');
         });
 

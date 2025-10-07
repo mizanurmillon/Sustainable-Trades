@@ -12,6 +12,19 @@ use Illuminate\Support\Facades\Validator;
 class DiscountController extends Controller
 {
     use ApiResponse;
+
+    public function index(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->error([], 'User not found', 404);
+        }
+
+        $data = Discount::where('shop_id', $user->shopInfo->id)->get();
+
+        return $this->success($data,'Discounts fetched successfully', 200);
+    }
     
     public function store(Request $request)
     {
