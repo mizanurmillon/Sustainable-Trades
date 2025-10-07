@@ -21,7 +21,7 @@ class DiscountController extends Controller
             return $this->error([], 'User not found', 404);
         }
 
-        $data = Discount::with('product:id,product_name', 'discountProducts.product:id,product_name')->where('shop_id', $user->shopInfo->id)->get();
+        $data = Discount::with('product:id,product_name', 'discountProducts.products:id,product_name')->where('shop_id', $user->shopInfo->id)->latest()->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'Failed to fetch discounts', 500);

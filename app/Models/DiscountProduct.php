@@ -19,7 +19,7 @@ class DiscountProduct extends Model
         'product_id' => 'integer',
     ];
 
-    public function product()
+    public function products()
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
