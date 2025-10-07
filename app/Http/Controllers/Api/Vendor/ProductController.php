@@ -75,7 +75,7 @@ class ProductController extends Controller
                 'fulfillment' => $request->fulfillment,
                 'selling_option' => $request->selling_option,
                 'is_featured' => $request->is_featured ?? false,
-                'status' => 'padding',
+                'status' => 'pending',
             ]);
 
             if ($request->has('tags')) {
