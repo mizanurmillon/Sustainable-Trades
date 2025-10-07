@@ -23,6 +23,10 @@ class DiscountController extends Controller
 
         $data = Discount::where('shop_id', $user->shopInfo->id)->get();
 
+        if ($data->isEmpty()) {
+            return $this->error([], 'Failed to fetch discounts', 500);
+        }
+
         return $this->success($data,'Discounts fetched successfully', 200);
     }
     
