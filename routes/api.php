@@ -150,7 +150,6 @@ Route::group(['middleware' => ['guest']], function () {
     //Shop Owner APIs
     Route::controller(ShopController::class)->group(function () {
         Route::get('/shops', 'allShops');
-        Route::get('/nearby-product','nearbyProduct');
         Route::get('/shops/featured', 'featuredShops');
         Route::get('/shop/{id}', 'shopDetails');
         Route::get('/shop/products/{id}', 'shopProducts');
@@ -173,6 +172,7 @@ Route::group(['middleware' => ['guest']], function () {
     Route::controller(AllProductController::class)->group(function () {
         Route::get('/all-products', 'allProducts');
         Route::get('/is-featured-product', 'isFeaturedProduct');
+        Route::get('/nearby-product','nearbyProduct');
     });
 
     Route::controller(TopVendorController::class)->group(function () {
