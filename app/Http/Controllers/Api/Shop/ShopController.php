@@ -56,7 +56,7 @@ class ShopController extends Controller
 
     public function featuredShops()
     {
-        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner,is_featured', 'shopInfo.address:id,shop_info_id,address_line_1')->where('role', 'vendor')
+        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner,is_featured', 'shopInfo.address')->where('role', 'vendor')
             ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->whereHas('shopInfo', function ($q) {
                 $q->where('is_featured', true);
