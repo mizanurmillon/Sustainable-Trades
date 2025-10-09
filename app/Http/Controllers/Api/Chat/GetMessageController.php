@@ -95,7 +95,7 @@ class GetMessageController extends Controller
             ->with(['sender:id,first_name,last_name,avatar', 'parentMessage', 'attachments',])
             ->orderBy('created_at', 'desc')
             ->withTrashed()
-            ->paginate(100);
+            ->get();
 
 
         return $this->success([

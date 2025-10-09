@@ -24,7 +24,7 @@ class Message extends Model
             'receiver_id' => 'integer',
             'conversation_id' => 'integer',
             'reply_to_message_id' => 'integer',
-            'is_read' => 'boolean',
+            // 'is_read' => 'boolean',
         ];
     }
 
