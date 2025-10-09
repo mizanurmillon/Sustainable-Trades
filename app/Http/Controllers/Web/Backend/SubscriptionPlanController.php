@@ -36,7 +36,7 @@ class SubscriptionPlanController extends Controller
                     if (empty($data->image)) {
                         $url = asset('backend/images/placeholder/image_placeholder.png');
                     }
-                    return '<img src="' . $url . '" class="img-fluid">';
+                    return '<img src="' . $url . '" class="img-fluid" style="width: 25px; height: auto;">';
                 })
                 // ->addColumn('status', function ($data) {
                 //     $status = ' <div class="form-check form-switch">';
