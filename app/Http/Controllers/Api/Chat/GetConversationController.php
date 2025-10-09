@@ -50,7 +50,7 @@ class GetConversationController extends Controller
             })
             ->withCount('unreadMessages')
             ->latest('updated_at')
-            ->paginate(15);
+            ->get();
 
         $response = [
             'total_conversations' => $conversations->count(),
