@@ -25,6 +25,11 @@ class ShopController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('shop_name', function ($data) {
+                    $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
+
+                    return "<a href='#' target='_blank'>{$shopName}</a>";
+                })
                 ->addColumn('total_products', function ($data) {
                     return $data->products_count ?? 0;
                 })

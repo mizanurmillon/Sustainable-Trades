@@ -47,6 +47,7 @@
                                         <th>Phone</th>
                                         <th>Role</th>
                                         <th>Status</th>
+                                        <th>Created At</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -141,6 +142,12 @@
                                 name: 'status',
                                 orderable: false,
                                 searchable: false
+                            },
+                            {
+                                data: 'created_at',
+                                name: 'created_at',
+                                orderable: true,
+                                searchable: true
                             },
                             {
                                 data: 'action',

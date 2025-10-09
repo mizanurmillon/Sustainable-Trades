@@ -37,6 +37,9 @@ class SustainableShoppersController extends Controller
                 ->addColumn('role', function ($data) {
                     return '<span class="badge bg-primary text-white">' . $data->role . '</span>';
                 })
+                ->addColumn('created_at', function ($data) {
+                    return $data->created_at->format('d M Y h:i A');
+                })
                 ->addColumn('avatar', function ($data) {
                     $url = asset($data->avatar);
                     if (empty($data->avatar)) {
@@ -62,7 +65,7 @@ class SustainableShoppersController extends Controller
                             </div></div>';
                 })
 
-                ->rawColumns(['avatar', 'action', 'owner_name', 'email', 'status', 'role'])
+                ->rawColumns(['avatar', 'action', 'owner_name', 'email', 'status', 'role', 'created_at'])
                 ->make(true);
         }
 

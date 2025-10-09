@@ -37,7 +37,13 @@ class ProMembersController extends Controller
                     return $data->user->shopInfo->products()->count();
                 })
                 ->addColumn('shop_name', function ($data) {
-                    return $data->user->shopInfo->shop_name ?? 'N/A';
+                    
+                    $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
+
+                    return "<a href='#' target='_blank'>{$shopName}</a>";
+                })
+                ->addColumn('created_at', function ($data) {
+                    return $data->created_at->format('d M Y h:i A');
                 })
                 ->addColumn('avatar', function ($data) {
                     $url = asset($data->user->avatar);
@@ -57,7 +63,7 @@ class ProMembersController extends Controller
                             </div></div>';
                 })
 
-                ->rawColumns(['avatar', 'action', 'owner_name', 'email', 'total_products', 'shop_name'])
+                ->rawColumns(['avatar', 'action', 'owner_name', 'email', 'total_products', 'shop_name', 'created_at'])
                 ->make(true);
         }
         return view('backend.layouts.pro_members.index');
