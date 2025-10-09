@@ -19,6 +19,7 @@ class GetConversationController extends Controller
         }
 
         $name = request()->query('name') ?? null;
+        $unread = request()->query('unread') ?? false;
 
         $conversations = Conversation::query()
             ->with([
@@ -43,6 +44,9 @@ class GetConversationController extends Controller
                                 ->orWhere('last_name', 'LIKE', "%$name%");
                     });
                 });
+            })
+            ->when($unread, function ($query) {
+                $query->whereHas('unreadMessages');
             })
             ->withCount('unreadMessages')
             ->latest('updated_at')
