@@ -16,6 +16,7 @@ class TradeOffer extends Model
         'id' => 'integer',
         'sender_id' => 'integer',
         'receiver_id'=> 'integer',
+        'parent_offer_id' => 'integer',
     ];
 
     public function items()
@@ -37,4 +38,10 @@ class TradeOffer extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
+
+    public function parentOffer()
+    {
+        return $this->belongsTo(TradeOffer::class, 'parent_offer_id');
+    }
+
 }

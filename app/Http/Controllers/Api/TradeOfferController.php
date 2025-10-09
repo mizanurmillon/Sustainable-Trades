@@ -248,14 +248,18 @@ class TradeOfferController extends Controller
             return $this->error([], 'Trade offer not found', 404);
         }
 
-        // Validate the counter offer data
+        // Validate the request data
         $validator = Validator::make($request->all(), [
             'offered_items' => 'required|array',
-            'offered_items.*' => 'required|integer|exists:products,id',
+            'offered_items.*.product_id' => 'required|integer|exists:products,id',
+            'offered_items.*.quantity' => 'required|integer|min:1',
             'requested_items' => 'required|array',
-            'requested_items.*' => 'required|integer|exists:products,id',
-            'quantity' => 'required|numeric|min:0',
+            'requested_items.*.product_id' => 'required|integer|exists:products,id',
+            'requested_items.*.quantity' => 'required|integer|min:1',
             'message' => 'nullable|string|max:500',
+            'receiver_id' => 'required|integer|exists:users,id',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -265,32 +269,39 @@ class TradeOfferController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create a new trade offer for the counter
             $counterOffer = TradeOffer::create([
                 'sender_id' => $user->id,
-                'receiver_id' => $offer->sender_id,
-                'inquiry' => Str::random(5),
+                'receiver_id' => $request->receiver_id,
+                'parent_offer_id' => $offer->id,
+                'inquiry' =>  Str::random(5),
                 'message' => $request->message,
-                'status' => 'pending',
             ]);
 
             foreach ($request->offered_items as $item) {
-                $counterOffer->items()->create([
-                    'product_id' => $item,
+                $offer->items()->create([
+                    'product_id' => $item['product_id'],
                     'type' => 'offered',
-                    'quantity' => $request->quantity,
+                    'quantity' => $item['quantity'],
                 ]);
             }
 
             foreach ($request->requested_items as $item) {
-                $counterOffer->items()->create([
-                    'product_id' => $item,
+                $offer->items()->create([
+                    'product_id' => $item['product_id'],
                     'type' => 'requested',
-                    'quantity' => $request->quantity,
+                    'quantity' => $item['quantity'],
                 ]);
             }
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = uploadImage($file, 'trade_offers');
+                    $offer->attachments()->create(['file_path' => $path]);
+                }
+            }
+           
             DB::commit();
-            $counterOffer->load('items');
+            $counterOffer->load('items', 'attachments');
             return $this->success($counterOffer, 'Trade counter offer sent successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();

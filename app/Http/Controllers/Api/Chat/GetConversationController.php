@@ -19,7 +19,7 @@ class GetConversationController extends Controller
         }
 
         $name = request()->query('name') ?? null;
-        $unread = request()->query('unread') ?? false;
+        $unread = $request->has('unread');
 
         $sent = $request->has('sent');
 
@@ -48,7 +48,7 @@ class GetConversationController extends Controller
                 });
             })
             ->when($unread, function ($query) {
-                $query->whereHas('unreadMessages');
+                $query->where('is_read', false);
             })
             ->when($sent, function ($query) use ($user) {
                 $query->whereHas('messages', function ($q) use ($user) {
