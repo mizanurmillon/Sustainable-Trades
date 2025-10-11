@@ -70,7 +70,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
         Route::controller(TradeOfferController::class)->group(function () {
             Route::post('/trade-offer/create', 'store');
-            route::get('/trade-offers', 'getTradeOffers');
+            Route::get('/trade-offers', 'getTradeOffers');
+            Route::get('/trade-offer/{id}', 'getTradeOffer');
             Route::get('/trade-offer-approve/{id}', 'approveTradeOffer');
             Route::get('/trade-offer-cancel/{id}', 'cancelTradeOffer');
             Route::get('/trade-count', 'getTradeCount');

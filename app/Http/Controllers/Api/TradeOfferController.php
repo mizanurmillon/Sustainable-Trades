@@ -124,6 +124,23 @@ class TradeOfferController extends Controller
         return $this->success($offers, 'Trade offers retrieved successfully');
     }
 
+    public function getTradeOffer($id)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->error([], 'User not found', 404);
+        }
+
+        $data = TradeOffer::with(['items.product:id,shop_info_id,product_name,product_price,description','items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address'])->where('id', $id)->first();
+
+        if (!$data) {
+            return $this->error([], 'Trade offer not found', 404);
+        }
+
+        return $this->success($data, 'Trade offer retrieved successfully');
+    }
+
     public function approveTradeOffer($id)
     {
         $user = auth()->user();
