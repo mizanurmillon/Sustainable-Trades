@@ -125,4 +125,21 @@ class DiscountController extends Controller
 
         return $this->success($data,'Discount created successfully', 200);
     }
+
+    public function discount($id)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->error([], 'User not found', 404);
+        }
+
+        $data = Discount::with('product:id,product_name', 'discountProducts.products:id,product_name')->where('shop_id', $user->shopInfo->id)->find($id);
+
+        if (!$data) {
+            return $this->error([], 'Discount not found', 404);
+        }
+
+        return $this->success($data,'Discount fetched successfully', 200);
+    }
 }
