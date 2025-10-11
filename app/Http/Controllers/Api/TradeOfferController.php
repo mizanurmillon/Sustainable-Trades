@@ -135,7 +135,7 @@ class TradeOfferController extends Controller
         $data = TradeOffer::with(['items.product:id,shop_info_id,product_name,product_price,description','items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address'])->where('id', $id)->first();
 
         if (!$data) {
-            return $this->error([], 'Trade offer not found', 404);
+            return $this->error([], 'Trade offer not found', 200);
         }
 
         return $this->success($data, 'Trade offer retrieved successfully');
