@@ -51,6 +51,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/discounts', 'index');
             Route::post('/discounts', 'store');
             Route::get('/discount/{id}', 'discount');
+            Route::post('/discount-update/{id}', 'update');
+            Route::delete('/delete-discount-codes', 'bulkDelete');
+            Route::post('/status-discount-codes/{id}', 'status');
         });
 
         Route::controller(ShippingController::class)->group(function () {
