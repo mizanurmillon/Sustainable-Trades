@@ -93,7 +93,7 @@ class GetMessageController extends Controller
 
         $messages = $conversation->messages()
             ->with(['sender:id,first_name,last_name,avatar', 'parentMessage', 'attachments',])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->withTrashed()
             ->get();
 
