@@ -48,14 +48,16 @@ class GetConversationController extends Controller
                 });
             })
             ->when($unread, function ($query) {
-                $query->where('is_read', false);
+                $query->whereHas('messages', function ($q) {
+                    $q->where('is_read', false);
+                });
             })
             ->when($sent, function ($query) use ($user) {
                 $query->whereHas('messages', function ($q) use ($user) {
                     $q->where('sender_id', $user->id);
                 });
             })
-            ->withCount('unreadMessages')
+            ->withCount('unreadMessage')
             ->latest('updated_at')
             ->get();
 
