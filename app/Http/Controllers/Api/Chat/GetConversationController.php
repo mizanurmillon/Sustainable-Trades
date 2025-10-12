@@ -14,14 +14,14 @@ class GetConversationController extends Controller
     public function __invoke(Request $request)
     {
         $user = auth()->user();
+        // dd($user->id);
         if (!$user) {
             return $this->error([], 'Unauthorized', 401);
         }
 
-        $name = request()->query('name') ?? null;
-        $unread = $request->has('unread');
-
-        $sent = $request->has('sent');
+        $name = $request->query('name'); // use $request instead of global request()
+        $unread = $request->query('unread'); // better for boolean flags
+        $sent = $request->query('sent');
 
         $conversations = Conversation::query()
             ->with([
@@ -30,6 +30,12 @@ class GetConversationController extends Controller
                         ->where('participant_type', get_class($user))
                         ->with(['participant' => function ($q) use ($name) {
                             $q->select('id', 'first_name', 'last_name', 'avatar');
+                            if ($name) {
+                                $q->where(function ($subQuery) use ($name) {
+                                    $subQuery->where('first_name', 'LIKE', "%$name%")
+                                        ->orWhere('last_name', 'LIKE', "%$name%");
+                                });
+                            }
                         }])
                         ->take(3);
                 },
@@ -39,17 +45,10 @@ class GetConversationController extends Controller
                 $query->where('participant_type', get_class($user))
                     ->where('participant_id', $user->id);
             })
-            ->when($name, function ($query, $name) {
-                $query->whereHas('participants.participant', function ($q) use ($name) {
-                    $q->where(function ($subQuery) use ($name) {
-                        $subQuery->where('first_name', 'LIKE', "%$name%")
-                            ->orWhere('last_name', 'LIKE', "%$name%");
-                    });
-                });
-            })
-            ->when($unread, function ($query) {
-                $query->whereHas('messages', function ($q) {
-                    $q->where('is_read', false);
+            ->when($unread, function ($query) use ($user) {
+                $query->whereHas('messages', function ($q) use ($user) {
+                    $q->where('is_read', false)
+                        ->where('sender_id', '!=', $user->id);
                 });
             })
             ->when($sent, function ($query) use ($user) {
