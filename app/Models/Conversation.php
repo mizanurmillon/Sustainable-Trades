@@ -35,17 +35,17 @@ class Conversation extends Model
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
-    public function unreadMessage()
+    public function unreadMessages()
     {
         return $this->hasMany(Message::class, 'sender_id', 'id')->where('is_read', false);
     }
 
-    public function unreadMessages($userId)
-    {
-        return $this->messages()
-            ->where('receiver_id', $userId)
-            ->where('is_read', false);
-    }
+    // public function unreadMessages($userId)
+    // {
+    //     return $this->messages()
+    //         ->where('receiver_id', $userId)
+    //         ->where('is_read', false);
+    // }
 
     // public function users()
     // {

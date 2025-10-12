@@ -21,11 +21,11 @@ class MembershipController extends Controller
 
     protected $provider;
 
-    public function __construct()
-    {
-        $this->provider = new PayPalClient;
-        $this->provider->setApiCredentials(config('paypal'));
-    }
+    // public function __construct()
+    // {
+    //     $this->provider = new PayPalClient;
+    //     $this->provider->setApiCredentials(config('paypal'));
+    // }
 
     public function createMembership(Request $request, $id)
     {
