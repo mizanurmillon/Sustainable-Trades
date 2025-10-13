@@ -26,6 +26,7 @@ class GetMessageController extends Controller
             'receiver_id' => ['nullable', 'required_without:conversation_id', 'integer'],
             'conversation_id' => ['nullable', 'required_without:receiver_id', 'integer'],
             'name' => ['nullable', 'string', 'max:255'],
+            'type' => ['required', 'string', 'in:private,group,order,self'],
         ]);
 
         if ($validator->fails()) {
@@ -50,8 +51,10 @@ class GetMessageController extends Controller
 
         $conversation_id = $request->query('conversation_id');
 
+        $type = $request->query('type');
+
         // Conversation logic
-        $conversation = $this->getConversation($user, $receiver_id, $conversation_id);
+        $conversation = $this->getConversation($user, $receiver_id, $conversation_id, $type);
 
         if (!$conversation) {
             return $this->error([], 'Conversation not found', 404);
@@ -113,7 +116,7 @@ class GetMessageController extends Controller
      * @param int|null $conversation_id
      * @return Conversation|null
      */
-    private function getConversation(User $user, $receiver_id = null, $conversation_id = null)
+    private function getConversation(User $user, $receiver_id = null, $conversation_id = null, $type = null)
     {
         if ($conversation_id) {
             $conversation = Conversation::where('id', $conversation_id)
@@ -121,7 +124,7 @@ class GetMessageController extends Controller
                     $query->where('participant_id', $user->id)
                         ->where('participant_type', User::class);
                 })
-                ->where('type', 'group')
+                ->where('type', $type)
                 ->first();
 
             if (!$conversation) {
@@ -140,12 +143,12 @@ class GetMessageController extends Controller
                     $q->where('participant_id', $user->id)
                         ->where('participant_type', User::class);
                 })
-                    ->where('type', 'self')
+                    ->where('type', $type )
                     ->first();
 
                 if (!$conversation) {
                     $conversation = Conversation::create([
-                        'type' => 'self',
+                        'type' => $type,
                     ]);
 
                     $conversation->participants()->createMany([
@@ -168,12 +171,12 @@ class GetMessageController extends Controller
                     $q->where('participant_id', $receiver->id)
                         ->where('participant_type', User::class);
                 })
-                ->where('type', 'private')
+                ->where('type', $type )
                 ->first();
 
             if (!$conversation) {
                 $conversation = Conversation::create([
-                    'type' => 'private',
+                    'type' => $type,
                 ]);
 
                 $conversation->participants()->createMany([
@@ -190,6 +193,38 @@ class GetMessageController extends Controller
             } else {
                 return $conversation;
             }
+
+            $conversation = Conversation::whereHas('participants', function ($q) use ($user) {
+                $q->where('participant_id', $user->id)
+                    ->where('participant_type', User::class);
+            })
+                ->whereHas('participants', function ($q) use ($receiver) {
+                    $q->where('participant_id', $receiver->id)
+                        ->where('participant_type', User::class);
+                })
+                ->where('type', $type)
+                ->first();
+
+            if (!$conversation) {
+                $conversation = Conversation::create([
+                    'type' => $type,
+                ]);
+
+                $conversation->participants()->createMany([
+                    [
+                        'participant_id' => $receiver->id,
+                        'participant_type' => User::class,
+                    ],
+                    [
+                        'participant_id' => $user->id,
+                        'participant_type' => User::class,
+                    ],
+                ]);
+                return $conversation;
+            } else {
+                return $conversation;
+            }
+
         } else {
             return $this->error([], 'Either receiver_id or conversation_id is required', 422);
         }
