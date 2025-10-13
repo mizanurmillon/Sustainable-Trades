@@ -35,7 +35,7 @@ class MembershipController extends Controller
             'card_holder_name' => 'required|string',
             'card_number'      => 'required|string|max:20',
             'cvv'              => 'required|string|max:4',
-            'expiry_date'      => 'required|string|regex:/^\d{2}\/\d{2}$/', // Validate MM/YY
+            'expiry_date'      => 'required|string', // Validate MM/YY
         ]);
 
         if ($validator->fails()) {
@@ -68,20 +68,20 @@ class MembershipController extends Controller
 
             $token = $tokenResponse['access_token'];
 
-            // Transform expiry_date from MM/YY to YYYY-MM
-            $expiryParts = explode('/', $request->expiry_date);
-            if (count($expiryParts) !== 2) {
-                return response()->json(['success' => false, 'message' => 'Invalid expiry date format'], 422);
-            }
-            $month = $expiryParts[0];
-            $year = '20' . $expiryParts[1]; // Convert YY to YYYY
-            $formattedExpiry = "$year-$month";
+            // // Transform expiry_date from MM/YY to YYYY-MM
+            // $expiryParts = explode('/', $request->expiry_date);
+            // if (count($expiryParts) !== 2) {
+            //     return response()->json(['success' => false, 'message' => 'Invalid expiry date format'], 422);
+            // }
+            // $month = $expiryParts[0];
+            // $year = '20' . $expiryParts[1]; // Convert YY to YYYY
+            // $formattedExpiry = "$year-$month";
 
             // Log card details (sanitized)
             Log::info('PayPal Card Details:', [
                 'card_holder_name' => $request->card_holder_name,
                 'card_number' => $request->card_number,
-                'expiry' => $formattedExpiry,
+                'expiry' => $request->expiry_date,
                 'cvv' => $request->cvv,
             ]);
 
@@ -104,7 +104,7 @@ class MembershipController extends Controller
                 'payment_source' => [
                     'card' => [
                         'number' => $request->card_number,
-                        'expiry' => $formattedExpiry,
+                        'expiry' => $request->expiry_date,
                         'security_code' => $request->cvv,
                         'name' => $request->card_holder_name,
                     ]
