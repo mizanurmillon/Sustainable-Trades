@@ -29,7 +29,7 @@ class ShopController extends Controller
                     $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
                     $frontendUrl = env('FRONTEND_BASE_URL'); // get the value from .env
 
-                    return "<a href='{$frontendUrl}/{$data->id}' target='_blank'>{$shopName}</a>";
+                    return "<a href='{$frontendUrl}/{$data->user->id}' target='_blank'>{$shopName}</a>";
                 })
                 ->addColumn('total_products', function ($data) {
                     return $data->products_count ?? 0;
