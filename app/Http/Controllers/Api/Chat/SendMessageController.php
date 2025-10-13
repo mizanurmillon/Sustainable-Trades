@@ -11,6 +11,7 @@ use App\Events\MessageSentEvent;
 use App\Events\ConversationEvent;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use App\Events\LocalPickupConversationEvent;
 
 class SendMessageController extends Controller
 {
@@ -134,6 +135,10 @@ class SendMessageController extends Controller
 
         # Broadcast the Conversation and Unread Message Count
         broadcast(new ConversationEvent($messageSend->sender_id, $messageSend->receiver_id, $messageSend,$unreadMessageCount))->toOthers();
+
+        if($conversation->type == 'order') {
+            broadcast(new LocalPickupConversationEvent($messageSend->sender_id, $messageSend->receiver_id, $messageSend,$unreadMessageCount))->toOthers(); 
+        }
 
         return $this->success([
             'message' => $messageSend,

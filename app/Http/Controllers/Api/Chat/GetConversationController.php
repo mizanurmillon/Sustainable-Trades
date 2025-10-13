@@ -45,6 +45,7 @@ class GetConversationController extends Controller
                     });
                 });
             })
+            ->where('type', '!=', 'order')
             ->withCount('unreadMessages')
             ->latest('updated_at')
             ->get();

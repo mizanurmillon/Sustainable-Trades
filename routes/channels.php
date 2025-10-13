@@ -13,3 +13,7 @@ Broadcast::channel('chat-channel.{receiverId}', function ($user, $receiverId) {
 Broadcast::channel('conversation-channel.{receiverId}', function ($user, $receiverId) {
     return (int) $user->id === (int) $receiverId;
 });
+
+Broadcast::channel('local-pickup-conversation-channel.{receiverId}', function ($user, $receiverId) {
+    return (int) $user->id === (int) $receiverId;
+});

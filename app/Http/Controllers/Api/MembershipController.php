@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Membership;
-use App\Models\MembershipHistory;
-use App\Models\SubscriptionPlan;
-use App\Models\User;
-use App\Traits\ApiResponse; // Assuming this is your trait for API responses
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use App\Models\Membership;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\SubscriptionPlan;
+use App\Models\MembershipHistory;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use App\Traits\ApiResponse; // Assuming this is your trait for API responses
 
 class MembershipController extends Controller
 {
@@ -34,7 +35,7 @@ class MembershipController extends Controller
             'card_holder_name' => 'required|string',
             'card_number'      => 'required|string|max:20',
             'cvv'              => 'required|string|max:4',
-            'expiry_date'      => 'required|string|max:7', // MM/YYYY
+            'expiry_date'      => 'required|string|regex:/^\d{2}\/\d{2}$/', // Validate MM/YY
         ]);
 
         if ($validator->fails()) {
@@ -53,12 +54,43 @@ class MembershipController extends Controller
 
         try {
             $provider = new PayPalClient;
+            Log::info('PayPal Config:', ['config' => config('paypal')]);
             $provider->setApiCredentials(config('paypal'));
-            $token = $provider->getAccessToken();
-            $provider->setAccessToken($token);
 
-            // Create order (direct card payment)
-            $orderData = [
+            // Get access token
+            $tokenResponse = $provider->getAccessToken();
+            Log::info('PayPal getAccessToken Response:', ['tokenResponse' => $tokenResponse]);
+
+            if (!isset($tokenResponse['access_token'])) {
+                Log::error('Failed to get PayPal access token', ['response' => $tokenResponse]);
+                throw new \Exception('Unable to retrieve PayPal access token');
+            }
+
+            $token = $tokenResponse['access_token'];
+
+            // Transform expiry_date from MM/YY to YYYY-MM
+            $expiryParts = explode('/', $request->expiry_date);
+            if (count($expiryParts) !== 2) {
+                return response()->json(['success' => false, 'message' => 'Invalid expiry date format'], 422);
+            }
+            $month = $expiryParts[0];
+            $year = '20' . $expiryParts[1]; // Convert YY to YYYY
+            $formattedExpiry = "$year-$month";
+
+            // Log card details (sanitized)
+            Log::info('PayPal Card Details:', [
+                'card_holder_name' => $request->card_holder_name,
+                'card_number' => $request->card_number,
+                'expiry' => $formattedExpiry,
+                'cvv' => $request->cvv,
+            ]);
+
+            // Create order
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $token,
+                'PayPal-Request-Id' => (string) Str::uuid(),
+            ])->post('https://api-m.sandbox.paypal.com/v2/checkout/orders', [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [
                     [
@@ -72,16 +104,17 @@ class MembershipController extends Controller
                 'payment_source' => [
                     'card' => [
                         'number' => $request->card_number,
-                        'expiry' => $request->expiry_date,
+                        'expiry' => $formattedExpiry,
                         'security_code' => $request->cvv,
                         'name' => $request->card_holder_name,
                     ]
                 ]
-            ];
+            ]);
 
-            $response = $provider->createOrder($orderData);
+            $data = $response->json();
+            Log::info('PayPal Order Response:', ['data' => $data]);
 
-            if(isset($response['status']) && $response['status'] === 'COMPLETED'){
+            if (isset($data['status']) && $data['status'] === 'COMPLETED') {
                 // Payment successful, save membership
                 $endDate = Carbon::now()->addMonth()->toDateTimeString();
 
@@ -117,11 +150,11 @@ class MembershipController extends Controller
                 ]);
             }
 
-            return response()->json(['success'=>false,'message'=>'Payment failed','response'=>$response],500);
-
+            Log::error('PayPal Order Creation Failed:', ['response' => $data]);
+            return response()->json(['success' => false, 'message' => 'Payment failed', 'response' => $data], 500);
         } catch (\Exception $e) {
-            Log::error('PayPal Payment Error: '.$e->getMessage());
-            return response()->json(['success'=>false,'message'=>'Exception: '.$e->getMessage()],500);
+            Log::error('PayPal Payment Error:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Exception: ' . $e->getMessage()], 500);
         }
     }
 }

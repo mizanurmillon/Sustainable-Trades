@@ -253,6 +253,10 @@
                 console.log('Conversation and Unread Message count:', e);
             })
 
+            Echo.private('local-pickup-conversation-channel.' + 1).listen('LocalPickupConversationEvent', (e) => {
+                console.log('Local Pickup Conversation and Unread Message count:', e);
+            })
+
         });
     </script>
 @endpush
