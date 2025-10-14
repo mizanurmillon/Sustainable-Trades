@@ -94,7 +94,7 @@ class TradeOfferController extends Controller
             $q->where('receiver_id', $user->id)
                 ->orWhere('sender_id', $user->id);
         })
-            ->with(['items.product:id,shop_info_id,product_name,product_price,description','items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address','parentOffer:id,receiver_id,sender_id,inquiry,message,created_at','parentOffer.items.product:id,product_name,product_price,description','parentOffer.items.product.images']);
+            ->with(['items.product:id,shop_info_id,product_name,product_price,description','items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address']);
 
         // Filter by Search
         if ($request->filled('search')) {
