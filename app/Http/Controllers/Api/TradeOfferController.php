@@ -322,7 +322,7 @@ class TradeOfferController extends Controller
 
             DB::commit();
 
-            $counterOffer->load('items', 'attachments','parent_offer');
+            $counterOffer->load('parentOffer.items','parentOffer.attachments');
 
             return $this->success($counterOffer, 'Trade counter offer sent successfully', 201);
         } catch (\Exception $e) {
