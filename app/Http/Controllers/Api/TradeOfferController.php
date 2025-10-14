@@ -94,7 +94,7 @@ class TradeOfferController extends Controller
             $q->where('receiver_id', $user->id)
                 ->orWhere('sender_id', $user->id);
         })
-            ->with(['items.product:id,shop_info_id,product_name,product_price,description','items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address']);
+            ->with(['items.product:id,shop_info_id,product_name,product_price,description', 'items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address']);
 
         // Filter by Search
         if ($request->filled('search')) {
@@ -119,7 +119,7 @@ class TradeOfferController extends Controller
             $query->where('created_at', '<', Carbon::today());
         }
 
-        $offers = $query->get();
+        $offers = $query->latest()->get();
 
         return $this->success($offers, 'Trade offers retrieved successfully');
     }
@@ -132,7 +132,7 @@ class TradeOfferController extends Controller
             return $this->error([], 'User not found', 404);
         }
 
-        $data = TradeOffer::with(['items.product:id,shop_info_id,product_name,product_price,description','items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address','parentOffer:id,receiver_id,sender_id,inquiry,message,created_at','parentOffer.items.product:id,product_name,product_price,description','parentOffer.items.product.images'])->where('id', $id)->first();
+        $data = TradeOffer::with(['items.product:id,shop_info_id,product_name,product_price,description', 'items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address', 'parentOffer:id,receiver_id,sender_id,inquiry,message,created_at', 'parentOffer.items.product:id,product_name,product_price,description', 'parentOffer.items.product.images'])->where('id', $id)->first();
 
         if (!$data) {
             return $this->error([], 'Trade offer not found', 200);
@@ -265,7 +265,7 @@ class TradeOfferController extends Controller
             return $this->error([], 'Trade offer not found', 404);
         }
 
-        // Validate the request data
+        // ✅ Validate request
         $validator = Validator::make($request->all(), [
             'offered_items' => 'required|array',
             'offered_items.*.product_id' => 'required|integer|exists:products,id',
@@ -286,16 +286,18 @@ class TradeOfferController extends Controller
         try {
             DB::beginTransaction();
 
+            
             $counterOffer = TradeOffer::create([
                 'sender_id' => $user->id,
                 'receiver_id' => $request->receiver_id,
                 'parent_offer_id' => $offer->id,
-                'inquiry' =>  Str::random(5),
+                'inquiry' => Str::random(5),
                 'message' => $request->message,
             ]);
 
+           
             foreach ($request->offered_items as $item) {
-                $offer->items()->create([
+                $counterOffer->items()->create([
                     'product_id' => $item['product_id'],
                     'type' => 'offered',
                     'quantity' => $item['quantity'],
@@ -303,22 +305,25 @@ class TradeOfferController extends Controller
             }
 
             foreach ($request->requested_items as $item) {
-                $offer->items()->create([
+                $counterOffer->items()->create([
                     'product_id' => $item['product_id'],
                     'type' => 'requested',
                     'quantity' => $item['quantity'],
                 ]);
             }
 
+            
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $path = uploadImage($file, 'trade_offers');
-                    $offer->attachments()->create(['file_path' => $path]);
+                    $counterOffer->attachments()->create(['file_path' => $path]);
                 }
             }
-           
+
             DB::commit();
-            $counterOffer->load('items', 'attachments');
+
+            $counterOffer->load('items', 'attachments','parent_offer');
+
             return $this->success($counterOffer, 'Trade counter offer sent successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -327,13 +332,14 @@ class TradeOfferController extends Controller
     }
 
 
+
     public function tradeShopProduct($id)
     {
         $query = Product::where('shop_info_id', $id)
             ->where('status', 'approved')
             ->whereNot('selling_option', 'For Sale')
             ->where('product_quantity', '>', 0)
-            ->select('id', 'shop_info_id', 'product_name', 'product_price','product_quantity', 'selling_option');
+            ->select('id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity', 'selling_option');
 
         $data = $query->get();
 
