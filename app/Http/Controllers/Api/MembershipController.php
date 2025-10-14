@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\SubscriptionPlan;
 use App\Models\MembershipHistory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
@@ -22,139 +23,188 @@ class MembershipController extends Controller
 
     protected $provider;
 
-    // public function __construct()
-    // {
-    //     $this->provider = new PayPalClient;
-    //     $this->provider->setApiCredentials(config('paypal'));
-    // }
+    public function __construct()
+    {
+        $this->provider = new PayPalClient;
+        $this->provider->setApiCredentials(config('paypal'));
+    }
 
     public function createMembership(Request $request, $id)
     {
-        // Validate request
+
         $validator = Validator::make($request->all(), [
-            'card_holder_name' => 'required|string',
-            'card_number'      => 'required|string|max:20',
-            'cvv'              => 'required|string|max:4',
-            'expiry_date'      => 'required|string', // Validate MM/YY
+            'success_url' => 'required|url',
+            'cancel_url' => 'required|url',
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(), $validator->errors()->first(), 422);
+            return $this->error($validator->errors(), 'Validation error', 400);
         }
 
         $user = auth()->user();
-        if (!$user) {
-            return $this->error([], 'User not found', 404);
-        }
 
-        $plan = SubscriptionPlan::find($id);
-        if (!$plan) {
-            return $this->error([], 'Plan not found', 404);
-        }
+        if (!$user) return $this->error([], 'User not found', 200);
+
+        $paypalPlan = SubscriptionPlan::find($id);
+
+        if (!$paypalPlan) return $this->error([], 'Subscription plan not found', 404);
+
+        $data = [
+            'plan_id' => $paypalPlan->paypal_plan_id,
+            'subscriber' => [
+                'name' => [
+                    'given_name' => $user->first_name,
+                    'surname' => $user->last_name,
+                ],
+                'email_address' => $user->email,
+            ],
+            'application_context' => [
+                'brand_name' => config('app.name'),
+                'locale' => 'en-US',
+                'shipping_preference' => 'NO_SHIPPING',
+                'user_action' => 'SUBSCRIBE_NOW',
+                'payment_method' => [
+                    'payer_selected' => 'PAYPAL',
+                    'payee_preferred' => 'IMMEDIATE_PAYMENT_REQUIRED',
+                ],
+                'return_url' => route('payments.paypal.success') . '?user_id=' . $user->id . '&success_url=' . urlencode($request->success_url),
+                'cancel_url' => route('payments.cancel') . '?cancel_url=' . urlencode($request->cancel_url),
+            ],
+        ];
 
         try {
             $provider = new PayPalClient;
-            Log::info('PayPal Config:', ['config' => config('paypal')]);
-            $provider->setApiCredentials(config('paypal'));
+            $provider->setApiCredentials(config('paypal'));  // Make sure config has correct credentials
+            $token = $provider->getAccessToken();
+            $provider->setAccessToken($token);
 
-            // Get access token
-            $tokenResponse = $provider->getAccessToken();
-            Log::info('PayPal getAccessToken Response:', ['tokenResponse' => $tokenResponse]);
+            $response = $provider->createSubscription($data);
 
-            if (!isset($tokenResponse['access_token'])) {
-                Log::error('Failed to get PayPal access token', ['response' => $tokenResponse]);
-                throw new \Exception('Unable to retrieve PayPal access token');
+            if (isset($response['id'])) {
+                // Find the approval URL and redirect user there
+                foreach ($response['links'] as $link) {
+                    if ($link['rel'] == 'approve') {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Subscription created successfully',
+                            'data' => ['url' => $link['href']],
+                        ], 200);
+                    }
+                }
+                return $this->error([], 'Approval link not found', 500);
             }
-
-            $token = $tokenResponse['access_token'];
-
-            // // Transform expiry_date from MM/YY to YYYY-MM
-            // $expiryParts = explode('/', $request->expiry_date);
-            // if (count($expiryParts) !== 2) {
-            //     return response()->json(['success' => false, 'message' => 'Invalid expiry date format'], 422);
-            // }
-            // $month = $expiryParts[0];
-            // $year = '20' . $expiryParts[1]; // Convert YY to YYYY
-            // $formattedExpiry = "$year-$month";
-
-            // Log card details (sanitized)
-            Log::info('PayPal Card Details:', [
-                'card_holder_name' => $request->card_holder_name,
-                'card_number' => $request->card_number,
-                'expiry' => $request->expiry_date,
-                'cvv' => $request->cvv,
-            ]);
-
-            // Create order
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $token,
-                'PayPal-Request-Id' => (string) Str::uuid(),
-            ])->post('https://api-m.sandbox.paypal.com/v2/checkout/orders', [
-                'intent' => 'CAPTURE',
-                'purchase_units' => [
-                    [
-                        'amount' => [
-                            'currency_code' => 'USD',
-                            'value' => $plan->price,
-                        ],
-                        'description' => $plan->membership_type
-                    ]
-                ],
-                'payment_source' => [
-                    'card' => [
-                        'number' => $request->card_number,
-                        'expiry' => $request->expiry_date,
-                        'security_code' => $request->cvv,
-                        'name' => $request->card_holder_name,
-                    ]
-                ]
-            ]);
-
-            $data = $response->json();
-            Log::info('PayPal Order Response:', ['data' => $data]);
-
-            if (isset($data['status']) && $data['status'] === 'COMPLETED') {
-                // Payment successful, save membership
-                $endDate = Carbon::now()->addMonth()->toDateTimeString();
-
-                $membership = Membership::create([
-                    'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
-                    'user_id'         => $user->id,
-                    'plan_id'         => $plan->id,
-                    'membership_type' => $plan->membership_type ?? '',
-                    'type'            => $plan->interval ?? '',
-                    'price'           => $plan->price,
-                    'start_at'        => Carbon::now(),
-                    'end_at'          => $endDate,
-                ]);
-
-                MembershipHistory::create([
-                    'order_id'        => $membership->order_id,
-                    'user_id'         => $user->id,
-                    'membership_id'   => $membership->id,
-                    'plan_id'         => $plan->id,
-                    'membership_type' => $plan->membership_type,
-                    'type'            => $plan->interval,
-                    'price'           => $plan->price,
-                    'start_at'        => Carbon::now(),
-                    'end_at'          => $endDate,
-                ]);
-
-                $user->update(['is_premium' => true]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Payment successful and membership activated',
-                    'membership' => $membership
-                ]);
-            }
-
-            Log::error('PayPal Order Creation Failed:', ['response' => $data]);
-            return response()->json(['success' => false, 'message' => 'Payment failed', 'response' => $data], 500);
+            return $this->error($response, 'Subscription creation failed', 500);
         } catch (\Exception $e) {
-            Log::error('PayPal Payment Error:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json(['success' => false, 'message' => 'Exception: ' . $e->getMessage()], 500);
+            Log::error('PayPal Subscription Creation Error: ' . $e->getMessage());
+            return $this->error([], 'Exception: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function success(Request $request)
+    {
+        // Log incoming request to debug
+        Log::info('PayPal success callback data', $request->all());
+
+        $subscription_id = $request->get('subscription_id');
+        $userId = $request->get('user_id');
+
+        $success_url = $request->get('success_url');
+
+        if (!$subscription_id) {
+            return $this->error([], 'Subscription ID not provided', 400);
+        }
+
+        if (!$userId) {
+            return $this->error([], 'User ID not provided', 400);
+        }
+
+        try {
+            // Initialize PayPal client
+            $provider = new PayPalClient();
+            $provider->setApiCredentials(config('paypal'));
+            $token = $provider->getAccessToken();
+            $provider->setAccessToken($token);
+
+            // Fetch subscription details
+            $details = $provider->showSubscriptionDetails($subscription_id);
+            Log::info('PayPal subscription details', $details);
+
+            if (!isset($details['plan_id'])) {
+                return $this->error([], 'Plan ID not found in subscription details', 500);
+            }
+
+            $plan = SubscriptionPlan::where('paypal_plan_id', $details['plan_id'])->first();
+            if (!$plan) {
+                return $this->error([], 'Plan not found', 404);
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                return $this->error([], 'User not found', 404);
+            }
+
+            // Determine membership end date
+            $nextBilling = $details['billing_info']['next_billing_time'] ?? null;
+            $endDate = $nextBilling
+                ? Carbon::parse($nextBilling)->toDateTimeString()
+                : Carbon::now()->addMonth()->toDateTimeString();
+
+            DB::beginTransaction();
+
+            // Update user to premium
+            $user->update(['is_premium' => true]);
+
+            // Create membership
+            $membership = Membership::create([
+                'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
+                'user_id'         => $user->id,
+                'plan_id'         => $plan->id,
+                'membership_type' => $plan->membership_type ?? '',
+                'type'            => $plan->interval ?? '',
+                'price'           => $plan->price,
+                'start_at'        => Carbon::now(),
+                'end_at'          => $endDate,
+            ]);
+
+            // Create membership history
+            MembershipHistory::create([
+                'order_id'        => $membership->order_id,
+                'user_id'         => $user->id,
+                'membership_id'   => $membership->id,
+                'plan_id'         => $plan->id,
+                'membership_type' => $plan->membership_type ?? '',
+                'type'            => $plan->interval ?? '',
+                'price'           => $plan->price,
+                'start_at'        => Carbon::now(),
+                'end_at'          => $endDate,
+            ]);
+
+            DB::commit();
+            // Redirect to success URL if provided
+
+            if ($success_url) {
+                return redirect()->away($success_url);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error([], 'Failed to process subscription: ' . $e->getMessage(), 500);
+        }
+    }
+
+
+
+
+
+    public function paypalCancel(Request $request)
+    {
+        return $this->error([], 'User cancelled the subscription', 200);
+        // Handle the cancellation logic here
+
+         $cancel_url = $request->get('cancel_url');
+
+        // Redirect to the cancel URL
+        if ($cancel_url) {
+            return redirect()->away($cancel_url);
         }
     }
 }
