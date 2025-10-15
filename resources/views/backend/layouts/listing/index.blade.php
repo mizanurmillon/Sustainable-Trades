@@ -44,7 +44,7 @@
                                         data-lightbox="roadtrip" target="_blank"><img
                                             src="{{ asset($product->images->first()->image ?? 'backend/images/placeholder/image_placeholder.png') }}"
                                             class="img-fluid rounded-start w-100 h-100 object-fit-cover"
-                                            alt="...">,</a>
+                                            alt="..." style="width: 100px;height: 70px;">,</a>
                                     <div class="position-absolute bottom-0 end-0 m-2">
                                         <span class="badge bg-white text-dark"><i class="fa-solid fa-camera me-1"></i>
                                             {{ $product->images->count() }}</span>
