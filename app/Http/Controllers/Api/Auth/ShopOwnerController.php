@@ -148,6 +148,7 @@ class ShopOwnerController extends Controller
 
     public function shopOwnerDataUpdate(shopOwnerUpdateRequest $request)
     {
+        // dd($request->all());
 
         $user = auth()->user();
 
@@ -233,12 +234,13 @@ class ShopOwnerController extends Controller
                 'payment_methods' => ($validated['payment_methods']),
             ]);
 
-            if (isset($validated['answers']) && is_array($validated['answers']) && is_array($validated['questions'])) {
+            if (isset($validated['faqs']) && is_array($validated['faqs'])) {
                 $user->shopInfo->faqs()->delete(); // Remove existing FAQs
-                foreach ($validated['answers'] as $index => $answer) {
+
+                foreach ($validated['faqs'] as $faq) {
                     $user->shopInfo->faqs()->create([
-                        'question' => $validated['questions'][$index] ?? '',
-                        'answer' => $answer,
+                        'question' => $faq['question'],
+                        'answer' => $faq['answer'],
                     ]);
                 }
             }

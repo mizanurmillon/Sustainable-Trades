@@ -24,10 +24,10 @@ class shopOwnerUpdateRequest extends FormRequest
         return [
             'first_name'  => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email'          => 'required|email|unique:users,email,' . (auth()->user()->id ?? 'null'),
-            'phone'          => 'required|string|max:15|unique:users,phone,' . (auth()->user()->id ?? 'null'),
+            'email'          => 'required|email|unique:users,email,' . (auth()->user()->id),
+            'phone'          => 'required|string|max:15|unique:users,phone,' . (auth()->user()->id),
             'company_name'  => 'required|string|max:255',
-            'shop_name'    => 'required|string|max:255|unique:shop_infos,shop_name,' . (auth()->user()->shopInfo->id ?? 'null'),
+            'shop_name'    => 'required|string|max:255|unique:shop_infos,shop_name,' . (auth()->user()->shopInfo->id),
             'shop_city'   => 'required|string|max:255',
             'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
             'shop_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
@@ -54,10 +54,9 @@ class shopOwnerUpdateRequest extends FormRequest
             'return_policy' => 'required|string',
             'payment_methods' => 'nullable|array',
             'payment_methods.*' => 'string|max:50',
-            'answers' => 'nullable|array',
-            'answers.*' => 'nullable|string',
-            'questions' => 'nullable|array',
-            'questions.*' => 'nullable|string',
+            'faqs' => 'nullable|array',
+            'faqs.*.question' => 'nullable|string',
+            'faqs.*.answer' => 'nullable|string',
         ];
     }
     
