@@ -193,14 +193,14 @@ class ShopOwnerController extends Controller
             }
 
             if ($request->hasFile('about_image')) {
-                $oldPath = public_path($user->shopInfo->about->image);
+                $oldPath = public_path($user->shopInfo->about->about_image);
                 if (file_exists($oldPath) && is_file($oldPath)) {
                     unlink($oldPath);
                 }
                 $aboutImage = $request->file('about_image');
                 $aboutImageName = uploadImage($aboutImage, 'shops');
             } else {
-                $aboutImageName = $user->shopInfo->about->image;
+                $aboutImageName = $user->shopInfo->about->about_image;
             }
 
             $user->first_name = $validated['first_name'];
