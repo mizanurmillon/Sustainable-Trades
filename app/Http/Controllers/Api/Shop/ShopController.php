@@ -38,7 +38,7 @@ class ShopController extends Controller
         $data = $query->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No shops found', 404);
+            return $this->error([], 'No shops found', 200);
         }
 
         return $this->success($data, 'All shops retrieved successfully', 200);
@@ -65,7 +65,7 @@ class ShopController extends Controller
             ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No shops found', 404);
+            return $this->error([], 'No shops found', 200);
         }
 
         return $this->success($data, 'All featured shops successfully', 200);
@@ -91,7 +91,7 @@ class ShopController extends Controller
         }
 
         if (!$data) {
-            return $this->error([], 'Shop not found', 404);
+            return $this->error([], 'Shop not found', 200);
         }
 
         return $this->success($data, 'Shop details retrieved successfully', 200);
@@ -106,7 +106,7 @@ class ShopController extends Controller
             ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No featured products found for this shop', 404);
+            return $this->error([], 'No featured products found for this shop', 200);
         }
 
         // If user is authenticated, fetch favorite products
@@ -166,7 +166,7 @@ class ShopController extends Controller
         $data = $query->paginate($item); // Paginate results, 15 per page
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No products found for this shop', 404);
+            return $this->error([], 'No products found for this shop', 200);
         }
 
         // If user is authenticated, fetch favorite products

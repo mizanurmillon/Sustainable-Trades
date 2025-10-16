@@ -23,7 +23,7 @@ class AllProductController extends Controller
         $data = $query->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No products found', 404);
+            return $this->error([], 'No products found', 200);
         }
 
         return $this->success($data,'Data fetched successfully',200);
@@ -34,7 +34,7 @@ class AllProductController extends Controller
         $data = Product::with('images')->where('is_featured', true)->where('status', 'approved')->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No featured products found', 404);
+            return $this->error([], 'No featured products found', 200);
         }
 
         // If user is authenticated, fetch favorite products
@@ -102,7 +102,7 @@ class AllProductController extends Controller
             ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No nearby products found', 404);
+            return $this->error([], 'No nearby products found', 200);
         }
 
         // If user is authenticated, fetch favorite products

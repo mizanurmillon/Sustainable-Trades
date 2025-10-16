@@ -22,7 +22,7 @@ class TopVendorController extends Controller
         $data = $query->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No shops found', 404);
+            return $this->error([], 'No shops found', 200);
         }
 
         return $this->success($data, 'All top shops retrieved successfully', 200);

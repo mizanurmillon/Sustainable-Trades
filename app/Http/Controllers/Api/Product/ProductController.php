@@ -30,7 +30,7 @@ class ProductController extends Controller
             ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No categories found', 404);
+            return $this->error([], 'No categories found', 200);
         }
 
         // Collect all product IDs from all categories
@@ -62,7 +62,7 @@ class ProductController extends Controller
         $data = Product::with(['category', 'sub_category', 'images', 'metaTags', 'shop.user:id,first_name,last_name,avatar,role', 'shop:id,user_id,shop_name,shop_image', 'shop.address'])->find($id);
 
         if (!$data) {
-            return $this->error([], 'Product not found', 404);
+            return $this->error([], 'Product not found', 200);
         }
         // If user is authenticated, fetch favorite products
         if (auth()->user()) {

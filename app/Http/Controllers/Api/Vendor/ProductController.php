@@ -144,7 +144,7 @@ class ProductController extends Controller
         $data = $products->get();
 
         if ($data->isEmpty()) {
-            return $this->error([],'No products found',404);
+            return $this->error([],'No products found',200);
 
         }
 
@@ -165,7 +165,7 @@ class ProductController extends Controller
             ->find($id);
 
         if (!$product) {
-            return $this->error([],'Product not found',404);
+            return $this->error([],'Product not found',200);
         }
 
         return $this->success($product, 'Product details retrieved successfully', 200);
@@ -184,7 +184,7 @@ class ProductController extends Controller
             ->find($id);
 
         if (!$product) {
-            return $this->error([],'Product not found',404);
+            return $this->error([],'Product not found',200);
         }
        
         $product->status = 'pending';
@@ -311,7 +311,7 @@ class ProductController extends Controller
             ->find($id);
 
         if (!$product) {
-            return $this->error([],'Product not found',404);
+            return $this->error([],'Product not found',200);
         }
 
         try {

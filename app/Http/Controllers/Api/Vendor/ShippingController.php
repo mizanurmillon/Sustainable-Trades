@@ -71,7 +71,7 @@ class ShippingController extends Controller
             ->first();
 
         if ($oldData) {
-            return $this->error([], 'Weight range already exists', 409);
+            return $this->error([], 'Weight range already exists', 400);
         }
 
         $data = WeightRangeRat::create([
@@ -82,7 +82,7 @@ class ShippingController extends Controller
         ]);
 
         if (!$data) {
-            return $this->error([], 'Failed to create weight range shipping', 500);
+            return $this->error([], 'Failed to create weight range shipping', 200);
         }
 
         return $this->success($data,'Weight range shipping created successfully', 200);
@@ -100,7 +100,7 @@ class ShippingController extends Controller
         $data = WeightRangeRat::where('shop_id', $user->shopInfo->id)->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'Failed to fetch weight range shipping', 500);
+            return $this->error([], 'Failed to fetch weight range shipping', 200);
         }
         return $this->success($data,'Weight range shipping fetched successfully', 200);
     }
@@ -115,7 +115,7 @@ class ShippingController extends Controller
         $data = WeightRangeRat::find($id);
 
         if (!$data) {
-            return $this->error([], 'Weight range not found',404);
+            return $this->error([], 'Weight range not found',200);
         }
 
         $data->delete();

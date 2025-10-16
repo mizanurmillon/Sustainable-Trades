@@ -22,7 +22,7 @@ class SubscriptionPlanController extends Controller
        $data = $query->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'Data not found', 404);
+            return $this->error([], 'Data not found', 200);
         }
 
         return $this->success($data,'Data fetched successfully',200);
