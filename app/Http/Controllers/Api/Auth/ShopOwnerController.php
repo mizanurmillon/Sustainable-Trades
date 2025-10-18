@@ -260,7 +260,7 @@ class ShopOwnerController extends Controller
                 'longitude' => $validated['longitude'] ?? null,
                 'city' => $validated['city'] ?? null,
                 'state' => $validated['state'] ?? null,
-                'postal_code' => $validated['zip_code'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
                 'display_my_address' => $validated['display_my_address'] ?? false,
                 'address_10_mile' => $validated['address_10_mile'] ?? false,
                 'do_not_display' => $validated['do_not_display'] ?? false,

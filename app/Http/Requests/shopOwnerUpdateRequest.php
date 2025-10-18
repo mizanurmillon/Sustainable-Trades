@@ -42,7 +42,7 @@ class shopOwnerUpdateRequest extends FormRequest
             'longitude'     => 'nullable|numeric',
             'city'          => 'nullable|string|max:255',
             'state'         => 'nullable|string|max:255',
-            'zip_code'      => 'nullable|string|max:20',
+            'postal_code'      => 'nullable|string|max:20',
             'display_my_address' => 'boolean',
             'address_10_mile' => 'boolean',
             'do_not_display' => 'boolean',
