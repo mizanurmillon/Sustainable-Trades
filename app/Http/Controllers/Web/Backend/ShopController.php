@@ -15,8 +15,11 @@ class ShopController extends Controller
 
         if ($request->ajax()) {
 
-
-            $data = ShopInfo::with('user', 'products')->withCount('products')->latest()->get();
+            $data = ShopInfo::with(['user', 'products'])
+                ->withCount('products')
+                ->whereHas('user.membership')
+                ->latest()
+                ->get();
 
             if (!empty($request->input('search.value'))) {
                 $searchTerm = $request->input('search.value');
