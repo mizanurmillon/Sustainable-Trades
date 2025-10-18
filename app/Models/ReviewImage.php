@@ -2,24 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SystemSetting extends Model {
-
-    use HasFactory, SoftDeletes;
-
+class ReviewImage extends Model
+{
     protected $guarded = [];
-
 
     protected $hidden = [
         'created_at',
         'updated_at',
-        'deleted_at',
     ];
 
     protected $casts = [
         'id' => 'integer',
+        'review_id' => 'integer',
     ];
+
+    public function review()
+    {
+        return $this->belongsTo(Review::class, 'review_id');
+    }
 }

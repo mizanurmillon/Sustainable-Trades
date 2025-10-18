@@ -28,11 +28,15 @@ class ShopController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('shop_name', function ($data) {
+               ->addColumn('shop_name', function ($data) {
                     $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
-                    $frontendUrl = env('FRONTEND_BASE_URL'); // get the value from .env
+                    $frontendUrl = env('FRONTEND_BASE_URL');
 
-                    return "<a href='{$frontendUrl}/{$data->user->id}' target='_blank'>{$shopName}</a>";
+                    $viewType = 'customer'; 
+                    $userId = $data->user->id;
+                    $listingId = $data->id;
+
+                    return "<a href='{$frontendUrl}/shop-details?view={$viewType}&id={$userId}&listing_id={$listingId}' target='_blank'>{$shopName}</a>";
                 })
                 ->addColumn('total_products', function ($data) {
                     return $data->products_count ?? 0;

@@ -38,9 +38,13 @@ class BasicMembersController extends Controller
                 })
                 ->addColumn('shop_name', function ($data) {
                     $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
-                    $frontendUrl = env('FRONTEND_BASE_URL'); // get the value from .env
+                    $frontendUrl = env('FRONTEND_BASE_URL');
 
-                    return "<a href='{$frontendUrl}/{$data->user->id}' target='_blank'>{$shopName}</a>";
+                    $viewType = 'customer'; 
+                    $userId = $data->user->id;
+                    $listingId = $data->user->shopInfo->id;
+
+                    return "<a href='{$frontendUrl}/shop-details?view={$viewType}&id={$userId}&listing_id={$listingId}' target='_blank'>{$shopName}</a>";
                 })
                 ->addColumn('created_at', function ($data) {
                     return $data->created_at->format('d M Y h:i A');

@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->decimal('weight',10,2)->nullable()->after('product_quantity')->comment('Weight of the product in kilograms');
+        Schema::create('review_images', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade');
+            $table->string('image')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('review_images');
     }
 };

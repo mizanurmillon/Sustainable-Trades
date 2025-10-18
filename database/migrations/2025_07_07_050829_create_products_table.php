@@ -18,7 +18,7 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->string('product_name');
             $table->float('product_price');
-            $table->integer('product_quantity')->default(0);
+            $table->integer('product_quantity')->nullable();
             $table->boolean('unlimited_stock')->default(false);
             $table->boolean('out_of_stock')->default(false);
             $table->string('video')->nullable();
