@@ -18,6 +18,7 @@ class ShopController extends Controller
     {
         $query = User::with('shopInfo:id,user_id,shop_name,shop_image,shop_banner', 'shopInfo.address')
             ->where('role', 'vendor')
+            ->whereHas('membership')
             ->where('status', 'active')
             ->whereHas('shopInfo')
             ->select('id', 'first_name', 'last_name', 'role', 'avatar');

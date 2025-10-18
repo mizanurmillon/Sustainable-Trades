@@ -34,7 +34,7 @@ class BasicMembersController extends Controller
                     return $data->user->phone ?? 'N/A';
                 })
                 ->addColumn('total_products', function ($data) {
-                    return $data->user->shopInfo->products()->count();
+                    return $data->user->shopInfo->products()->count() ?? 0;
                 })
                 ->addColumn('shop_name', function ($data) {
                     $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
