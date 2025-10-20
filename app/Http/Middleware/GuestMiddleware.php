@@ -23,7 +23,7 @@ class GuestMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-         try {
+        try {
             $user = JWTAuth::parseToken()->authenticate();
         } catch (Exception $e) {
             if ($e instanceof TokenInvalidException) {
