@@ -53,4 +53,9 @@ class ShopInfo extends Model
     {
         return $this->hasOne(AboutShop::class, 'shop_info_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'shop_info_id');
+    }
 }

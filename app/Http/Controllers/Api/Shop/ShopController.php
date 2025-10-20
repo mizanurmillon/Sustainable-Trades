@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api\Shop;
 
-use App\Http\Controllers\Controller;
-use App\Models\FollowShop;
-use App\Models\MyFavorit;
-use App\Models\Product;
 use App\Models\User;
+use App\Models\Product;
+use App\Models\MyFavorit;
+use App\Models\FollowShop;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class ShopController extends Controller
 {
@@ -75,13 +76,27 @@ class ShopController extends Controller
     public function shopDetails($id)
     {
 
-        $data = User::with(['shopInfo', 'shopInfo.about', 'shopInfo.policies', 'shopInfo.policies', 'shopInfo.faqs', 'shopInfo.address', 'shopInfo.socialLinks'])
+        $data = User::with([
+            'shopInfo',
+            'shopInfo.about',
+            'shopInfo.policies',
+            'shopInfo.faqs',
+            'shopInfo.address',
+            'shopInfo.socialLinks',
+            'shopInfo.reviews',
+            'shopInfo.reviews.user:id,first_name,last_name,avatar',
+            'shopInfo.reviews.images',
+            'shopInfo.reviews.product:id,product_name',
+            'shopInfo.reviews.product.images'
+        ])
             ->select('id', 'first_name', 'last_name', 'phone', 'email', 'role', 'avatar', 'company_name')
             ->where('id', $id)
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->first();
-
+        if ($data && $data->shopInfo) {
+            $data->rating_avg = $data->shopInfo->reviews()->avg('rating');
+        }
         if (auth()->check()) {
             $shopFollow = FollowShop::where('user_id', auth()->id())
                 ->where('shop_info_id', $data->shopInfo->id)

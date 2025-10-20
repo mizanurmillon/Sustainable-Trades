@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\Cart\CartController;
@@ -141,6 +142,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::controller(FollowShopController::class)->group(function () {
         Route::get('/follow-shops', 'followShops');
         Route::post('/follow-shop/{id}', 'followShop');
+    });
+
+    Route::controller(ReviewController::class)->group(function () {
+        Route::post('/add-review/{id}', 'addReview');
     });
 });
 

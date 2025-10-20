@@ -59,7 +59,10 @@ class ProductController extends Controller
 
     public function singleProduct($id)
     {
-        $data = Product::with(['category', 'sub_category', 'images', 'metaTags', 'shop.user:id,first_name,last_name,avatar,role', 'shop:id,user_id,shop_name,shop_image', 'shop.address'])->find($id);
+        $data = Product::with(['category', 'sub_category', 'images', 'metaTags', 'shop.user:id,first_name,last_name,avatar,role', 'shop:id,user_id,shop_name,shop_image', 'shop.address','reviews', 'reviews.user:id,first_name,last_name,avatar'])
+        ->withAvg('reviews', 'rating')
+        ->withCount('reviews') 
+        ->find($id);
 
         if (!$data) {
             return $this->error([], 'Product not found', 200);
