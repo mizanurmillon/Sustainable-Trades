@@ -17,7 +17,7 @@
                 </ul>
             </div>
             <div class="d-flex align-items-center">
-                <a href="#" class="btn btn-light-primary">View Inventory</a>
+                <a href="{{ route('admin.listing_requests.index') }}" class="btn btn-light-primary">View Inventory</a>
             </div>
         </div>
     </div>
@@ -103,7 +103,7 @@
                                     @if ($product->status == 'pending')
                                         <span class="badge bg-secondary">Pending</span>
                                     @elseif($product->status == 'approved')
-                                        <span class="badge bg-success text-white">Approved</span>
+                                        <span class="badge bg-primary text-white">Approved</span>
                                     @elseif($product->status == 'rejected')
                                         <span class="badge bg-danger text-white">Rejected</span>
                                     @endif

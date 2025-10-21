@@ -56,14 +56,23 @@ class ShopController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
 
-    public function featuredShops()
+    public function featuredShops(Request $request)
     {
-        $data = User::with('shopInfo:id,user_id,shop_name,shop_name,shop_image,shop_banner,is_featured', 'shopInfo.address')->where('role', 'vendor')
-            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
-            ->whereHas('shopInfo', function ($q) {
-                $q->where('is_featured', true);
-            })
+        $city = $request->query('city'); // optional city filter
+
+        $data = User::with([
+            'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
+            'shopInfo.address'
+        ])
+            ->where('role', 'vendor')
             ->where('status', 'active')
+            ->whereHas('shopInfo', function ($q) use ($city) {
+                $q->where('is_featured', true);
+                if ($city) {
+                    $q->where('shop_city', $city);
+                }
+            })
+            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->get();
 
         if ($data->isEmpty()) {
