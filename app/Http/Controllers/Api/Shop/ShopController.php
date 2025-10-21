@@ -58,7 +58,7 @@ class ShopController extends Controller
 
     public function featuredShops(Request $request)
     {
-        $city = $request->query('city'); // optional city filter
+        // $city = $request->query('city'); // optional city filter
 
         $data = User::with([
             'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
@@ -66,11 +66,11 @@ class ShopController extends Controller
         ])
             ->where('role', 'vendor')
             ->where('status', 'active')
-            ->whereHas('shopInfo', function ($q) use ($city) {
+            ->whereHas('shopInfo', function ($q) {
                 $q->where('is_featured', true);
-                if ($city) {
-                    $q->where('shop_city', $city);
-                }
+                // if ($city) {
+                //     $q->where('shop_city', $city);
+                // }
             })
             ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->get();
@@ -78,7 +78,6 @@ class ShopController extends Controller
         if ($data->isEmpty()) {
             return $this->error([], 'No shops found', 200);
         }
-
         return $this->success($data, 'All featured shops successfully', 200);
     }
 

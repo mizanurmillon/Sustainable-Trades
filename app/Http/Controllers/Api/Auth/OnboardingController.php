@@ -84,6 +84,8 @@ class OnboardingController extends Controller
         }
 
         $data = $response->json();
+
+        // dd($data);
         $onboardingUrl = collect($data['links'])->firstWhere('rel', 'action_url')['href'] ?? null;
 
         if (!$onboardingUrl) {
