@@ -266,7 +266,7 @@
                         toastr.success(resp.message);
                         let badgeHtml = '';
                         if (action === 'approve') {
-                            badgeHtml = '<span class="badge bg-success text-white">Approved</span>';
+                            badgeHtml = '<span class="badge bg-primary text-white">Approved</span>';
                         } else if (action === 'rejected') {
                             badgeHtml = '<span class="badge bg-danger text-white">Rejected</span>';
                         }
