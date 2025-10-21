@@ -38,18 +38,19 @@
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Product Image</label>
-                                <div class="d-flex align-items-center">
+                                <div class="d-flex flex-wrap align-items-center gap-3">
                                     @foreach ($product->images as $image)
-                                        <div class="symbol symbol-150px me-5">
+                                        <div class="flex-shrink-0" style="width: 150px; height: 150px;">
                                             <img src="{{ asset($image->image ?? 'backend/images/placeholder/image_placeholder.png') }}"
-                                                alt="Product Image" />
+                                                alt="Product Image" class="img-fluid rounded"
+                                                style="width: 100%; height: 100%; object-fit: cover;" />
                                         </div>
                                     @endforeach
                                     <div>
                                         <label class="btn btn-icon btn-circle btn-light-primary" for="product_image">
                                             <i class="bi bi-camera fs-2"></i>
                                         </label>
-                                        {{--  <input type="file" id="product_image" name="image" class="d-none" />  --}}
+                                        {{-- <input type="file" id="product_image" name="image" class="d-none" /> --}}
                                     </div>
                                 </div>
                             </div>
@@ -87,18 +88,22 @@
                                     To ensure all products and services on Sustainable Trades meet our sustainability
                                     standards, each listing must be approved before it goes live. Please upload a short
                                     video introducing yourself and your product or service. In the video, share details
-                                    about how and where your product was made, how your food was grown, and how it aligns
-                                    with our sustainability guidelines. This helps us maintain the quality and integrity of
+                                    about how and where your product was made, how your food was grown, and how it
+                                    aligns
+                                    with our sustainability guidelines. This helps us maintain the quality and integrity
+                                    of
                                     our marketplace.
                                 </p>
                                 <div class="d-flex align-items-center">
-                                    <button type="button" class="btn btn-light me-3"><i class="bi bi-upload"></i> Upload
+                                    <button type="button" class="btn btn-light me-3"><i class="bi bi-upload"></i>
+                                        Upload
                                         video</button>
                                     <button type="button" class="btn btn-link">Remove video</button>
                                 </div>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label" style="font-size: 15px; font-weight: 600">Listing Status</label>
+                                <label class="form-label" style="font-size: 15px; font-weight: 600">Listing
+                                    Status</label>
                                 <span id="status-badge-{{ $product->id }}">
                                     @if ($product->status == 'pending')
                                         <span class="badge bg-secondary">Pending</span>
@@ -150,7 +155,8 @@
                                     <option value="Arrange Local Pickup" @if ($product->fulfillment == 'Arrange Local Pickup') selected @endif>
                                         Arrange Local Pickup</option>
                                     <option value="Arrange Local Pickup or Shipping"
-                                        @if ($product->fulfillment == 'Arrange Local Pickup or Shipping') selected @endif>Arrange Local Pickup or Shipping
+                                        @if ($product->fulfillment == 'Arrange Local Pickup or Shipping') selected @endif>Arrange Local Pickup or
+                                        Shipping
                                     </option>
                                 </select>
                             </div>
@@ -169,7 +175,8 @@
                                     <option value="For Sale or Trader Barter"
                                         @if ($product->selling_option == 'For Sale or Trader Barter') selected @endif>For Sale or Trader Barter
                                     </option>
-                                    <option value="For Sale" @if ($product->selling_option == 'For Sale') selected @endif>For Sale
+                                    <option value="For Sale" @if ($product->selling_option == 'For Sale') selected @endif>For
+                                        Sale
                                     </option>
                                 </select>
                             </div>
@@ -268,10 +275,10 @@
                         let buttonsHtml = `
                     <div class="d-flex gap-2 w-100">
                         ${action === 'approve' ? `
-                                    <button type="button" class="btn btn-danger w-100" style="background-color: #8B200C"
-                                        onclick="showRejectConfirm(${id})">Deny</button>` : `
-                                    <button type="button" class="btn btn-primary w-100"
-                                        onclick="showApproveConfirm(${id})">Approve</button>`}
+                                            <button type="button" class="btn btn-danger w-100" style="background-color: #8B200C"
+                                                onclick="showRejectConfirm(${id})">Deny</button>` : `
+                                            <button type="button" class="btn btn-primary w-100"
+                                                onclick="showApproveConfirm(${id})">Approve</button>`}
                         <a href="{{ route('admin.listing_requests.index') }}" class="btn text-dark w-100"
                             style="background-color: #E48872">Back</a>
                     </div>`;

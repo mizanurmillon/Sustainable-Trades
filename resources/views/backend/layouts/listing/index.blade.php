@@ -43,8 +43,8 @@
                                     <a href="{{ asset($product->images->first()->image ?? 'backend/images/placeholder/image_placeholder.png') }}"
                                         data-lightbox="roadtrip" target="_blank"><img
                                             src="{{ asset($product->images->first()->image ?? 'backend/images/placeholder/image_placeholder.png') }}"
-                                            class="img-fluid rounded-start object-fit-cover"
-                                            alt="..." style="width: 300px;height: 300px;">,</a>
+                                            class="img-fluid rounded-start object-fit-cover h-100 w-100"
+                                            alt="..."></a>
                                     <div class="position-absolute bottom-0 end-0 m-2">
                                         <span class="badge bg-white text-dark"><i class="fa-solid fa-camera me-1"></i>
                                             {{ $product->images->count() }}</span>
