@@ -122,22 +122,21 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::get('/', 'getNotifications');
     });
 
-    Route::group(['middleware' => ['customer']], function () {
+    Route::group(['middleware' => ['customer']], function () {});
 
-        Route::controller(CartController::class)->group(function () {
-            Route::post('/add-to-cart/{id}', 'addToCart');
-            route::get('/cart', 'getCart');
-            route::post('/cart/update/{id}', 'updateCart');
-            route::delete('/cart/item/remove/{id}', 'deleteCartItem');
-            Route::delete('/cart/empty', 'emptyCart');
-            Route::delete('/cart/remove/{id}', 'deleteCart');
-        });
+    Route::controller(CartController::class)->group(function () {
+        Route::post('/add-to-cart/{id}', 'addToCart');
+        route::get('/cart', 'getCart');
+        route::post('/cart/update/{id}', 'updateCart');
+        route::delete('/cart/item/remove/{id}', 'deleteCartItem');
+        Route::delete('/cart/empty', 'emptyCart');
+        Route::delete('/cart/remove/{id}', 'deleteCart');
     });
 
     Route::controller(MyFavoriteController::class)->group(function () {
-            Route::get('/my-favorites', 'myFavorites');
-            Route::post('/add-favorites/{id}', 'addFavorite',);
-        });
+        Route::get('/my-favorites', 'myFavorites');
+        Route::post('/add-favorites/{id}', 'addFavorite',);
+    });
 
     Route::controller(FollowShopController::class)->group(function () {
         Route::get('/follow-shops', 'followShops');
@@ -177,7 +176,7 @@ Route::group(['middleware' => ['guest']], function () {
     Route::controller(AllProductController::class)->group(function () {
         Route::get('/all-products', 'allProducts');
         Route::get('/is-featured-product', 'isFeaturedProduct');
-        Route::get('/nearby-product','nearbyProduct');
+        Route::get('/nearby-product', 'nearbyProduct');
     });
 
     Route::controller(TopVendorController::class)->group(function () {
