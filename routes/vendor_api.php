@@ -36,6 +36,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/product/request-approval/{id}', 'productRequestApproval');
             Route::post('/product/update/{id}', 'productUpdate');
             Route::delete('/product/delete/{id}', 'productDelete');
+            Route::delete('/image-delete/{id}', 'productImageDelete');
         });
 
         Route::controller(ImportExportController::class)->group(function () {

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Traits\ApiResponse;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -278,7 +279,7 @@ class ProductController extends Controller
             }
 
             if ($request->has('product_image')) {
-                $product->images()->delete();
+                // $product->images()->delete();
                 foreach ($request->product_image as $image) {
                     $imageName = uploadImage($image, 'products');
                     $product->images()->create([
@@ -341,6 +342,40 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            return $this->error([],$e->getMessage(),500);
+        }
+    }
+
+    public function productImageDelete($id)
+    {
+        $user = auth()->user();
+
+        if(!$user)
+        {
+            return $this->error([],'User Not Found',400);
+        }
+
+        $image = ProductImage::whereHas('product', function ($query) use ($user) {
+                $query->where('shop_info_id', $user->shopInfo->id);
+            })
+            ->find($id);
+
+        if (!$image) {
+            return $this->error([],'Image not found',200);
+        }
+
+        try {
+            // Delete image file
+            if (file_exists(public_path($image->image))) {
+                unlink(public_path($image->image));
+            }
+
+            // Delete image record
+            $image->delete();
+
+            return $this->success([],'Product image deleted successfully',200);
+
+        } catch (\Exception $e) {
             return $this->error([],$e->getMessage(),500);
         }
     }
