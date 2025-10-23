@@ -204,34 +204,34 @@ class ShopOwnerController extends Controller
                 $aboutImageName = $user->shopInfo->about->about_image;
             }
 
-            $user->first_name = $validated['first_name'];
-            $user->last_name = $validated['last_name'];
-            $user->email = $validated['email'];
-            $user->phone = $validated['phone'];
-            $user->company_name = $validated['company_name'];
+            $user->first_name = $validated['first_name'] ?? $user->first_name;
+            $user->last_name = $validated['last_name'] ?? $user->last_name;
+            $user->email = $validated['email'] ?? $user->email;
+            $user->phone = $validated['phone'] ?? $user->phone;
+            $user->company_name = $validated['company_name'] ?? $user->company_name;
             if ($avatarName) {
                 $user->avatar = $avatarName;
             }
             $user->save();
 
             $user->shopInfo()->update([
-                'shop_name' => $validated['shop_name'],
-                'shop_city' => $validated['shop_city'],
+                'shop_name' => $validated['shop_name'] ?? $user->shopInfo->shop_name,
+                'shop_city' => $validated['shop_city'] ?? $user->shopInfo->shop_city,
                 'shop_banner' => $shopBannerName,
                 'shop_image' => $shopImageName
             ]);
 
             $user->shopInfo->about()->update([
-                'tagline' => $validated['tagline'],
-                'statement' => $validated['statement'],
-                'our_story' => $validated['our_story'],
+                'tagline' => $validated['tagline'] ?? $user->shopInfo->about->tagline,
+                'statement' => $validated['statement'] ?? $user->shopInfo->about->statement,
+                'our_story' => $validated['our_story'] ?? $user->shopInfo->about->our_story,
                 'about_image' => $aboutImageName
             ]);
 
             $user->shopInfo->policies()->update([
-                'shipping_information' => $validated['shipping_information'],
-                'return_policy' => $validated['return_policy'],
-                'payment_methods' => ($validated['payment_methods']),
+                'shipping_information' => $validated['shipping_information'] ?? $user->shopInfo->policies->shipping_information,
+                'return_policy' => $validated['return_policy'] ?? $user->shopInfo->policies->return_policy,
+                'payment_methods' => ($validated['payment_methods']) ?? $user->shopInfo->policies->payment_methods,
             ]);
 
             if (isset($validated['faqs']) && is_array($validated['faqs'])) {
@@ -247,23 +247,23 @@ class ShopOwnerController extends Controller
 
             // Save Social Links
             $user->shopInfo->socialLinks()->updateOrCreate([], [
-                'website_url' => $validated['website_url'],
-                'facebook_url' => $validated['facebook_url'],
-                'instagram_url' => $validated['instagram_url'],
-                'pinterest_url' => $validated['pinterest_url'],
+                'website_url' => $validated['website_url'] ?? $user->shopInfo->socialLinks->website_url,
+                'facebook_url' => $validated['facebook_url'] ?? $user->shopInfo->socialLinks->facebook_url,
+                'instagram_url' => $validated['instagram_url'] ?? $user->shopInfo->socialLinks->instagram_url,
+                'pinterest_url' => $validated['pinterest_url'] ?? $user->shopInfo->socialLinks->pinterest_url,
             ]);
 
             $user->shopInfo->address()->update([
-                'address_line_1' => $validated['address_line_1'],
+                'address_line_1' => $validated['address_line_1'] ?? $user->shopInfo->address->address_line_1,
                 // 'address_line_2' => $validated['address_line_2'],
-                'latitude' => $validated['latitude'],
-                'longitude' => $validated['longitude'],
-                'city' => $validated['city'],
-                'state' => $validated['state'],
-                'postal_code' => $validated['postal_code'],
-                'display_my_address' => $validated['display_my_address'],
-                'address_10_mile' => $validated['address_10_mile'],
-                'do_not_display' => $validated['do_not_display'],
+                'latitude' => $validated['latitude'] ?? $user->shopInfo->address->latitude,
+                'longitude' => $validated['longitude'] ?? $user->shopInfo->address->longitude,
+                'city' => $validated['city'] ?? $user->shopInfo->address->city,
+                'state' => $validated['state'] ?? $user->shopInfo->address->state,
+                'postal_code' => $validated['postal_code'] ?? $user->shopInfo->address->postal_code,
+                'display_my_address' => $validated['display_my_address'] ?? $user->shopInfo->address->display_my_address,
+                'address_10_mile' => $validated['address_10_mile'] ?? $user->shopInfo->address->address_10_mile,
+                'do_not_display' => $validated['do_not_display'] ?? $user->shopInfo->address->do_not_display,
             ]);
 
             DB::commit();

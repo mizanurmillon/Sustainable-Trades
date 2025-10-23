@@ -3,9 +3,46 @@
 namespace App\Http\Controllers\Api\Order;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    //
+    use ApiResponse;
+    
+    public function index(Request $request)
+    {
+        $user = auth()->user(); 
+
+        $query = Order::with('user:id,first_name,last_name,email')->where('shop_id', $user->shopInfo->id);
+
+        if ($request->query('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $order = $query->latest()->get();
+
+        if ($order->isEmpty()) {
+            return $this->error([], 'No orders found', 200);
+        }
+
+        return $this->success($order, 'Orders retrieved successfully');
+    }
+
+    public function show(Request $request, $id)
+    {
+        $user = auth()->user(); 
+
+        $order = Order::with('user:id,first_name,last_name,email,phone,avatar','orderItems','orderItems.product:id,product_name,product_price', 'orderItems.product','shippingAddress', 'OrderStatusHistory')
+            ->where('shop_id', $user->shopInfo->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return $this->error([], 'Order not found', 404);
+        }
+
+        return $this->success($order, 'Order retrieved successfully');
+    }
 }
