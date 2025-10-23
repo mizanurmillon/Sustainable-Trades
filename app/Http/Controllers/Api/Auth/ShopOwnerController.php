@@ -247,23 +247,23 @@ class ShopOwnerController extends Controller
 
             // Save Social Links
             $user->shopInfo->socialLinks()->updateOrCreate([], [
-                'website_url' => $validated['website_url'] ?? null,
-                'facebook_url' => $validated['facebook_url'] ?? null,
-                'instagram_url' => $validated['instagram_url'] ?? null,
-                'pinterest_url' => $validated['pinterest_url'] ?? null,
+                'website_url' => $validated['website_url'],
+                'facebook_url' => $validated['facebook_url'],
+                'instagram_url' => $validated['instagram_url'],
+                'pinterest_url' => $validated['pinterest_url'],
             ]);
 
             $user->shopInfo->address()->update([
-                'address_line_1' => $validated['address_line_1'] ?? null,
-                'address_line_2' => $validated['address_line_2'] ?? null,
-                'latitude' => $validated['latitude'] ?? null,
-                'longitude' => $validated['longitude'] ?? null,
-                'city' => $validated['city'] ?? null,
-                'state' => $validated['state'] ?? null,
-                'postal_code' => $validated['postal_code'] ?? null,
-                'display_my_address' => $validated['display_my_address'] ?? false,
-                'address_10_mile' => $validated['address_10_mile'] ?? false,
-                'do_not_display' => $validated['do_not_display'] ?? false,
+                'address_line_1' => $validated['address_line_1'],
+                'address_line_2' => $validated['address_line_2'],
+                'latitude' => $validated['latitude'],
+                'longitude' => $validated['longitude'],
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'postal_code' => $validated['postal_code'],
+                'display_my_address' => $validated['display_my_address'],
+                'address_10_mile' => $validated['address_10_mile'],
+                'do_not_display' => $validated['do_not_display'],
             ]);
 
             DB::commit();
