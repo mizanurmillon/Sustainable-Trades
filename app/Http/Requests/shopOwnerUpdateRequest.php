@@ -37,7 +37,7 @@ class shopOwnerUpdateRequest extends FormRequest
             'instagram_url' => 'nullable|url|max:255',
             'pinterest_url'  => 'nullable|url|max:255',
             'address_line_1' => 'nullable|string|max:255',
-            'address_line_2' => 'nullable|string|max:255',
+            // 'address_line_2' => 'nullable|string|max:255',
             'latitude'      => 'nullable|numeric',
             'longitude'     => 'nullable|numeric',
             'city'          => 'nullable|string|max:255',

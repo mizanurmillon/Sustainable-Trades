@@ -255,7 +255,7 @@ class ShopOwnerController extends Controller
 
             $user->shopInfo->address()->update([
                 'address_line_1' => $validated['address_line_1'],
-                'address_line_2' => $validated['address_line_2'],
+                // 'address_line_2' => $validated['address_line_2'],
                 'latitude' => $validated['latitude'],
                 'longitude' => $validated['longitude'],
                 'city' => $validated['city'],
