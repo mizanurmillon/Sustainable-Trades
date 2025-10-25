@@ -14,6 +14,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::controller(OrderController::class)->group(function () {
            Route::get('/orders', 'index');
            Route::get('/order/{id}', 'show'); 
+           Route::post('/order-status-update/{id}', 'updateStatus');
         });
     });
 

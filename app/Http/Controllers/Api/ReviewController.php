@@ -77,7 +77,7 @@ class ReviewController extends Controller
         $reviews = Review::with('user:id,first_name,last_name,avatar', 'images', 'product:id,product_name', 'product.images')
             ->where('shop_info_id', $id)
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         if ($reviews->isEmpty()) {
             return $this->error([], 'No reviews found for this shop', 200);
@@ -91,7 +91,7 @@ class ReviewController extends Controller
         $reviews = Review::with('user:id,first_name,last_name,avatar', 'images')
             ->where('product_id', $id)
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         if ($reviews->isEmpty()) {
             return $this->error([], 'No reviews found for this product', 200);

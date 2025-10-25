@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api\Order;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class OrderController extends Controller
 {
@@ -44,5 +45,65 @@ class OrderController extends Controller
         }
 
         return $this->success($order, 'Order retrieved successfully');
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:confirmed,processing,shipped,delivered,cancelled',
+        ]);
+
+        $user = auth()->user(); 
+
+        $order = Order::where('shop_id', $user->shopInfo->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return $this->error([], 'Order not found', 404);
+        }
+
+       try {
+            DB::beginTransaction();
+            $order->status = $request->status;
+            $order->save();
+
+            if(!$order) {
+                return $this->error([], 'Failed to update order status', 500);
+            }
+
+            if($order->status == 'confirmed') {
+                $order->OrderStatusHistory()->create([
+                    'order_id' => $order->id,
+                    'content' => 'Your order has been confirmed.',
+                ]);
+            } elseif($order->status == 'processing') {
+                $order->OrderStatusHistory()->create([
+                    'order_id' => $order->id,
+                    'content' => 'Your order is being processed.',
+                ]);
+            } elseif($order->status == 'shipped') {
+                $order->OrderStatusHistory()->create([
+                    'order_id' => $order->id,
+                    'content' => 'Your order has been shipped.',
+                ]);
+            } elseif($order->status == 'delivered') {
+                $order->OrderStatusHistory()->create([
+                    'order_id' => $order->id,
+                    'content' => 'Your order has been delivered.',
+                ]);
+            } elseif($order->status == 'cancelled') {
+                $order->OrderStatusHistory()->create([
+                    'order_id' => $order->id,
+                    'content' => 'Your order has been cancelled.',
+                ]);
+            }
+
+            DB::commit();
+            return $this->success($order, 'Order status updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error([], 'Failed to update order status', 500);
+        }
     }
 }
