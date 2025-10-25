@@ -31,6 +31,8 @@ class ShopController extends Controller
                 $q->where(function ($subQuery) use ($address) {
                     $subQuery->where('address_line_1', 'like', "%{$address}%")
                         ->orWhere('address_line_2', 'like', "%{$address}%")
+                        ->orWhere('city', 'like', "%{$address}%")
+                        ->orWhere('state', 'like', "%{$address}%")
                         ->orWhere('postal_code', 'like', "%{$address}%");
                 });
             });
