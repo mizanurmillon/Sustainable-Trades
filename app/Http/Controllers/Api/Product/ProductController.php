@@ -59,7 +59,7 @@ class ProductController extends Controller
 
     public function singleProduct($id)
     {
-        $data = Product::with(['category', 'sub_category', 'images', 'metaTags', 'shop.user:id,first_name,last_name,avatar,role', 'shop:id,user_id,shop_name,shop_image', 'shop.address','reviews', 'reviews.user:id,first_name,last_name,avatar'])
+        $data = Product::with(['category', 'sub_category', 'images', 'metaTags', 'shop.user:id,first_name,last_name,avatar,role', 'shop:id,user_id,shop_name,shop_image', 'shop.address'])
         ->withAvg('reviews', 'rating')
         ->withCount('reviews') 
         ->find($id);

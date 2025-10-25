@@ -71,4 +71,34 @@ class ReviewController extends Controller
         }
         
     }
+
+    public function shopReviews($id)
+    {
+        $reviews = Review::with('user:id,first_name,last_name,avatar', 'images', 'product:id,product_name', 'product.images')
+            ->where('shop_info_id', $id)
+            ->latest()
+            ->paginate(10);
+
+        if ($reviews->isEmpty()) {
+            return $this->error([], 'No reviews found for this shop', 200);
+        }
+
+        return $this->success($reviews, 'Shop reviews retrieved successfully', 200);
+    }
+
+    public function productReviews($id)
+    {
+        $reviews = Review::with('user:id,first_name,last_name,avatar', 'images')
+            ->where('product_id', $id)
+            ->latest()
+            ->paginate(10);
+
+        if ($reviews->isEmpty()) {
+            return $this->error([], 'No reviews found for this product', 200);
+        }
+
+        return $this->success($reviews, 'Product reviews retrieved successfully', 200);
+    }
+
+    
 }

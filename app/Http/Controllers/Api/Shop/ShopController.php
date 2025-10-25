@@ -91,11 +91,6 @@ class ShopController extends Controller
             'shopInfo.faqs',
             'shopInfo.address',
             'shopInfo.socialLinks',
-            'shopInfo.reviews',
-            'shopInfo.reviews.user:id,first_name,last_name,avatar',
-            'shopInfo.reviews.images',
-            'shopInfo.reviews.product:id,product_name',
-            'shopInfo.reviews.product.images'
         ])
             ->select('id', 'first_name', 'last_name', 'phone', 'email', 'role', 'avatar', 'company_name')
             ->where('id', $id)

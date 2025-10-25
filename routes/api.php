@@ -182,6 +182,11 @@ Route::group(['middleware' => ['guest']], function () {
     Route::controller(TopVendorController::class)->group(function () {
         Route::get('/top-vendors', 'topVendors');
     });
+
+    Route::controller(ReviewController::class)->group(function () {
+        Route::get('/shop-review/{id}', 'shopReviews');
+        Route::get('/product-review/{id}', 'productReviews');
+    });
 });
 
 Route::controller(NewsletterController::class)->group(function () {
