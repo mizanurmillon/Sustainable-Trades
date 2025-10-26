@@ -44,13 +44,13 @@ class CategoryController extends Controller
         // Get products of this category based on nearby shop location
         $products = Product::with([
             'images',
-            'category:id,category_name',
-            'shop_info:id,shop_name',
-            'shop_info.address:id,shop_info_id,latitude,longitude,address_line_1,city'
+            'category:id,name',
+            'shop:id,shop_name',
+            'shop.address:id,shop_info_id,latitude,longitude,address_line_1,city'
         ])
             ->where('category_id', $id)
             ->where('status', 'approved')
-            ->whereHas('shop_info.address', function ($query) use ($lat, $lng, $radius) {
+            ->whereHas('shop.address', function ($query) use ($lat, $lng, $radius) {
                 $query->whereRaw("
                 6371 * acos(
                     cos(radians(?)) * cos(radians(latitude)) *
@@ -59,19 +59,7 @@ class CategoryController extends Controller
                 ) <= ?
             ", [$lat, $lng, $lat, $radius]);
             });
-
-        // Optional search by address
-        if ($request->has('search')) {
-            $search = $request->search;
-            $products->whereHas('shop_info.address', function ($query) use ($search) {
-                $query->where('address_line_1', 'like', "%{$search}%")
-                    ->orWhere('address_line_2', 'like', "%{$search}%")
-                    ->orWhere('city', 'like', "%{$search}%")
-                    ->orWhere('state', 'like', "%{$search}%")
-                    ->orWhere('postal_code', 'like', "%{$search}%");
-            });
-        }
-
+        
         $products = $products->get(['id', 'category_id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity', 'selling_option']);
 
         if ($products->isEmpty()) {
