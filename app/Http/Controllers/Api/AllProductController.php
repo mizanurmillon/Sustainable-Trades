@@ -92,6 +92,8 @@ class AllProductController extends Controller
             $query->where(function ($q) use ($address) {
                 $q->where('shop_addresses.address_line_1', 'like', "%{$address}%")
                     ->orWhere('shop_addresses.address_line_2', 'like', "%{$address}%")
+                    ->orWhere('shop_addresses.city', 'like', "%{$address}%")
+                    ->orWhere('shop_addresses.state', 'like', "%{$address}%")
                     ->orWhere('shop_addresses.postal_code', 'like', "%{$address}%");
             });
         }

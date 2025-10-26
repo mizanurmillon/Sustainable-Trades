@@ -60,27 +60,40 @@ class ShopController extends Controller
 
     public function featuredShops(Request $request)
     {
-        // $city = $request->query('city'); // optional city filter
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        $radius = $request->query('radius', 5); // default 5 km
+
+        if (!$lat || !$lng) {
+            return $this->error([], 'Latitude and longitude are required', 400);
+        }
 
         $data = User::with([
             'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
-            'shopInfo.address'
+            'shopInfo.address:id,shop_info_id,latitude,longitude,address_line_1,city'
         ])
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->whereHas('shopInfo', function ($q) {
                 $q->where('is_featured', true);
-                // if ($city) {
-                //     $q->where('shop_city', $city);
-                // }
+            })
+            ->whereHas('shopInfo.address', function ($query) use ($lat, $lng, $radius) {
+                $query->whereRaw("
+                6371 * acos(
+                    cos(radians(?)) * cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) * sin(radians(latitude))
+                ) <= ?
+            ", [$lat, $lng, $lat, $radius]);
             })
             ->select('id', 'first_name', 'last_name', 'role', 'avatar')
             ->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No shops found', 200);
+            return $this->error([], 'No nearby featured shops found', 200);
         }
-        return $this->success($data, 'All featured shops successfully', 200);
+
+        return $this->success($data, 'Nearby featured shops retrieved successfully', 200);
     }
 
     public function shopDetails($id)

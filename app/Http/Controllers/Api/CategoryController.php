@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Product;
 use App\Models\Category;
 use App\Models\MyFavorit;
 use App\Models\SubCategory;
@@ -24,31 +25,80 @@ class CategoryController extends Controller
         return $this->success($data, 'Categories retrieved successfully', 200);
     }
 
-    public function singleCategory($id)
+    public function singleCategory(Request $request, $id)
     {
-        $data = Category::with('products:id,category_id,shop_info_id,product_name,product_price,product_quantity,selling_option','products.images')
-            ->find($id);
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+        $radius = $request->query('radius', 5); // default 5 km
 
-        if (!$data) {
+        if (!$lat || !$lng) {
+            return $this->error([], 'Latitude and longitude are required', 400);
+        }
+
+        // Category exists check
+        $category = Category::find($id);
+        if (!$category) {
             return $this->error([], 'Category not found', 404);
         }
 
-        // If user is authenticated, fetch favorite products
+        // Get products of this category based on nearby shop location
+        $products = Product::with([
+            'images',
+            'category:id,category_name',
+            'shop_info:id,shop_name',
+            'shop_info.address:id,shop_info_id,latitude,longitude,address_line_1,city'
+        ])
+            ->where('category_id', $id)
+            ->where('status', 'approved')
+            ->whereHas('shop_info.address', function ($query) use ($lat, $lng, $radius) {
+                $query->whereRaw("
+                6371 * acos(
+                    cos(radians(?)) * cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) * sin(radians(latitude))
+                ) <= ?
+            ", [$lat, $lng, $lat, $radius]);
+            });
+
+        // Optional search by address
+        if ($request->has('search')) {
+            $search = $request->search;
+            $products->whereHas('shop_info.address', function ($query) use ($search) {
+                $query->where('address_line_1', 'like', "%{$search}%")
+                    ->orWhere('address_line_2', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('state', 'like', "%{$search}%")
+                    ->orWhere('postal_code', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $products->get(['id', 'category_id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity', 'selling_option']);
+
+        if ($products->isEmpty()) {
+            return $this->error([], 'No nearby products found in this category', 404);
+        }
+
+        // If user logged in, check favorites
         $favorites = [];
         if (auth()->check()) {
             $favorites = MyFavorit::where('user_id', auth()->id())
-                ->whereIn('product_id', $data->products->pluck('id'))
+                ->whereIn('product_id', $products->pluck('id'))
                 ->pluck('product_id')
                 ->toArray();
         }
 
-        // Attach `is_favorite` flag to each product
-        foreach ($data->products as $product) {
+        foreach ($products as $product) {
             $product->is_favorite = in_array($product->id, $favorites);
         }
 
-        return $this->success($data, 'Category retrieved successfully', 200);
+        $response = [
+            'category' => $category,
+            'products' => $products
+        ];
+
+        return $this->success($response, 'Category-wise nearby products retrieved successfully', 200);
     }
+
 
 
     /**
