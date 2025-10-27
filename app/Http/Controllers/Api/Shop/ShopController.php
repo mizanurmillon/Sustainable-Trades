@@ -43,7 +43,18 @@ class ShopController extends Controller
 
         if ($data->isEmpty()) {
             return $this->error([], 'No shops found', 200);
-        }
+        } 
+
+        // ✅ Manually calculate avg_rating and total_reviews for each shop
+        $data->transform(function ($user) {
+            if ($user->shopInfo) {
+                $avg = $user->shopInfo->reviews()->avg('rating');
+
+                $user->shopInfo->avg_rating = round($avg ?? 0, 1);
+            }
+            return $user;
+        });
+
 
         return $this->success($data, 'All shops retrieved successfully', 200);
     }
@@ -72,6 +83,7 @@ class ShopController extends Controller
             'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
             'shopInfo.address:id,shop_info_id,latitude,longitude,address_line_1,address_line_2,city,state,postal_code',
         ])
+           
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->whereHas('shopInfo', function ($q) {
@@ -92,6 +104,15 @@ class ShopController extends Controller
         if ($data->isEmpty()) {
             return $this->error([], 'No nearby featured shops found', 200);
         }
+
+        // ✅ Manually calculate avg_rating and total_reviews for each shop
+        $data->transform(function ($user) {
+            if ($user->shopInfo) {
+                $avg = $user->shopInfo->reviews()->avg('rating');
+                $user->shopInfo->avg_rating = round($avg ?? 0, 1);
+            }
+            return $user;
+        });
 
         return $this->success($data, 'Nearby featured shops retrieved successfully', 200);
     }
