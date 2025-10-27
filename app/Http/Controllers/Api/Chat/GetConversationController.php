@@ -20,39 +20,68 @@ class GetConversationController extends Controller
         }
 
         $name = $request->query('name');
+        $unreadOnly = $request->query('unread');
+        $sent = $request->query('sent');
 
-        $conversations = Conversation::query()
+        $query = Conversation::query()
             ->with([
-                'participants' => function ($query) use ($user, $name) {
-                    $query->where('participant_id', '!=', $user->id)
+                'participants' => function ($q) use ($user) {
+                    $q->where('participant_id', '!=', $user->id)
                         ->where('participant_type', get_class($user))
-                        ->with(['participant' => function ($q) use ($name) {
-                            $q->select('id', 'first_name','last_name', 'avatar');
-                        }])
+                        ->with([
+                            'participant' => function ($sub) {
+                                $sub->select('id', 'first_name', 'last_name', 'avatar');
+                            }
+                        ])
                         ->take(3);
                 },
                 'lastMessage',
             ])
-            ->whereHas('participants', function ($query) use ($user) {
-                $query->where('participant_type', get_class($user))
+            ->whereHas('participants', function ($q) use ($user) {
+                $q->where('participant_type', get_class($user))
                     ->where('participant_id', $user->id);
-            })
-            ->when($name, function ($query, $name) {
-                $query->whereHas('participants', function ($query) use ($name) {
-                    $query->whereHas('participant', function ($query) use ($name) {
-                        $query->where('first_name', 'like', "%$name%")
-                            ->orWhere('last_name', 'like', "%$name%");
+            });
+
+        // Filter by participant name
+        if (!empty($name)) {
+            $query->whereHas('participants.participant', function ($q) use ($name, $user) {
+                $q->where('id', '!=', $user->id)
+                    ->where(function ($subQuery) use ($name) {
+                        $subQuery->where('first_name', 'like', '%' . $name . '%')
+                            ->orWhere('last_name', 'like', '%' . $name . '%');
                     });
-                });
-            })
+            });
+        }
+
+        // Filter only unread conversations
+        if ($unreadOnly) {
+            $query->whereHas('messages', function ($q) use ($user) {
+                $q->where('receiver_id', $user->id)
+                    ->where('is_read', 0);
+            });
+        }
+
+        // Filter conversations with messages sent by the user
+        if ($sent) {
+            $query->whereHas('messages', function ($q) use ($user) {
+                $q->where('sender_id', $user->id);
+            });
+        }
+
+        // Final conversations query
+        $conversations = $query->withCount('unreadMessages')
             ->where('type', '!=', 'order')
-            ->withCount('unreadMessages')
             ->latest('updated_at')
             ->get();
 
         $response = [
             'total_conversations' => $conversations->count(),
-            'self' => $user->only(['id', 'name', 'avatar']),
+            'self' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name ?? null,
+                'last_name' => $user->last_name ?? null,
+                'avatar' => $user->avatar ?? null,
+            ],
             'conversations' => $conversations,
         ];
 
