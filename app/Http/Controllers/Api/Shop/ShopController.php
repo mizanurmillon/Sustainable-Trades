@@ -70,7 +70,7 @@ class ShopController extends Controller
 
         $data = User::with([
             'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
-            'shopInfo.address:id,shop_info_id,latitude,longitude,address_line_1,city'
+            'shopInfo.address:id,shop_info_id,latitude,longitude,address_line_1,address_line_2,city,state,postal_code',
         ])
             ->where('role', 'vendor')
             ->where('status', 'active')

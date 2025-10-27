@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\Order\MyOrderController;
 use App\Http\Controllers\Api\Order\OrderController;
 use App\Http\Controllers\Api\Order\PaymentController;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -15,6 +17,13 @@ Route::group(['middleware' => ['jwt.verify']], function () {
            Route::get('/orders', 'index');
            Route::get('/order/{id}', 'show'); 
            Route::post('/order-status-update/{id}', 'updateStatus');
+        });
+    });
+
+    Route::group(['middleware' => ['customer']], function () {
+        Route::controller(MyOrderController::class)->group(function () {
+           Route::get('/my-orders', 'index');
+           Route::get('/my-order/{id}', 'show'); 
         });
     });
 
