@@ -35,38 +35,49 @@ class CategoryController extends Controller
             return $this->error([], 'Latitude and longitude are required', 400);
         }
 
-        // Category exists check
+        // Check if category exists
         $category = Category::find($id);
         if (!$category) {
             return $this->error([], 'Category not found', 404);
         }
 
         // Get products of this category based on nearby shop location
-        $products = Product::with([
-            'images',
-            'category:id,name',
-            'shop:id,shop_name',
-            'shop.address:id,shop_info_id,latitude,longitude,address_line_1,city'
-        ])
-            ->where('category_id', $id)
-            ->where('status', 'approved')
-            ->whereHas('shop.address', function ($query) use ($lat, $lng, $radius) {
-                $query->whereRaw("
-                6371 * acos(
-                    cos(radians(?)) * cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) * sin(radians(latitude))
-                ) <= ?
-            ", [$lat, $lng, $lat, $radius]);
-            });
-        
-        $products = $products->get(['id', 'category_id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity', 'selling_option']);
+        $products = Product::query()
+            ->join('shop_infos', 'products.shop_info_id', '=', 'shop_infos.id')
+            ->join('shop_addresses', 'shop_infos.id', '=', 'shop_addresses.shop_info_id')
+            ->where('products.category_id', $id)
+            ->where('products.status', 'approved')
+            ->select(
+                'products.id',
+                'products.category_id',
+                'products.shop_info_id',
+                'products.product_name',
+                'products.product_price',
+                'products.product_quantity',
+                'products.selling_option'
+            )
+            ->selectRaw("
+            (6371 * acos(
+                cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
+                cos(radians(shop_addresses.longitude) - radians(?)) +
+                sin(radians(?)) * sin(radians(shop_addresses.latitude))
+            )) AS distance
+        ", [$lat, $lng, $lat])
+            ->having('distance', '<=', $radius)
+            ->orderBy('distance', 'ASC')
+            ->with([
+                'images',
+                'category:id,name',
+                'shop:id,shop_name',
+                'shop.address:id,shop_info_id,latitude,longitude,address_line_1,city'
+            ])
+            ->get();
 
         if ($products->isEmpty()) {
             return $this->error([], 'No nearby products found in this category', 404);
         }
 
-        // If user logged in, check favorites
+        // If user logged in, mark favorites
         $favorites = [];
         if (auth()->check()) {
             $favorites = MyFavorit::where('user_id', auth()->id())
@@ -77,6 +88,7 @@ class CategoryController extends Controller
 
         foreach ($products as $product) {
             $product->is_favorite = in_array($product->id, $favorites);
+            $product->distance = round($product->distance, 2); // distance in km, 2 decimal
         }
 
         $response = [
@@ -86,6 +98,7 @@ class CategoryController extends Controller
 
         return $this->success($response, 'Category-wise nearby products retrieved successfully', 200);
     }
+
 
 
 

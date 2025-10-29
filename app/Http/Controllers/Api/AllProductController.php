@@ -66,12 +66,13 @@ class AllProductController extends Controller
     {
         $lat = $request->input('lat');
         $lng = $request->input('lng');
+        $radius = $request->input('radius', 5); // Default radius is 5 km
 
         if (!$lat || !$lng) {
             return $this->error([], 'Latitude and longitude are required', 400);
         }
 
-        $radius = 5;
+        $radius = $radius * 1; // Convert to numeric
 
         $query = Product::with('images', 'shop')
             ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')

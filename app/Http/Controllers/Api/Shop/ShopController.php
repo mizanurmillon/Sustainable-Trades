@@ -43,7 +43,7 @@ class ShopController extends Controller
 
         if ($data->isEmpty()) {
             return $this->error([], 'No shops found', 200);
-        } 
+        }
 
         // ✅ Manually calculate avg_rating and total_reviews for each shop
         $data->transform(function ($user) {
@@ -79,26 +79,28 @@ class ShopController extends Controller
             return $this->error([], 'Latitude and longitude are required', 400);
         }
 
-        $data = User::with([
-            'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
-            'shopInfo.address:id,shop_info_id,latitude,longitude,address_line_1,address_line_2,city,state,postal_code',
-        ])
-           
+        $data = User::query()
+            ->with([
+                'shopInfo:id,user_id,shop_name,shop_image,shop_banner,is_featured,shop_city',
+                'shopInfo.address:id,shop_info_id,latitude,longitude,address_line_1,address_line_2,city,state,postal_code',
+            ])
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->whereHas('shopInfo', function ($q) {
                 $q->where('is_featured', true);
             })
-            ->whereHas('shopInfo.address', function ($query) use ($lat, $lng, $radius) {
-                $query->whereRaw("
-                6371 * acos(
-                    cos(radians(?)) * cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) * sin(radians(latitude))
-                ) <= ?
-            ", [$lat, $lng, $lat, $radius]);
-            })
-            ->select('id', 'first_name', 'last_name', 'role', 'avatar')
+            ->join('shop_infos', 'users.id', '=', 'shop_infos.user_id')
+            ->join('shop_addresses', 'shop_infos.id', '=', 'shop_addresses.shop_info_id')
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.role', 'users.avatar')
+            ->selectRaw("
+            (6371 * acos(
+                cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
+                cos(radians(shop_addresses.longitude) - radians(?)) +
+                sin(radians(?)) * sin(radians(shop_addresses.latitude))
+            )) AS distance
+        ", [$lat, $lng, $lat])
+            ->having('distance', '<=', $radius)
+            ->orderBy('distance', 'ASC')
             ->get();
 
         if ($data->isEmpty()) {

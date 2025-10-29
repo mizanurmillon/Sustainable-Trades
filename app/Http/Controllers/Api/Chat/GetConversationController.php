@@ -62,11 +62,7 @@ class GetConversationController extends Controller
         }
 
         // Filter conversations with messages sent by the user
-        if ($sent) {
-            $query->whereHas('messages', function ($q) use ($user) {
-                $q->where('sender_id', $user->id);
-            });
-        }
+        if ($sent) $query->whereHas('sentMessages', fn($q) => $q->where('sender_id', $user->id));
 
         // Final conversations query
         $conversations = $query->withCount('unreadMessages')

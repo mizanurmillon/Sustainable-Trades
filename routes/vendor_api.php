@@ -92,9 +92,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
 Route::get('/trade-shop-product/{id}', [TradeOfferController::class, 'tradeShopProduct']);
 
-Route::get('/paypal/onboard/success', [OnboardingController::class,'onboardSuccess'])->name('account.success');
+Route::get('/paypal/onboard/success', [OnboardingController::class,'onboardSuccess'])->name('paypal.onboard.success');
 
-Route::get('/paypal/onboard/cancel', [OnboardingController::class,'onboardCancel'])->name('account.cancel');
+Route::get('/paypal/onboard/cancel', [OnboardingController::class,'onboardCancel'])->name('paypal.onboard.cancel');
 
 
 Route::controller(MembershipController::class)->group(function () {
