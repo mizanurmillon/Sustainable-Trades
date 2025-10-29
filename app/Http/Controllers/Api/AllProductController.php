@@ -66,7 +66,7 @@ class AllProductController extends Controller
     {
         $lat = $request->input('lat');
         $lng = $request->input('lng');
-        $radius = $request->input('radius', 5); // Default radius is 5 km
+        $radius = $request->input('radius', 5); // Default radius is 5 miles
 
         if (!$lat || !$lng) {
             return $this->error([], 'Latitude and longitude are required', 400);
@@ -78,7 +78,7 @@ class AllProductController extends Controller
             ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')
             ->selectRaw(
                 'products.id, products.shop_info_id, products.product_name, products.product_price, products.product_quantity, products.selling_option,
-            (6371 * acos(
+            (3959 * acos(
                 cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
                 cos(radians(shop_addresses.longitude) - radians(?)) +
                 sin(radians(?)) * sin(radians(shop_addresses.latitude))

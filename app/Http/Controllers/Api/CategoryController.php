@@ -29,7 +29,7 @@ class CategoryController extends Controller
     {
         $lat = $request->query('lat');
         $lng = $request->query('lng');
-        $radius = $request->query('radius', 5); // default 5 km
+        $radius = $request->query('radius', 5); // default 5 miles
 
         if (!$lat || !$lng) {
             return $this->error([], 'Latitude and longitude are required', 400);
@@ -57,7 +57,7 @@ class CategoryController extends Controller
                 'products.selling_option'
             )
             ->selectRaw("
-            (6371 * acos(
+            (3959 * acos(
                 cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
                 cos(radians(shop_addresses.longitude) - radians(?)) +
                 sin(radians(?)) * sin(radians(shop_addresses.latitude))
