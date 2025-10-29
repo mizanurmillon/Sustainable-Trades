@@ -14,13 +14,13 @@ class AllProductController extends Controller
 
     public function allProducts(Request $request) {
         
-        $query = Product::with('images', 'shop:id,user_id,shop_name','shop.address')->where('status', 'approved')->select('id','shop_info_id','product_name', 'product_price', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option');
+        $query = Product::with('images', 'shop:id,user_id,shop_name','shop.address')->where('status', 'approved')->select('id','shop_info_id','product_name', 'product_price', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option')->withAvg('reviews', 'rating');
 
         if($request->has('search')) {
             $query->where('product_name', 'like', '%' . $request->search . '%');
         }
 
-        $data = $query->get();
+        $data = $query->latest()->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'No products found', 200);
@@ -31,7 +31,7 @@ class AllProductController extends Controller
 
     public function isFeaturedProduct()
     {
-        $data = Product::with('images')->where('is_featured', true)->where('status', 'approved')->get();
+        $data = Product::with('images')->where('is_featured', true)->where('status', 'approved')->withAvg('reviews', 'rating')->latest()->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'No featured products found', 200);
@@ -101,6 +101,7 @@ class AllProductController extends Controller
 
         $data = $query->having('distance', '<=', $radius)
             ->orderBy('distance', 'ASC')
+            ->withAvg('reviews', 'rating')
             ->limit(10)
             ->get();
 

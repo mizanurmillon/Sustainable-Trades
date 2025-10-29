@@ -106,4 +106,38 @@ class OrderController extends Controller
             return $this->error([], 'Failed to update order status', 500);
         }
     }
+
+    public function addNote(Request $request, $id)
+    {
+        $request->validate([
+            'note' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+
+        $order = Order::where('shop_id', $user->shopInfo->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return $this->error([], 'Order not found', 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $order->note = $request->note;
+            $order->save();
+
+            if(!$order) {
+                return $this->error([], 'Failed to add order note', 500);
+            }
+
+            DB::commit();
+            return $this->success($order, 'Order note added successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error([], 'Failed to add order note', 500);
+        }
+    }
 }
