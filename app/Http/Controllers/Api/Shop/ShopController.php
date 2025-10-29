@@ -73,7 +73,7 @@ class ShopController extends Controller
     {
         $lat = $request->query('lat');
         $lng = $request->query('lng');
-        $radius = $request->query('radius', 5); // default 5 miles
+        // $radius = $request->query('radius', 5); // default 5 miles
 
         if (!$lat || !$lng) {
             return $this->error([], 'Latitude and longitude are required', 400);
@@ -99,7 +99,6 @@ class ShopController extends Controller
                 sin(radians(?)) * sin(radians(shop_addresses.latitude))
             )) AS distance
         ", [$lat, $lng, $lat])
-            ->having('distance', '<=', $radius)
             ->orderBy('distance', 'ASC')
             ->get();
 

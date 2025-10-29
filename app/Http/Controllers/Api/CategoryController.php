@@ -63,7 +63,6 @@ class CategoryController extends Controller
                 sin(radians(?)) * sin(radians(shop_addresses.latitude))
             )) AS distance
         ", [$lat, $lng, $lat])
-            ->having('distance', '<=', $radius)
             ->orderBy('distance', 'ASC')
             ->with([
                 'images',
