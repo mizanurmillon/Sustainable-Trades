@@ -96,7 +96,7 @@ class AllProductController extends Controller
     {
         $lat = $request->input('lat');
         $lng = $request->input('lng');
-        // $radius = $request->input('radius', 5); // Default radius is 5 miles
+        $radius = $request->input('radius', 30); // Default radius is 30 miles
 
         if (!$lat || !$lng) {
             return $this->error([], 'Latitude and longitude are required', 400);
@@ -117,7 +117,7 @@ class AllProductController extends Controller
             )
             ->where('products.status', 'approved');
 
-        $data = $query->orderBy('distance', 'ASC')
+        $data = $query->having('distance', '<=', $radius)->orderBy('distance', 'ASC')
             ->withAvg('reviews', 'rating')
             ->limit(10)
             ->get();
