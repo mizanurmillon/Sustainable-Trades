@@ -100,6 +100,7 @@ class ShopController extends Controller
             )) AS distance
         ", [$lat, $lng, $lat])
             ->orderBy('distance', 'ASC')
+            ->limit(4)
             ->get();
 
         if ($data->isEmpty()) {
