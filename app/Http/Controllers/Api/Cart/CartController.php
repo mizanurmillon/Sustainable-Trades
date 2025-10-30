@@ -98,7 +98,7 @@ class CartController extends Controller
 
         $cart = Cart::where('user_id', $user->id)
             ->with([
-                'shop:id,shop_name,shop_image',
+                'shop:id,user_id,shop_name,shop_image',
                 'shop.address',
                 'CartItems.product:id,product_name,product_price,product_quantity',
                 'CartItems.product.images'
