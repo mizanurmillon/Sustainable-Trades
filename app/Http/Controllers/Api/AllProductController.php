@@ -107,7 +107,7 @@ class AllProductController extends Controller
         $query = Product::with('images', 'shop')
             ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')
             ->selectRaw(
-                'products.id, products.shop_info_id, products.product_name, products.product_price, products.product_quantity, products.selling_option,
+                'products.id, products.shop_info_id, products.product_name, products.product_price, products.product_quantity, products.selling_option, products.unlimited_stock, products.out_of_stock,
             (3959 * acos(
                 cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
                 cos(radians(shop_addresses.longitude) - radians(?)) +

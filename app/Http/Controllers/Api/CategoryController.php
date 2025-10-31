@@ -54,7 +54,9 @@ class CategoryController extends Controller
                 'products.product_name',
                 'products.product_price',
                 'products.product_quantity',
-                'products.selling_option'
+                'products.selling_option',
+                'products.unlimited_stock',
+                'products.out_of_stock'
             )
             ->selectRaw("
             (3959 * acos(
