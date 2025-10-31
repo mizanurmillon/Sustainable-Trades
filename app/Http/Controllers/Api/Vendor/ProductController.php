@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
     use ApiResponse;
-    
+
     public function productStore(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'product_name' => 'required|string|max:255',
             'product_price' => 'required|numeric|min:0',
             'product_quantity' => 'nullable|numeric|min:1',
-            'weight'=> 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
             'unlimited_stock' => 'nullable|boolean',
             'out_of_stock' => 'nullable|boolean',
@@ -40,26 +40,25 @@ class ProductController extends Controller
         // dd($request->all());
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(),$validator->errors()->first(), 422);
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
         }
 
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
-        try{
+        try {
             DB::beginTransaction();
 
-            if($request->has('video')){
+            if ($request->has('video')) {
                 $video                        = $request->file('video');
                 $videoName                    = uploadImage($video, 'products/videos');
-            }else{
+            } else {
                 $videoName = null; // Default to null if no video is uploaded
             }
-            
+
             $data = Product::create([
                 'shop_info_id' => $user->shopInfo->id,
                 'product_name' => $request->product_name,
@@ -100,11 +99,10 @@ class ProductController extends Controller
 
             $data->load(['images', 'metaTags']);
 
-            return $this->success($data,'Product created successfully and waiting for approval',201);
-
-        }catch (\Exception $e) {
+            return $this->success($data, 'Product created successfully and waiting for approval', 201);
+        } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error([],$e->getMessage(),500);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 
@@ -112,13 +110,12 @@ class ProductController extends Controller
     {
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
         $products = Product::where('shop_info_id', $user->shopInfo->id)
-            ->with(['images','category'])
+            ->with(['images', 'category'])
             ->select([
                 'id',
                 'category_id',
@@ -133,20 +130,16 @@ class ProductController extends Controller
             $products->where('status', $request->status);
         }
 
-        if($request->has('short_by') == 'a-z')
-        {
+        if ($request->has('short_by') == 'a-z') {
             $products->orderBy('product_name', 'asc');
-        }
-        elseif($request->has('short_by') == 'z-a')
-        {
+        } elseif ($request->has('short_by') == 'z-a') {
             $products->where('product_name', 'desc');
         }
 
         $data = $products->get();
 
         if ($data->isEmpty()) {
-            return $this->error([],'No products found',200);
-
+            return $this->error([], 'No products found', 200);
         }
 
         return $this->success($data, 'Products retrieved successfully', 200);
@@ -156,9 +149,8 @@ class ProductController extends Controller
     {
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
         $product = Product::where('shop_info_id', $user->shopInfo->id)
@@ -166,7 +158,7 @@ class ProductController extends Controller
             ->find($id);
 
         if (!$product) {
-            return $this->error([],'Product not found',200);
+            return $this->error([], 'Product not found', 200);
         }
 
         return $this->success($product, 'Product details retrieved successfully', 200);
@@ -176,18 +168,17 @@ class ProductController extends Controller
     {
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
         $product = Product::where('shop_info_id', $user->shopInfo->id)
             ->find($id);
 
         if (!$product) {
-            return $this->error([],'Product not found',200);
+            return $this->error([], 'Product not found', 200);
         }
-       
+
         $product->status = 'pending';
         $product->save();
 
@@ -200,7 +191,7 @@ class ProductController extends Controller
             'product_name' => 'sometimes|required|string|max:255',
             'product_price' => 'sometimes|required|numeric|min:0',
             'product_quantity' => 'nullable|numeric|min:1',
-            'weight'=> 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
             'unlimited_stock' => 'nullable|boolean',
             'out_of_stock' => 'nullable|boolean',
@@ -218,24 +209,23 @@ class ProductController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->error($validator->errors(),$validator->errors()->first(), 422);
+            return $this->error($validator->errors(), $validator->errors()->first(), 422);
         }
 
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
-        try{
+        try {
             DB::beginTransaction();
 
             $product = Product::where('shop_info_id', $user->shopInfo->id)
                 ->find($id);
 
             if (!$product) {
-                return $this->error([],'Product not found',404);
+                return $this->error([], 'Product not found', 404);
             }
 
             if ($request->has('video')) {
@@ -249,23 +239,30 @@ class ProductController extends Controller
                 $videoName = $product->video; // Keep the old video if no new one is uploaded
             }
 
-            $product->update([
-                'product_name' => $request->product_name ?? $product->product_name,
-                'product_price' => $request->product_price ?? $product->product_price,
-                'product_quantity' => $request->product_quantity ?? $product->product_quantity,
-                'weight' => $request->weight,
-                'cost' => $request->cost,
-                'unlimited_stock' => $request->unlimited_stock ?? $product->unlimited_stock,
-                'out_of_stock' => $request->out_of_stock ?? $product->out_of_stock,
-                'video'=> $videoName,
-                'description' => $request->description,
-                'category_id' => $request->category_id,
-                'sub_category_id' => $request->sub_category_id,
-                'fulfillment' => $request->fulfillment,
-                'selling_option' => $request->selling_option,
-                'is_featured' => $request->is_featured,
-                'status' => 'pending'
-            ]);
+            $updateData = [
+                'product_name'      => $request->product_name ?? $product->product_name,
+                'product_price'     => $request->product_price ?? $product->product_price,
+                'product_quantity'  => $request->product_quantity ?? $product->product_quantity,
+                'weight'            => $request->weight ?? $product->weight,
+                'cost'              => $request->cost ?? $product->cost,
+                'unlimited_stock'   => $request->unlimited_stock ?? $product->unlimited_stock,
+                'out_of_stock'      => $request->out_of_stock ?? $product->out_of_stock,
+                'video'             => $videoName,
+                'description'       => $request->description ?? $product->description,
+                'category_id'       => $request->category_id ?? $product->category_id,
+                'sub_category_id'   => $request->sub_category_id ?? $product->sub_category_id,
+                'fulfillment'       => $request->fulfillment ?? $product->fulfillment,
+                'selling_option'    => $request->selling_option ?? $product->selling_option,
+                'is_featured'       => $request->is_featured ?? $product->is_featured,
+            ];
+
+            // Update status to 'pending' if any of these fields are changed
+            if ($request->has('product_name') || $request->has('product_price') || $request->has('description')) {
+                $updateData['status'] = 'pending';
+            }
+
+            // Finally update the product
+            $product->update($updateData);
 
             if ($request->has('tags')) {
                 // Delete old tags
@@ -287,15 +284,19 @@ class ProductController extends Controller
                     ]);
                 }
             }
-            
+
             DB::commit();
             $product->load(['images', 'metaTags']);
-            return $this->success($product, 'Product updated successfully and waiting for approval', 200);
 
-
-        }catch(\Exception $e){
+            if($product->status == 'pending'){
+                return $this->success($product, 'Product updated successfully and waiting for approval', 200);
+            } else {
+                return $this->success($product, 'Product updated successfully', 200);
+            }
+            
+        } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error([],$e->getMessage(),500);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 
@@ -303,16 +304,15 @@ class ProductController extends Controller
     {
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
         $product = Product::where('shop_info_id', $user->shopInfo->id)
             ->find($id);
 
         if (!$product) {
-            return $this->error([],'Product not found',200);
+            return $this->error([], 'Product not found', 200);
         }
 
         try {
@@ -338,11 +338,10 @@ class ProductController extends Controller
             $product->delete();
 
             DB::commit();
-            return $this->success([],'Product deleted successfully',200);
-
+            return $this->success([], 'Product deleted successfully', 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error([],$e->getMessage(),500);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 
@@ -350,18 +349,17 @@ class ProductController extends Controller
     {
         $user = auth()->user();
 
-        if(!$user)
-        {
-            return $this->error([],'User Not Found',400);
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
         }
 
         $image = ProductImage::whereHas('product', function ($query) use ($user) {
-                $query->where('shop_info_id', $user->shopInfo->id);
-            })
+            $query->where('shop_info_id', $user->shopInfo->id);
+        })
             ->find($id);
 
         if (!$image) {
-            return $this->error([],'Image not found',200);
+            return $this->error([], 'Image not found', 200);
         }
 
         try {
@@ -373,12 +371,9 @@ class ProductController extends Controller
             // Delete image record
             $image->delete();
 
-            return $this->success([],'Product image deleted successfully',200);
-
+            return $this->success([], 'Product image deleted successfully', 200);
         } catch (\Exception $e) {
-            return $this->error([],$e->getMessage(),500);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 }
-
-
