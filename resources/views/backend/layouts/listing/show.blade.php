@@ -160,6 +160,7 @@
                                     </option>
                                 </select>
                             </div>
+                            @if($product->metaTags->count() > 0)
                             <div class="mb-5">
                                 <label class="form-label">Meta Tags:</label>
                                 <br>
@@ -173,6 +174,7 @@
                                     @php $i++; @endphp
                                 @endforeach
                             </div>
+                            @endif
                             <div class="mb-5">
                                 <label class="form-label">Selling Option</label>
                                 <select name="selling_option" class="form-select">
