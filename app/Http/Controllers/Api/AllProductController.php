@@ -31,8 +31,14 @@ class AllProductController extends Controller
         ->where('status', 'approved')
         ->withAvg('reviews', 'rating');
 
-        if($request->has('search')) {
-            $query->where('product_name', 'like', '%' . $request->search . '%');
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                ->orWhereHas('metaTags', function ($q2) use ($search) {
+                    $q2->where('tag', 'like', "%{$search}%");
+                });
+            });
         }
 
         $data = $query->orderBy('distance', 'ASC')->get();
