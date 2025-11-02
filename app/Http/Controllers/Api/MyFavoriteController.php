@@ -16,40 +16,44 @@ class MyFavoriteController extends Controller
     {
         $user = auth()->user();
 
-        if(!$user){
-           return $this->error([], "User Unauthorized", 401); 
+        if (!$user) {
+            return $this->error([], "User Unauthorized", 401);
         }
 
-        $data = MyFavorit::where('user_id', $user->id)->with('product:id,product_name,product_price,product_quantity,is_featured,out_of_stock,selling_option,unlimited_stock','product.images')->latest()->get();
+        // Get user's favorite products with product details
+        $favorites = MyFavorit::where('user_id', $user->id)
+            ->with([
+                'product:id,product_name,product_price,product_quantity,is_featured,out_of_stock,selling_option,unlimited_stock',
+                'product.images'
+            ])
+            ->latest()
+            ->get();
 
-        // If user is authenticated, fetch favorite products
-        $favorites = [];
-        if (auth()->user()) {
-            $favorites = MyFavorit::where('user_id', auth()->id())
-                ->whereIn('product_id', $data->pluck('id'))
-                ->pluck('product_id')
-                ->toArray(); // Get only the product IDs
+        // Extract only product IDs from favorites
+        $favoriteProductIds = $favorites->pluck('product_id')->toArray();
+
+        // Attach is_favorite flag to each favorite product
+        foreach ($favorites as $favorite) {
+            if ($favorite->product) {
+                $favorite->product->is_favorite = in_array($favorite->product->id, $favoriteProductIds);
+            }
         }
 
-        // Attach `is_favorite` flag to each product
-        foreach ($data as $product) {
-            $product->is_favorite = in_array($product->id, $favorites);
-        }
-
-        return $this->success($data, "My Favorites", 200);
+        return $this->success($favorites, "My Favorites", 200);
     }
+
 
     public function addFavorite(Request $request, $id)
     {
         $user = auth()->user();
 
-        if(!$user){
-           return $this->error([], "User Unauthorized", 401); 
+        if (!$user) {
+            return $this->error([], "User Unauthorized", 401);
         }
 
         $product = Product::find($id);
 
-        if(!$product){
+        if (!$product) {
             return $this->error([], "Product not found", 404);
         }
 
@@ -57,17 +61,17 @@ class MyFavoriteController extends Controller
             ->where('product_id', $id)
             ->first();
 
-        if($existingFavorite){
+        if ($existingFavorite) {
             $existingFavorite->delete();
             return $this->success([], "Removed from favorites", 200);
-        }else{
+        } else {
             $data = MyFavorit::create([
-                "user_id"=> $user->id,
-                "product_id"=> $id,
-                "shop_info_id"=> $product->shop_info_id,
+                "user_id" => $user->id,
+                "product_id" => $id,
+                "shop_info_id" => $product->shop_info_id,
             ]);
 
-            if(!$data){
+            if (!$data) {
                 return $this->error([], "Failed to add to favorites", 500);
             }
 
