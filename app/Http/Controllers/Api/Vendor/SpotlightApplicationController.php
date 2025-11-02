@@ -14,7 +14,7 @@ class SpotlightApplicationController extends Controller
 
     public function index(Request $request)
     {
-        $query = SpotlightApplication::where('status', 'approved');
+        $query = SpotlightApplication::with('user.shopInfo')->where('status', 'approved');
 
         if ($request->has('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
