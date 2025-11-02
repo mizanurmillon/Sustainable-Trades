@@ -22,6 +22,20 @@ class MyFavoriteController extends Controller
 
         $data = MyFavorit::where('user_id', $user->id)->with('product:id,product_name,product_price,product_quantity,is_featured,out_of_stock,selling_option,unlimited_stock','product.images')->latest()->get();
 
+        // If user is authenticated, fetch favorite products
+        $favorites = [];
+        if (auth()->user()) {
+            $favorites = MyFavorit::where('user_id', auth()->id())
+                ->whereIn('product_id', $data->pluck('id'))
+                ->pluck('product_id')
+                ->toArray(); // Get only the product IDs
+        }
+
+        // Attach `is_favorite` flag to each product
+        foreach ($data as $product) {
+            $product->is_favorite = in_array($product->id, $favorites);
+        }
+
         return $this->success($data, "My Favorites", 200);
     }
 
