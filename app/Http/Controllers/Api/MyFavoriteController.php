@@ -20,7 +20,7 @@ class MyFavoriteController extends Controller
            return $this->error([], "User Unauthorized", 401); 
         }
 
-        $data = MyFavorit::where('user_id', $user->id)->with('product:id,product_name,product_price','product.images')->latest()->get();
+        $data = MyFavorit::where('user_id', $user->id)->with('product:id,product_name,product_price,product_quantity,is_featured,out_of_stock,selling_option,unlimited_stock','product.images')->latest()->get();
 
         return $this->success($data, "My Favorites", 200);
     }
