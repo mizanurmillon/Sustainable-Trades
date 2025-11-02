@@ -1,6 +1,10 @@
 <!-- resources/views/backend/product_listing_requests.blade.php -->
 @extends('backend.app')
 
+@push('style')
+    <!-- Tagify CSS -->
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+@endpush
 @section('title', 'Product Listing Requests')
 
 @section('content')
@@ -162,9 +166,9 @@
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Meta Tags</label>
-                                <input type="text" name="meta_tags" class="form-control"
+                                <input type="text" name="meta_tags" id="meta_tags" class="form-control"
                                     placeholder="#organicsoap #naturalsoap #handmadesoap"
-                                    value="{{ $product->metaTags->pluck('tag')->implode(' ') }}" />
+                                    value="{{ $product->metaTags->pluck('tag')->implode(',') }}" />
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Selling Option</label>
@@ -213,6 +217,32 @@
 @endsection
 
 @push('script')
+    <!-- Tagify CSS & JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+    <script>
+        var input = document.querySelector('#meta_tags');
+
+        // Array of Bootstrap colors
+        var colors = ['primary', 'success', 'info', 'warning', 'danger', 'secondary', 'dark'];
+
+        var tagify = new Tagify(input, {
+            delimiters: ", ", // comma or space
+            maxTags: 10,
+            dropdown: {
+                enabled: 0
+            },
+            templates: {
+                tag: function(tagData) {
+                    // Pick a random color for each tag
+                    var color = colors[Math.floor(Math.random() * colors.length)];
+                    return `<span class='tagify__tag badge bg-${color} me-1' style="margin-right:2px;" title='${tagData.value}'>
+                            ${tagData.value}
+                            <span class='tagify__tag__removeBtn' role='button'></span>
+                        </span>`;
+                }
+            }
+        });
+    </script>
     <script>
         function showApproveConfirm(id) {
             event.preventDefault();
@@ -275,10 +305,10 @@
                         let buttonsHtml = `
                     <div class="d-flex gap-2 w-100">
                         ${action === 'approve' ? `
-                                            <button type="button" class="btn btn-danger w-100" style="background-color: #8B200C"
-                                                onclick="showRejectConfirm(${id})">Deny</button>` : `
-                                            <button type="button" class="btn btn-primary w-100"
-                                                onclick="showApproveConfirm(${id})">Approve</button>`}
+                                                        <button type="button" class="btn btn-danger w-100" style="background-color: #8B200C"
+                                                            onclick="showRejectConfirm(${id})">Deny</button>` : `
+                                                        <button type="button" class="btn btn-primary w-100"
+                                                            onclick="showApproveConfirm(${id})">Approve</button>`}
                         <a href="{{ route('admin.listing_requests.index') }}" class="btn text-dark w-100"
                             style="background-color: #E48872">Back</a>
                     </div>`;
