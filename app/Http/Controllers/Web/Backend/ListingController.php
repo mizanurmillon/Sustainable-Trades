@@ -25,7 +25,7 @@ class ListingController extends Controller
             $query->where('product_name', 'like', '%' . $request->name . '%');
         }
 
-        $products = $query->latest()->get();
+        $products = $query->orderBy('updated_at', 'desc')->get();
 
 
         $product = Product::whereNot('status', 'listing')->count();

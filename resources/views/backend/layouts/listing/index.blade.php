@@ -66,7 +66,7 @@
                                         </div>
                                         <div class="text-md-end">
                                             <p class="text-muted mb-0">Request Date:
-                                                {{ $product->created_at->format('d F Y') }}</p>
+                                                {{ $product->updated_at->format('d F Y') }}</p>
                                         </div>
                                     </div>
 
