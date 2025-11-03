@@ -256,8 +256,11 @@ class ProductController extends Controller
                 'is_featured'       => $request->is_featured ?? $product->is_featured,
             ];
 
-            // Update status to 'pending' if any of these fields are changed
-            if ($request->has('product_name') !== $product->product_name || $request->has('product_price') !== $product->product_price || $request->has('description') !== $product->description) {
+            if (
+                $request->input('product_name') !== $product->product_name ||
+                $request->input('product_price') != $product->product_price ||
+                $request->input('description') !== $product->description
+            ) {
                 $updateData['status'] = 'pending';
             }
 
@@ -288,12 +291,11 @@ class ProductController extends Controller
             DB::commit();
             $product->load(['images', 'metaTags']);
 
-            if($product->status == 'pending'){
+            if ($product->status == 'pending') {
                 return $this->success($product, 'Product updated successfully and waiting for approval', 200);
             } else {
                 return $this->success($product, 'Product updated successfully', 200);
             }
-            
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error([], $e->getMessage(), 500);
