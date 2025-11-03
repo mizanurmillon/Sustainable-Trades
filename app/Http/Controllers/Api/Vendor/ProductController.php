@@ -257,7 +257,7 @@ class ProductController extends Controller
             ];
 
             // Update status to 'pending' if any of these fields are changed
-            if ($request->has('product_name') || $request->has('product_price') || $request->has('description')) {
+            if ($request->has('product_name') !== $product->product_name || $request->has('product_price') !== $product->product_price || $request->has('description') !== $product->description) {
                 $updateData['status'] = 'pending';
             }
 
