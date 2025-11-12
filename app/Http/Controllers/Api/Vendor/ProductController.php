@@ -27,7 +27,7 @@ class ProductController extends Controller
             'video' => 'nullable|file|mimes:mp4,mov,avi,flv', // 20MB max
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'sub_category_id' => 'required|exists:sub_categories,id',
+            'sub_category_id' => 'nullable|exists:sub_categories,id',
             'fulfillment' => 'required|string|max:255',
             'selling_option' => 'required|string|max:255',
             'tags' => 'nullable|array',

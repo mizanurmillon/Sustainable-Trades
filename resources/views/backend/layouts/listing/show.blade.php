@@ -34,7 +34,7 @@
                             <div class="mb-5">
                                 <label class="form-label">Product Name / Service</label>
                                 <input type="text" name="name" class="form-control" placeholder="Product Name"
-                                    value="{{ $product->product_name }}" />
+                                    value="{{ $product->product_name }}" readonly />
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Product Image</label>
@@ -57,7 +57,7 @@
                             <div class="mb-5">
                                 <label class="form-label">Quantity</label>
                                 <input type="number" name="quantity" class="form-control" placeholder="20"
-                                    value="{{ $product->product_quantity }}" />
+                                    value="{{ $product->product_quantity }}" readonly />
                             </div>
 
                             <div class="d-flex align-items-center mb-5 justify-content-start gap-3">
@@ -65,7 +65,7 @@
                                     Stock</label>
                                 <div class="mb-5 form-check form-switch mt-7">
                                     <input type="checkbox" name="unlimited_stock" class="form-check-input"
-                                        @if ($product->unlimited_stock == 1) checked @endif() />
+                                        @if ($product->unlimited_stock == 1) checked @endif() readonly />
                                 </div>
                             </div>
 
@@ -74,7 +74,7 @@
                                     Stock</label>
                                 <div class="mb-5 form-check form-switch mt-7">
                                     <input type="checkbox" name="unlimited_stock" class="form-check-input"
-                                        @if ($product->out_of_stock == 1) checked @endif() />
+                                        @if ($product->out_of_stock == 1) checked @endif() readonly />
                                 </div>
 
                             </div>
@@ -121,15 +121,15 @@
                             <div class="mb-5">
                                 <label class="form-label">Price</label>
                                 <input type="text" name="price" class="form-control" placeholder="$0.00"
-                                    value="${{ $product->product_price }}" />
+                                    value="${{ $product->product_price }}" readonly />
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Description</label>
-                                <textarea name="description" class="form-control" rows="5">{{ $product->description }}</textarea>
+                                <textarea name="description" class="form-control" rows="5" readonly>{{ $product->description }}</textarea>
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Category / Subcategory</label>
-                                <select id="category-select" name="category" class="form-select">
+                                <select id="category-select" name="category" class="form-select" disabled>
                                     <option value="">Select Category</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}"
@@ -148,7 +148,7 @@
 
                             <div class="mb-5">
                                 <label class="form-label">Fulfillment</label>
-                                <select name="fulfillment" class="form-select">
+                                <select name="fulfillment" class="form-select" disabled>
                                     <option value="">Select Fulfillment</option>
                                     <option value="Shipping" @if ($product->fulfillment == 'Shipping') selected @endif>Shipping
                                     </option>
@@ -177,7 +177,7 @@
                             @endif
                             <div class="mb-5">
                                 <label class="form-label">Selling Option</label>
-                                <select name="selling_option" class="form-select">
+                                <select name="selling_option" class="form-select" disabled>
                                     <option value="">Choose Below</option>
                                     <option value="Trader/Barter" @if ($product->selling_option == 'Trader/Barter') selected @endif>
                                         Trader/Barter</option>
