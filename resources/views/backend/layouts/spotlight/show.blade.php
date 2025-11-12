@@ -23,8 +23,7 @@
                             <div class="mb-5">
                                 <label class="form-label">Upload Photo or Logo *</label>
                                 <div class="d-flex align-items-center">
-                                    <input type="file" name="image" id="image" class="dropify form-control"
-                                        data-default-file="{{ asset($application->image ?? 'backend/images/placeholder/image_placeholder.png') }}" disabled>
+                                   <img src="{{ asset($application->image ?? 'backend/images/placeholder/image_placeholder.png') }}" alt="" class="img-fluid">
                                 </div>
                             </div>
                             <div class="mb-5">
