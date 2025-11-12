@@ -57,7 +57,7 @@
                             <div class="mb-5">
                                 <label class="form-label">Quantity</label>
                                 <input type="number" name="quantity" class="form-control" placeholder="20"
-                                    value="{{ $product->product_quantity }}" readonly />
+                                    value="{{ $product->product_quantity }}" disabled />
                             </div>
 
                             <div class="d-flex align-items-center mb-5 justify-content-start gap-3">
@@ -65,7 +65,7 @@
                                     Stock</label>
                                 <div class="mb-5 form-check form-switch mt-7">
                                     <input type="checkbox" name="unlimited_stock" class="form-check-input"
-                                        @if ($product->unlimited_stock == 1) checked @endif() readonly />
+                                        @if ($product->unlimited_stock == 1) checked @endif() disabled />
                                 </div>
                             </div>
 
@@ -74,7 +74,7 @@
                                     Stock</label>
                                 <div class="mb-5 form-check form-switch mt-7">
                                     <input type="checkbox" name="unlimited_stock" class="form-check-input"
-                                        @if ($product->out_of_stock == 1) checked @endif() readonly />
+                                        @if ($product->out_of_stock == 1) checked @endif() disabled />
                                 </div>
 
                             </div>
