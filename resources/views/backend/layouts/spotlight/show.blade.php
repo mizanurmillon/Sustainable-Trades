@@ -23,7 +23,7 @@
                             <div class="mb-5">
                                 <label class="form-label">Upload Photo or Logo *</label>
                                 <div class="d-flex align-items-center">
-                                   <img src="{{ asset($application->image ?? 'backend/images/placeholder/image_placeholder.png') }}" alt="" class="img-fluid">
+                                   <img src="{{ asset($application->image ?? 'backend/images/placeholder/image_placeholder.png') }}" alt="" class="img-fluid" style="width: 100%; hight:70%">
                                 </div>
                             </div>
                             <div class="mb-5">
