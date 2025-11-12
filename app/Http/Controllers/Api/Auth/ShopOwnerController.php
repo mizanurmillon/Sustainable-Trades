@@ -34,17 +34,13 @@ class ShopOwnerController extends Controller
             if ($request->hasFile('shop_image')) {
                 $shopImage = $request->file('shop_image');
                 $shopImageName = uploadImage($shopImage, 'shops');
-            } else {
-                $shopImageName = null;
             }
 
             if ($request->hasFile('shop_banner')) {
                 $shopBanner = $request->file('shop_banner');
                 $shopBannerName = uploadImage($shopBanner, 'shops');
-            } else {
-                $shopBannerName = null;
-            }
-
+            } 
+            
             if ($request->hasFile('about_image')) {
                 $aboutImage = $request->file('about_image');
                 $aboutImageName = uploadImage($aboutImage, 'shops');

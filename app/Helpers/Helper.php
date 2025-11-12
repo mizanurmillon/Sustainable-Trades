@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
  */
 function uploadImage($file, $folder) {
     if (!$file->isValid()) {
+        
         return null;
     }
 

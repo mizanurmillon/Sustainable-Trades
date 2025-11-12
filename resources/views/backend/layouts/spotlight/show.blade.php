@@ -18,40 +18,40 @@
                             <div class="mb-5">
                                 <label class="form-label">Full Name *</label>
                                 <input type="text" name="name" class="form-control" placeholder="Product Name"
-                                    value="{{ $application->name }}" />
+                                    value="{{ $application->name }}" readonly />
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Upload Photo or Logo *</label>
                                 <div class="d-flex align-items-center">
                                     <input type="file" name="image" id="image" class="dropify form-control"
-                                        data-default-file="{{ asset($application->image ?? 'backend/images/placeholder/image_placeholder.png') }}">
+                                        data-default-file="{{ asset($application->image ?? 'backend/images/placeholder/image_placeholder.png') }}" readonly>
                                 </div>
                             </div>
                             <div class="mb-5">
                                 <label class="form-label">Business/Shop Name *</label>
                                 <input type="text" name="shop_name" class="form-control" placeholder="20"
-                                    value="{{ $application->shop_name }}" />
+                                    value="{{ $application->shop_name }}" readonly />
                             </div>
 
                             <div class="mb-5">
                                 <label class="form-label">Business/Shop Description *</label>
-                                <textarea name="description" class="form-control" rows="3">{{ $application->shop_description }}</textarea>
+                                <textarea name="description" class="form-control" rows="3" readonly>{{ $application->shop_description }}</textarea>
                             </div>
 
                             <div class="mb-5">
                                 <label class="form-label">Why is sustainability important to you and how do you practice
                                     it?</label>
-                                <textarea name="description" class="form-control" rows="3">{{ $application->sustainability_important }}</textarea>
+                                <textarea name="description" class="form-control" rows="3" readonly>{{ $application->sustainability_important }}</textarea>
                             </div>
 
                             <div class="mb-5">
                                 <label class="form-label">What impact does your business have on the community? </label>
-                                <textarea name="description" class="form-control" rows="3">{{ $application->what_impact }}</textarea>
+                                <textarea name="description" class="form-control" rows="3" readonly>{{ $application->what_impact }}</textarea>
                             </div>
 
                             <div class="mb-5">
                                 <label class="form-label">What types of community engagement are you involved in? </label>
-                                <textarea name="description" class="form-control" rows="3">{{ $application->community_engagement }}</textarea>
+                                <textarea name="description" class="form-control" rows="3" readonly>{{ $application->community_engagement }}</textarea>
                             </div>
 
                             <!-- Action Buttons Full Width Bottom -->

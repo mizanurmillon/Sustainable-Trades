@@ -29,7 +29,7 @@ class shopOwnerUpdateRequest extends FormRequest
             'company_name'  => 'required|string|max:255',
             'shop_name'    => 'required|string|max:255|unique:shop_infos,shop_name,' . (auth()->user()->shopInfo->id),
             'shop_city'   => 'required|string|max:255',
-            'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10MB max
+            'avatar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
             'shop_image'    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
             'shop_banner'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // 10MB max
             'website_url'  => 'nullable|url|max:255',
@@ -49,7 +49,7 @@ class shopOwnerUpdateRequest extends FormRequest
             'tagline' => 'required|string',
             'statement' => 'required|string',
             'our_story' => 'required|string',
-            'about_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+            'about_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240',
             'shipping_information' => 'required|string',
             'return_policy' => 'required|string',
             'payment_methods' => 'nullable|array',
