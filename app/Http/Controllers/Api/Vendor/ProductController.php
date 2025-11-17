@@ -37,7 +37,13 @@ class ProductController extends Controller
             'is_featured' => 'nullable|boolean',
         ]);
 
-        // dd($request->all());
+         // Check out_of_stock & unlimited_stock conflict
+        $validator->after(function ($validator) use ($request) {
+            if ($request->boolean('out_of_stock') && $request->boolean('unlimited_stock')) {
+                $validator->errors()->add('out_of_stock', 'Out of stock and unlimited stock cannot both be true.');
+                $validator->errors()->add('unlimited_stock', 'Out of stock and unlimited stock cannot both be true.');
+            }
+        });
 
         if ($validator->fails()) {
             return $this->error($validator->errors(), $validator->errors()->first(), 422);
@@ -207,6 +213,14 @@ class ProductController extends Controller
             'product_image.*' => 'file|mimes:jpg,jpeg,png,gif|max:20480', // 20MB max per image
             'is_featured' => 'nullable|boolean',
         ]);
+
+         // Check out_of_stock & unlimited_stock conflict
+            $validator->after(function ($validator) use ($request) {
+                if ($request->boolean('out_of_stock') && $request->boolean('unlimited_stock')) {
+                    $validator->errors()->add('out_of_stock', 'Out of stock and unlimited stock cannot both be true.');
+                    $validator->errors()->add('unlimited_stock', 'Out of stock and unlimited stock cannot both be true.');
+                }
+            });
 
         if ($validator->fails()) {
             return $this->error($validator->errors(), $validator->errors()->first(), 422);
