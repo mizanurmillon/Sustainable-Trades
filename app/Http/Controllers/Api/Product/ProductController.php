@@ -83,7 +83,7 @@ class ProductController extends Controller
         ->join('shop_addresses AS shopAddress', 'products.shop_info_id', '=', 'shopAddress.shop_info_id')
         ->select('products.*')
         ->selectRaw("{$distance_formula} AS distance_in_miles")
-        ->where('id', $id)   
+        ->where('products.id', $id)   
         ->first();           
 
         if (!$data) {
