@@ -286,7 +286,7 @@ class TradeOfferController extends Controller
         try {
             DB::beginTransaction();
 
-            
+
             $counterOffer = TradeOffer::create([
                 'sender_id' => $user->id,
                 'receiver_id' => $request->receiver_id,
@@ -295,7 +295,7 @@ class TradeOfferController extends Controller
                 'message' => $request->message,
             ]);
 
-           
+
             foreach ($request->offered_items as $item) {
                 $counterOffer->items()->create([
                     'product_id' => $item['product_id'],
@@ -312,7 +312,7 @@ class TradeOfferController extends Controller
                 ]);
             }
 
-            
+
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $path = uploadImage($file, 'trade_offers');
@@ -322,7 +322,7 @@ class TradeOfferController extends Controller
 
             DB::commit();
 
-            $counterOffer->load('parentOffer.items','parentOffer.attachments');
+            $counterOffer->load('parentOffer.items', 'parentOffer.attachments');
 
             return $this->success($counterOffer, 'Trade counter offer sent successfully', 201);
         } catch (\Exception $e) {
@@ -337,8 +337,12 @@ class TradeOfferController extends Controller
     {
         $query = Product::where('shop_info_id', $id)
             ->where('status', 'approved')
-            ->whereNot('selling_option', 'For Sale')
-            ->where('product_quantity', '>', 0)
+            ->where('selling_option', '!=', 'For Sale')
+            ->where('out_of_stock', '!=', true)
+            ->where(function ($q) {
+                $q->where('product_quantity', '>', 0)
+                    ->orWhere('unlimited_stock', true);
+            })
             ->select('id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity', 'selling_option');
 
         $data = $query->get();
