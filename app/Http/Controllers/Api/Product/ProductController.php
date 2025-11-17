@@ -91,7 +91,7 @@ class ProductController extends Controller
         }
 
         // Load address
-        $data->load('shop.address');
+        $data->load(['shop.address', 'shop.user']);
 
         if ($data->shop && $data->shop->address) {
             $data->shop->address->distance_in_miles = $data->distance_in_miles;
