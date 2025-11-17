@@ -340,7 +340,7 @@ class TradeOfferController extends Controller
             ->where('selling_option', '!=', 'For Sale')
             ->where('out_of_stock', '!=', true)
             ->where(function ($q) {
-                $q->where('product_quantity', '>', 0)
+                $q->orWhere('product_quantity', '>', 0)
                     ->orWhere('unlimited_stock', true);
             })
             ->select('id', 'shop_info_id', 'product_name', 'product_price', 'product_quantity', 'selling_option');
