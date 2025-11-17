@@ -71,7 +71,7 @@ class ProductController extends Controller
         + sin(radians({$lat})) 
         * sin(radians(shopAddress.latitude))
     ))";
-        $data = Product::with(['category', 'sub_category', 'images', 'metaTags', 'shop.user:id,first_name,last_name,avatar,role', 'shop:id,user_id,shop_name,shop_image'])
+        $data = Product::with(['category', 'sub_category', 'images', 'metaTags','shop:id,user_id,shop_name,shop_image','shop.user:id,first_name,last_name,avatar,role'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->join('shop_addresses AS shopAddress', 'products.shop_info_id', '=', 'shopAddress.shop_info_id')
