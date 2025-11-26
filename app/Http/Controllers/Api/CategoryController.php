@@ -110,7 +110,7 @@ class CategoryController extends Controller
      */
     public function categoryAndSubCategories()
     {
-        $data = Category::with('subcategories')->where('status', 'active')->latest()->get();
+        $data = Category::with('subcategories')->where('status', 'active')->orderBy('name', 'asc')->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'No categories found', 404);
@@ -121,7 +121,7 @@ class CategoryController extends Controller
 
     public function subCategories()
     {
-        $data = SubCategory::where('status', 'active')->latest()->get();
+        $data = SubCategory::where('status', 'active')->orderBy('sub_category_name', 'asc')->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'No subcategories found', 404);

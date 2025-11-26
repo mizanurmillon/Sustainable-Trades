@@ -24,14 +24,16 @@ return new class extends Migration
             $table->string('video')->nullable();
             $table->text('description')->nullable();
             $table->foreignId('category_id')
+                ->nullable()
                 ->constrained('categories')
-                ->onDelete('cascade');
-            $table->foreignId('sub_category_id')->nullable()
+                ->onDelete('set null');
+            $table->foreignId('sub_category_id')
+                ->nullable()
                 ->constrained('sub_categories')
-                ->onDelete('cascade');
+                ->onDelete('set null');
             $table->string('fulfillment')->nullable();
             $table->string('selling_option')->nullable();
-            $table->enum('status', ['listing','pending','approved','rejected','cancelled'])->default('listing');
+            $table->enum('status', ['listing', 'pending', 'approved', 'rejected', 'cancelled'])->default('listing');
             $table->timestamps();
         });
     }
