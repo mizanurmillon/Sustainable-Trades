@@ -40,9 +40,6 @@ class SubCategoryController extends Controller
                               <a href="' . route('admin.sub_categories.edit', ['id' => $data->id]) . '" class="text-white btn btn-primary" title="Edit">
                               <i class="bi bi-pencil"></i>
                               </a>
-                              <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" type="button" class="text-white btn btn-danger" title="Delete">
-                              <i class="bi bi-trash"></i>
-                            </a>
                             </div></div>';
                 })
                 ->rawColumns(['category_name','action', 'status'])
