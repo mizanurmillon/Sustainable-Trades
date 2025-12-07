@@ -17,7 +17,7 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
-      /**
+    /**
      * Get the identifier that will be stored in the JWT subject claim.
      *
      * @return mixed
@@ -26,7 +26,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->getKey(); // Return the primary key of the user (id)
     }
-    
+
 
     /**
      * Return a key value array, containing any custom claims to be added to the JWT.
@@ -62,7 +62,8 @@ class User extends Authenticatable implements JWTSubject
      * @var array<string, string>
      */
 
-    protected function casts(): array {
+    protected function casts(): array
+    {
         return [
             'email_verified_at' => 'datetime',
             'agree_to_terms' => 'boolean',
@@ -76,9 +77,13 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(ShopInfo::class);
     }
 
-    public function membership(): HasOne
+    public function membership()
     {
         return $this->hasOne(Membership::class);
     }
 
+    public function PaypalAccount()
+    {
+        return $this->hasOne(PaypalAccount::class);
+    }
 }

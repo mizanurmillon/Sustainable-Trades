@@ -40,6 +40,8 @@ return [
         'sandbox' => [
             'client_id' => env('PAYPAL_CLIENT_ID'),
             'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+            'partner_id' => env('PARTNER_ID'),
+            'base_url' => env('FRONTEND_BASE_URL'),
         ],
         'live' => [
             'client_id' => env('PAYPAL_LIVE_CLIENT_ID'),

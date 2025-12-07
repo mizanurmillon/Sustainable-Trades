@@ -204,6 +204,7 @@ class ShopController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('product_name', 'like', "%{$search}%");
+            
             });
         }
 

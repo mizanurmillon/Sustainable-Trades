@@ -13,6 +13,10 @@ use App\Models\OrderStatusHistory;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
+use PayPalCheckoutSdk\Core\PayPalHttpClient;
+use PayPalCheckoutSdk\Core\SandboxEnvironment;
+use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
 
 class PaymentController extends Controller
 {
@@ -53,13 +57,8 @@ class PaymentController extends Controller
             return $this->error([], 'Cart not found', 404);
         }
 
-        $sub_total = $cart->CartItems->sum(function ($item) {
-            return $item->product->product_price * $item->quantity;
-        });
-
-        
-        $total_amount = $sub_total + $request->tax_amount + $request->shipping_amount - $request->discount_amount;
-        // dd($total_amount);
+        $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
+        $total_amount = $sub_total + ($request->tax_amount ?? 0) + ($request->shipping_amount ?? 0) - ($request->discount_amount ?? 0);
 
         try {
             DB::beginTransaction();
@@ -119,7 +118,83 @@ class PaymentController extends Controller
 
                 return $this->success($data, 'Order placed successfully', 200);
             } elseif ($request->payment_method == 'paypal') {
-                // Process PayPal payment
+                // 1. Create order in DB with pending status
+                $order = Order::create([
+                    'user_id' => $user->id,
+                    'shop_id' => $cart->shop_id,
+                    'order_number' => 'ORD' . time(),
+                    'total_quantity' => $cart->CartItems->sum('quantity'),
+                    'sub_total' => $sub_total,
+                    'total_amount' => $total_amount,
+                    'tax_amount' => $request->tax_amount,
+                    'shipping_amount' => $request->shipping_amount,
+                    'discount_amount' => $request->discount_amount,
+                    'payment_method' => $request->payment_method,
+                    'payment_status' => 'pending',
+                    'currency' => 'USD',
+                    'shipping_option' => $request->shipping_option ?? 'delivery',
+                    'status' => 'pending',
+                ]);
+
+                foreach ($cart->CartItems as $item) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->product->product_price,
+                        'total_price' => $item->product->product_price * $item->quantity,
+                    ]);
+                }
+
+                // Save shipping info
+                shippingAddress::create([
+                    'order_id' => $order->id,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                    'address' => $request->address,
+                    'city' => $request->city,
+                    'state' => $request->state,
+                    'postal_code' => $request->postal_code,
+                    'country' => $request->country,
+                    'apt' => $request->apt,
+                    'phone' => $request->phone,
+                ]);
+
+                // PayPal setup
+                $clientId = config('services.paypal.sandbox.client_id');
+                $clientSecret = config('services.paypal.sandbox.client_secret');
+                $environment = new SandboxEnvironment($clientId, $clientSecret);
+                $client = new PayPalHttpClient($environment);
+
+                $paypalOrder = new OrdersCreateRequest();
+                $paypalOrder->prefer('return=representation');
+                $paypalOrder->body = [
+                    "intent" => "CAPTURE",
+                    "purchase_units" => [[
+                        "amount" => [
+                            "currency_code" => "USD",
+                            "value" => $total_amount
+                        ],
+                        "payee" => [
+                            // "email_address" => $order->shop->user->paypal_email,
+                            "merchant_id" => $order->shop->user->PaypalAccount->paypal_merchant_id
+                        ]
+                    ]],
+                    "application_context" => [
+                        "cancel_url" => route('payment.cancel', ['order_id' => $order->id]),
+                        "return_url" => route('success.payment', ['order_id' => $order->id])
+                    ]
+                ];
+
+                $response = $client->execute($paypalOrder);
+
+                DB::commit();
+
+                return $this->success([
+                    'order_id' => $order->id,
+                    'paypal_approval_url' => collect($response->result->links)->firstWhere('rel', 'approve')->href
+                ], 'PayPal order created successfully', 200);
             } else {
                 return $this->error([], 'Unsupported payment method', 400);
             }
@@ -129,7 +204,95 @@ class PaymentController extends Controller
         }
     }
 
-    public function paymentSuccess(Request $request) {}
+    public function paymentSuccess(Request $request)
+    {
+        $order_id = $request->query('order_id');
+        $token = $request->query('token'); // PayPal Order ID
 
-    public function paymentCancel(Request $request) {}
+        $order = Order::find($order_id);
+        if (!$order) return $this->error([], 'Order not found', 404);
+
+        $client = new PayPalHttpClient(new SandboxEnvironment(
+            config('services.paypal.sandbox.client_id'),
+            config('services.paypal.sandbox.client_secret')
+        ));
+
+        // First: Read the order details
+        $getRequest = new \PayPalCheckoutSdk\Orders\OrdersGetRequest($token);
+        $getResponse = $client->execute($getRequest);
+
+        $status = $getResponse->result->status;
+
+        // If already captured → do NOT capture again
+        if ($status === "COMPLETED") {
+
+            $order->update([
+                'payment_status' => 'completed',
+            ]);
+
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'content' => 'Payment already completed via PayPal',
+            ]);
+
+            return $this->success($order, 'Payment already completed', 200);
+        }
+
+        // Otherwise capture
+        $captureRequest = new OrdersCaptureRequest($token);
+        $captureRequest->prefer('return=representation');
+
+        try {
+            $response = $client->execute($captureRequest);
+
+            $order->update([
+                'payment_status' => 'completed',
+            ]);
+
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'content' => 'Payment completed via PayPal',
+            ]);
+
+            // Clear cart items
+            if ($order->cart) {
+                $order->cart->CartItems()->delete();
+                $order->cart()->delete();
+            }
+
+            return $this->success($order, 'Payment successful', 200);
+        } catch (\Exception $e) {
+
+            return $this->error([], $e->getMessage(), 500);
+        }
+    }
+
+
+    public function paymentCancel(Request $request)
+    {
+        $order_id = $request->query('order_id');
+
+        if (!$order_id) {
+            return $this->error([], 'Order ID missing in cancel URL', 400);
+        }
+
+        $order = Order::find($order_id);
+
+        if (!$order) {
+            return $this->error([], 'Order not found', 404);
+        }
+
+        // Update status
+        $order->update([
+            'payment_status' => 'cancelled',
+            'status' => 'cancelled',
+        ]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'content' => 'Payment canceled by user from PayPal'
+        ]);
+
+        return $this->success($order, 'Payment canceled successfully', 200);
+    }
 }
