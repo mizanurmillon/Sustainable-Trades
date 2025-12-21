@@ -13,9 +13,9 @@ class PayPalSubscriptionService
 
     public function __construct()
     {
-        $this->clientId = config('services.paypal.sandbox.client_id');
-        $this->secret = config('services.paypal.sandbox.client_secret');
-        $this->baseUrl = config('services.paypal.mode') === 'live'
+        $this->clientId = config('paypal.sandbox.client_id');
+        $this->secret = config('paypal.sandbox.client_secret');
+        $this->baseUrl = config('paypal.mode') === 'live'
             ? 'https://api-m.paypal.com'
             : 'https://api-m.sandbox.paypal.com';
     }

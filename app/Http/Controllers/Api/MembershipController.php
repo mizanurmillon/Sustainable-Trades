@@ -63,10 +63,6 @@ class MembershipController extends Controller
                 'locale' => 'en-US',
                 'shipping_preference' => 'NO_SHIPPING',
                 'user_action' => 'SUBSCRIBE_NOW',
-                'payment_method' => [
-                    'payer_selected' => 'PAYPAL',
-                    'payee_preferred' => 'IMMEDIATE_PAYMENT_REQUIRED',
-                ],
                 'return_url' => route('payments.paypal.success') . '?user_id=' . $user->id . '&success_url=' . urlencode($request->success_url),
                 'cancel_url' => route('payments.cancel') . '?cancel_url=' . urlencode($request->cancel_url),
             ],
@@ -80,20 +76,13 @@ class MembershipController extends Controller
 
             $response = $provider->createSubscription($data);
 
-            if (isset($response['id'])) {
-                // Find the approval URL and redirect user there
-                foreach ($response['links'] as $link) {
-                    if ($link['rel'] == 'approve') {
-                        return response()->json([
-                            'success' => true,
-                            'message' => 'Subscription created successfully',
-                            'data' => ['url' => $link['href']],
-                        ], 200);
-                    }
-                }
-                return $this->error([], 'Approval link not found', 500);
-            }
-            return $this->error($response, 'Subscription creation failed', 500);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'subscription_id' => $response['id'],
+                    // 'link' => collect($response['links'])->firstWhere('rel', 'approve')['href'],
+                ]
+            ]);
         } catch (\Exception $e) {
             Log::error('PayPal Subscription Creation Error: ' . $e->getMessage());
             return $this->error([], 'Exception: ' . $e->getMessage(), 500);
@@ -191,17 +180,10 @@ class MembershipController extends Controller
         }
     }
 
-
-
-
-
     public function paypalCancel(Request $request)
     {
         return $this->error([], 'User cancelled the subscription', 200);
         // Handle the cancellation logic here
-
-         $cancel_url = $request->get('cancel_url');
-
         // Redirect to the cancel URL
         if ($cancel_url) {
             return redirect()->away($cancel_url);

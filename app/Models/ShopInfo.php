@@ -58,4 +58,9 @@ class ShopInfo extends Model
     {
         return $this->hasMany(Review::class, 'shop_info_id');
     }
+
+    public function shopTax()
+    {
+        return $this->hasOne(ShopTax::class, 'shop_id');
+    }
 }

@@ -48,6 +48,4 @@ return [
             'client_secret' => env('PAYPAL_LIVE_CLIENT_SECRET'),
         ],
     ],
-
-
 ];

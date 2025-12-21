@@ -27,7 +27,6 @@ class PaymentController extends Controller
         $validator = Validator::make($request->all(), [
             'shipping_amount' => 'nullable|numeric',
             'discount_amount' => 'nullable|numeric',
-            'tax_amount' => 'nullable|numeric',
             'payment_method' => 'required|string',
             'shipping_option' => 'nullable|in:pickup,delivery',
             'first_name' => 'required|string|max:100',
@@ -35,6 +34,7 @@ class PaymentController extends Controller
             'email' => 'required|email|max:100',
             'phone' => 'required|string|max:20',
             'address' => 'required|string',
+            'country' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
             'postal_code' => 'required|string|max:20',
@@ -57,8 +57,17 @@ class PaymentController extends Controller
             return $this->error([], 'Cart not found', 404);
         }
 
+        if ($cart->shop->shopTax->country == $request->country && $cart->shop->shopTax->state == $request->state) {
+            $tax_rate = $cart->shop->shopTax->rate;
+            $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
+            $calculated_tax = ($sub_total * $tax_rate) / 100;
+        } else {
+            $calculated_tax = 0;
+        }
+        // dd($calculated_tax);
+
         $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
-        $total_amount = $sub_total + ($request->tax_amount ?? 0) + ($request->shipping_amount ?? 0) - ($request->discount_amount ?? 0);
+        $total_amount = $sub_total + ($request->shipping_amount ?? 0) + ($calculated_tax ?? 0) - ($request->discount_amount ?? 0);
 
         try {
             DB::beginTransaction();
@@ -71,7 +80,7 @@ class PaymentController extends Controller
                     'total_quantity' => $cart->CartItems->sum('quantity'),
                     'sub_total' => $sub_total,
                     'total_amount' => $total_amount,
-                    'tax_amount' => $request->tax_amount,
+                    'tax_amount' => $calculated_tax ?? 0,
                     'shipping_amount' => $request->shipping_amount,
                     'discount_amount' => $request->discount_amount,
                     'payment_method' => $request->payment_method,
@@ -118,7 +127,7 @@ class PaymentController extends Controller
 
                 return $this->success($data, 'Order placed successfully', 200);
             } elseif ($request->payment_method == 'paypal') {
-                // 1. Create order in DB with pending status
+                // Create Order in DB
                 $order = Order::create([
                     'user_id' => $user->id,
                     'shop_id' => $cart->shop_id,
@@ -126,9 +135,9 @@ class PaymentController extends Controller
                     'total_quantity' => $cart->CartItems->sum('quantity'),
                     'sub_total' => $sub_total,
                     'total_amount' => $total_amount,
-                    'tax_amount' => $request->tax_amount,
-                    'shipping_amount' => $request->shipping_amount,
-                    'discount_amount' => $request->discount_amount,
+                    'tax_amount' => $calculated_tax ?? 0,
+                    'shipping_amount' => $request->shipping_amount ?? 0,
+                    'discount_amount' => $request->discount_amount ?? 0,
                     'payment_method' => $request->payment_method,
                     'payment_status' => 'pending',
                     'currency' => 'USD',
@@ -136,6 +145,7 @@ class PaymentController extends Controller
                     'status' => 'pending',
                 ]);
 
+                //Create Order Items
                 foreach ($cart->CartItems as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,
@@ -146,7 +156,7 @@ class PaymentController extends Controller
                     ]);
                 }
 
-                // Save shipping info
+                //Save Shipping Info
                 shippingAddress::create([
                     'order_id' => $order->id,
                     'first_name' => $request->first_name,
@@ -161,12 +171,13 @@ class PaymentController extends Controller
                     'phone' => $request->phone,
                 ]);
 
-                // PayPal setup
+                //PayPal Setup
                 $clientId = config('services.paypal.sandbox.client_id');
                 $clientSecret = config('services.paypal.sandbox.client_secret');
                 $environment = new SandboxEnvironment($clientId, $clientSecret);
                 $client = new PayPalHttpClient($environment);
 
+                //Create PayPal Order
                 $paypalOrder = new OrdersCreateRequest();
                 $paypalOrder->prefer('return=representation');
                 $paypalOrder->body = [
@@ -177,13 +188,13 @@ class PaymentController extends Controller
                             "value" => $total_amount
                         ],
                         "payee" => [
-                            // "email_address" => $order->shop->user->paypal_email,
                             "merchant_id" => $order->shop->user->PaypalAccount->paypal_merchant_id
                         ]
                     ]],
                     "application_context" => [
                         "cancel_url" => route('payment.cancel', ['order_id' => $order->id]),
-                        "return_url" => route('success.payment', ['order_id' => $order->id])
+                        "return_url" => route('success.payment', ['order_id' => $order->id]),
+                        "user_action" => "PAY_NOW"
                     ]
                 ];
 
@@ -191,12 +202,13 @@ class PaymentController extends Controller
 
                 DB::commit();
 
-                return $this->success([
+                return response()->json([
+                    'status' => true,
+                    'message' => 'PayPal order created successfully',
                     'order_id' => $order->id,
-                    'paypal_approval_url' => collect($response->result->links)->firstWhere('rel', 'approve')->href
-                ], 'PayPal order created successfully', 200);
-            } else {
-                return $this->error([], 'Unsupported payment method', 400);
+                    'paypal_approval_url' => collect($response->result->links)
+                        ->firstWhere('rel', 'approve')->href
+                ]);
             }
         } catch (\Exception $e) {
             DB::rollBack();
