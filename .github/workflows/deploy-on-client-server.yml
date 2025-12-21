@@ -14,6 +14,6 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: ftp.softvencefsd.xyz
-          username: melissabooth123@melissabooth123.softvencefsd.xyz
-          password: "melissabooth123"
+          server: ftp.reigeeky.com
+          username: melissabooth123@melissabooth123.reigeeky.com
+          password: "reigeeky_melissabooth123"
