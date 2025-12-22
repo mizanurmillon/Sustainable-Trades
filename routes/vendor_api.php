@@ -83,9 +83,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 
     Route::controller(MembershipController::class)->group(function () {
-        Route::post('/membership/{id}', 'createMembership');
-        Route::post('/membership/upgrade', 'upgradeMembership');
-        Route::post('/membership/cancel', 'cancelMembership');
+        Route::post('/paypal/create-order', 'createOrder');
+        Route::post('/paypal/capture-order', 'captureOrder');
     });
 });
 
@@ -96,7 +95,7 @@ Route::get('/paypal/onboard/success', [OnboardingController::class, 'onboardSucc
 Route::get('/paypal/onboard/cancel', [OnboardingController::class, 'onboardCancel'])->name('paypal.onboard.cancel');
 
 
-Route::controller(MembershipController::class)->group(function () {
-    Route::get('/membership-success', 'success')->name('payments.paypal.success');
-    Route::get('/membership-cancel', 'paypalCancel')->name('payments.cancel');
-});
+// Route::controller(MembershipController::class)->group(function () {
+//     Route::get('/membership-success', 'success')->name('payments.paypal.success');
+//     Route::get('/membership-cancel', 'paypalCancel')->name('payments.cancel');
+// });

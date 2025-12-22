@@ -34,5 +34,5 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 });
 
-Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('success.payment');
-Route::get('/payment-cancel', [PaymentController::class, 'paymentCancel'])->name('payment.cancel');
+Route::post('/paypal/capture', [PaymentController::class, 'paymentSuccess']);
+Route::get('/payment-cancel/{order_id}', [PaymentController::class, 'paymentCancel'])->name('payment.cancel');

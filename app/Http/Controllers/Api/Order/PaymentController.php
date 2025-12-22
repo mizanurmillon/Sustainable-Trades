@@ -17,6 +17,18 @@ use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
+use App\Service\PayPalClient;
+use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
+use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
+use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
+use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
+use PaypalServerSdkLib\Models\Builders\MoneyBuilder;
+use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
+use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
+use PaypalServerSdkLib\Models\ShippingPreference;
+use PaypalServerSdkLib\Models\Payee;
 
 class PaymentController extends Controller
 {
@@ -126,8 +138,8 @@ class PaymentController extends Controller
                 DB::commit();
 
                 return $this->success($data, 'Order placed successfully', 200);
-            } elseif ($request->payment_method == 'paypal') {
-                // Create Order in DB
+            } elseif ($request->payment_method === 'paypal') {
+
                 $order = Order::create([
                     'user_id' => $user->id,
                     'shop_id' => $cart->shop_id,
@@ -138,14 +150,13 @@ class PaymentController extends Controller
                     'tax_amount' => $calculated_tax ?? 0,
                     'shipping_amount' => $request->shipping_amount ?? 0,
                     'discount_amount' => $request->discount_amount ?? 0,
-                    'payment_method' => $request->payment_method,
+                    'payment_method' => 'paypal',
                     'payment_status' => 'pending',
                     'currency' => 'USD',
                     'shipping_option' => $request->shipping_option ?? 'delivery',
                     'status' => 'pending',
                 ]);
 
-                //Create Order Items
                 foreach ($cart->CartItems as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,
@@ -156,7 +167,6 @@ class PaymentController extends Controller
                     ]);
                 }
 
-                //Save Shipping Info
                 shippingAddress::create([
                     'order_id' => $order->id,
                     'first_name' => $request->first_name,
@@ -171,44 +181,102 @@ class PaymentController extends Controller
                     'phone' => $request->phone,
                 ]);
 
-                //PayPal Setup
-                $clientId = config('services.paypal.sandbox.client_id');
-                $clientSecret = config('services.paypal.sandbox.client_secret');
-                $environment = new SandboxEnvironment($clientId, $clientSecret);
-                $client = new PayPalHttpClient($environment);
+                $client = PayPalClient::client();
 
-                //Create PayPal Order
-                $paypalOrder = new OrdersCreateRequest();
-                $paypalOrder->prefer('return=representation');
-                $paypalOrder->body = [
-                    "intent" => "CAPTURE",
-                    "purchase_units" => [[
-                        "amount" => [
-                            "currency_code" => "USD",
-                            "value" => $total_amount
-                        ],
-                        "payee" => [
-                            "merchant_id" => $order->shop->user->PaypalAccount->paypal_merchant_id
-                        ]
-                    ]],
-                    "application_context" => [
-                        "cancel_url" => route('payment.cancel', ['order_id' => $order->id]),
-                        "return_url" => route('success.payment', ['order_id' => $order->id]),
-                        "user_action" => "PAY_NOW"
-                    ]
+                // Format total amount for PayPal (2 decimal places)
+                $formattedAmount = number_format($total_amount, 2, '.', '');
+
+                // Create amount with breakdown - CORRECTED: Pass 2 arguments
+                $amount = AmountWithBreakdownBuilder::init(
+                    "USD",  // currency code
+                    $formattedAmount  // value
+                )->build();
+
+                // Create purchase unit
+                $purchaseUnit = PurchaseUnitRequestBuilder::init($amount)
+                    ->referenceId((string) $order->id)
+                    ->description("Order #" . $order->order_number)
+                    ->build();
+
+                // Create PayPal order request
+                $orderRequest = OrderRequestBuilder::init(
+                    CheckoutPaymentIntent::CAPTURE,
+                    [$purchaseUnit]
+                )
+                    ->paymentSource(
+                        PaymentSourceBuilder::init()
+                            ->paypal(
+                                PaypalWalletBuilder::init()
+                                    ->experienceContext(
+                                        PaypalWalletExperienceContextBuilder::init()
+                                            ->userAction(PaypalExperienceUserAction::PAY_NOW)
+                                            // ->returnUrl(route('success.payment', ['order_id' => $order->id]))
+                                            ->cancelUrl(route('payment.cancel', ['order_id' => $order->id]))
+                                            ->build()
+                                    )
+                                    ->build()
+                            )
+                            ->build()
+                    )
+                    ->build();
+
+                // Create the PayPal order
+                $ordersController = $client->getOrdersController();
+
+                $options = [
+                    'body' => $orderRequest,
+                    'prefer' => 'return=representation',
                 ];
 
-                $response = $client->execute($paypalOrder);
+                $ordersController = $client->getOrdersController();
 
-                DB::commit();
+                $options = [
+                    'body' => $orderRequest,
+                    'prefer' => 'return=representation',
+                ];
 
-                return response()->json([
-                    'status' => true,
-                    'message' => 'PayPal order created successfully',
-                    'order_id' => $order->id,
-                    'paypal_approval_url' => collect($response->result->links)
-                        ->firstWhere('rel', 'approve')->href
-                ]);
+                $response = $ordersController->createOrder($options);
+
+                // dd($response);
+
+                // Check if response was successful
+                if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
+                    $paypalOrder = $response->getResult();
+
+                    // dd($paypalOrder);
+
+                    // Store PayPal order ID in your database – FIXED
+                    $order->update([
+                        'paypal_order_id' => $paypalOrder->getId(),          // Use getter
+                        'paypal_order_status' => $paypalOrder->getStatus(),  // Use getter
+                    ]);
+
+                    // // Find approval link
+                    // $approvalLink = null;
+                    // if (isset($paypalOrder->links) && is_array($paypalOrder->links)) {
+                    //     foreach ($paypalOrder->links as $link) {
+                    //         if ($link->rel === 'approve') {  // Note: 'rel' might be private too – if error, use $link->getRel()
+                    //             $approvalLink = $link->href;  // 'href' might need $link->getHref()
+                    //             break;
+                    //         }
+                    //     }
+                    // }
+
+                    DB::commit();
+
+                    // Clear the cart
+                    $cart->CartItems()->delete();
+                    $cart->delete();
+
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'PayPal order created successfully',
+                        'order_id' => $order->id,
+                        'paypal_order_id' => $paypalOrder->getId(),
+                    ]);
+                } else {
+                    throw new \Exception('Failed to create PayPal order. Status: ' . $response->getStatusCode());
+                }
             }
         } catch (\Exception $e) {
             DB::rollBack();
@@ -218,93 +286,79 @@ class PaymentController extends Controller
 
     public function paymentSuccess(Request $request)
     {
-        $order_id = $request->query('order_id');
-        $token = $request->query('token'); // PayPal Order ID
-
-        $order = Order::find($order_id);
-        if (!$order) return $this->error([], 'Order not found', 404);
-
-        $client = new PayPalHttpClient(new SandboxEnvironment(
-            config('services.paypal.sandbox.client_id'),
-            config('services.paypal.sandbox.client_secret')
-        ));
-
-        // First: Read the order details
-        $getRequest = new \PayPalCheckoutSdk\Orders\OrdersGetRequest($token);
-        $getResponse = $client->execute($getRequest);
-
-        $status = $getResponse->result->status;
-
-        // If already captured → do NOT capture again
-        if ($status === "COMPLETED") {
-
-            $order->update([
-                'payment_status' => 'completed',
-            ]);
-
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'content' => 'Payment already completed via PayPal',
-            ]);
-
-            return $this->success($order, 'Payment already completed', 200);
-        }
-
-        // Otherwise capture
-        $captureRequest = new OrdersCaptureRequest($token);
-        $captureRequest->prefer('return=representation');
-
         try {
-            $response = $client->execute($captureRequest);
-
-            $order->update([
-                'payment_status' => 'completed',
+            $request->validate([
+                'paypal_order_id' => 'required|string',
             ]);
 
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'content' => 'Payment completed via PayPal',
+            // PayPal Order ID from frontend
+            $paypalOrderId = $request->paypal_order_id;
+
+            // Find order using paypal_order_id
+            $order = Order::where('paypal_order_id', $paypalOrderId)->firstOrFail();
+
+            $client = PayPalClient::client();
+
+            // Capture PayPal order
+            $response = $client->getOrdersController()->captureOrder([
+                'id' => $paypalOrderId
             ]);
 
-            // Clear cart items
-            if ($order->cart) {
-                $order->cart->CartItems()->delete();
-                $order->cart()->delete();
+            if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
+
+                $result = $response->getResult();
+
+                $order->update([
+                    'payment_status' => 'completed',
+                    'status' => 'processing', // better than pending
+                    'paypal_order_status' => $result->status,
+                ]);
+
+                // Capture ID
+                $captureId = null;
+                if (!empty($result->purchase_units[0]->payments->captures[0]->id)) {
+                    $captureId = $result->purchase_units[0]->payments->captures[0]->id;
+                    $order->update(['paypal_capture_id' => $captureId]);
+                }
+
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'content' => 'Payment completed via PayPal. Capture ID: ' . ($captureId ?? 'N/A'),
+                ]);
+
+                return $this->success($order, 'Payment successful');
             }
 
-            return $this->success($order, 'Payment successful', 200);
+            return $this->error([], 'Payment capture failed', 500);
         } catch (\Exception $e) {
-
+            logger()->error('PayPal Capture Error', [
+                'error' => $e->getMessage()
+            ]);
             return $this->error([], $e->getMessage(), 500);
         }
     }
 
 
-    public function paymentCancel(Request $request)
+    public function paymentCancel(Request $request, $order_id)
     {
-        $order_id = $request->query('order_id');
+        try {
+            $order = Order::findOrFail($order_id);
 
-        if (!$order_id) {
-            return $this->error([], 'Order ID missing in cancel URL', 400);
+            // Update status
+            $order->update([
+                'payment_status' => 'cancelled',
+                'status' => 'cancelled',
+                'paypal_order_status' => 'CANCELLED',
+            ]);
+
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'content' => 'Payment canceled by user from PayPal'
+            ]);
+
+            return $this->success($order, 'Payment canceled successfully', 200);
+        } catch (\Exception $e) {
+            return $this->error([], $e->getMessage(), 500);
         }
-
-        $order = Order::find($order_id);
-
-        if (!$order) {
-            return $this->error([], 'Order not found', 404);
-        }
-
-        // Update status
-        $order->update([
-            'payment_status' => 'cancelled',
-            'status' => 'cancelled',
-        ]);
-
-        OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'content' => 'Payment canceled by user from PayPal'
-        ]);
-
-        return $this->success($order, 'Payment canceled successfully', 200);
     }
 }
