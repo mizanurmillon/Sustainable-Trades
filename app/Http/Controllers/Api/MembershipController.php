@@ -50,11 +50,12 @@ class MembershipController extends Controller
                     ],
                     "description" => $plan->name,
                 ],
-            ],
+            ]
         ]);
 
         $data = [
             'orderID' => $order['id'],
+            'amount'  => $plan->price,
             'plan_id' => $plan->id,
             'status' => $order['status'],
         ];
@@ -68,53 +69,56 @@ class MembershipController extends Controller
         $orderID = $request->orderID;
         $planID  = $request->plan_id;
 
-        $user = $request->user(); // get authenticated user
+        $user = $request->user();
         $plan = SubscriptionPlan::find($planID);
 
         if (!$plan || !$user) {
-            return response()->json(['status' => 'failed', 'message' => 'Invalid plan or user'], 400);
+            return response()->json(['status' => false, 'message' => 'Invalid plan or user'], 400);
         }
 
-        $capture = $this->paypal->capturePaymentOrder($orderID);
+        try {
+            $capture = $this->paypal->capturePaymentOrder($orderID);
 
-        // dd($capture);
+            // dd($capture);
 
-        if (isset($capture['status']) && $capture['status'] === 'COMPLETED') {
+            if (isset($capture['status']) && $capture['status'] === 'COMPLETED') {
+                $user->update(['is_premium' => true]);
 
-            $user->update(['is_premium' => true]);
+                $endDate = now()->addDays($plan->interval_days ?? 30);
 
-            $endDate = now()->addDays($plan->interval_days ?? 30); // calculate end date
+                $membership = Membership::create([
+                    'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
+                    'user_id'         => $user->id,
+                    'plan_id'         => $plan->id,
+                    'membership_type' => $plan->membership_type ?? '',
+                    'type'            => $plan->interval ?? '',
+                    'price'           => $plan->price,
+                    'start_at'        => now(),
+                    'end_at'          => $endDate,
+                ]);
 
-            // Create membership
-            $membership = Membership::create([
-                'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
-                'user_id'         => $user->id,
-                'plan_id'         => $plan->id,
-                'membership_type' => $plan->membership_type ?? '',
-                'type'            => $plan->interval ?? '',
-                'price'           => $plan->price,
-                'start_at'        => now(),
-                'end_at'          => $endDate,
-            ]);
+                MembershipHistory::create([
+                    'order_id'        => $membership->order_id,
+                    'user_id'         => $user->id,
+                    'membership_id'   => $membership->id,
+                    'plan_id'         => $plan->id,
+                    'membership_type' => $plan->membership_type ?? '',
+                    'type'            => $plan->interval ?? '',
+                    'price'           => $plan->price,
+                    'start_at'        => now(),
+                    'end_at'          => $endDate,
+                ]);
 
-            // Create membership history
-            MembershipHistory::create([
-                'order_id'        => $membership->order_id,
-                'user_id'         => $user->id,
-                'membership_id'   => $membership->id,
-                'plan_id'         => $plan->id,
-                'membership_type' => $plan->membership_type ?? '',
-                'type'            => $plan->interval ?? '',
-                'price'           => $plan->price,
-                'start_at'        => now(),
-                'end_at'          => $endDate,
-            ]);
-
-            return $this->success([], 'Payment captured and membership created successfully', 200);
+                return $this->success([], 'Payment captured and membership created successfully', 200);
+            }
+            Log::warning('PayPal capture not COMPLETED', ['response' => $capture, 'orderID' => $orderID]);
+            return $this->error([], 'Payment capture failed', 500);
+        } catch (\Exception $e) {
+            Log::error('PayPal capture error: ' . $e->getMessage(), ['capture' => $capture ?? null]);
+            return $this->error([], 'Exception: ' . $e->getMessage(), 500);
         }
-
-        return $this->error([], 'Payment capture failed', 500);
     }
+
 
 
     // public function createMembership(Request $request, $id)
