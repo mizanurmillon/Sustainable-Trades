@@ -66,8 +66,8 @@ class MembershipController extends Controller
     // Capture order
     public function captureOrder(Request $request)
     {
-        $orderID = $request->orderID;
-        $planID  = $request->plan_id;
+        $orderID = $request->input('orderID');
+        $planID  = $request->input('plan_id');
 
         $user = $request->user();
         $plan = SubscriptionPlan::find($planID);
@@ -77,47 +77,60 @@ class MembershipController extends Controller
         }
 
         try {
+            $this->paypal->setApiCredentials(config('paypal'));
+            $this->paypal->getAccessToken();
+            
+            // Step B: Capture payment
             $capture = $this->paypal->capturePaymentOrder($orderID);
 
-            // dd($capture);
+            if (($capture['status'] ?? null) === 'COMPLETED') {
 
-            if (isset($capture['status']) && $capture['status'] === 'COMPLETED') {
                 $user->update(['is_premium' => true]);
 
                 $endDate = now()->addDays($plan->interval_days ?? 30);
 
                 $membership = Membership::create([
-                    'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
-                    'user_id'         => $user->id,
-                    'plan_id'         => $plan->id,
-                    'membership_type' => $plan->membership_type ?? '',
-                    'type'            => $plan->interval ?? '',
-                    'price'           => $plan->price,
-                    'start_at'        => now(),
-                    'end_at'          => $endDate,
+                    'order_id' => $orderID,
+                    'user_id'  => $user->id,
+                    'plan_id'  => $plan->id,
+                    'price'    => $plan->price,
+                    'start_at' => now(),
+                    'end_at'   => $endDate,
                 ]);
 
                 MembershipHistory::create([
-                    'order_id'        => $membership->order_id,
-                    'user_id'         => $user->id,
-                    'membership_id'   => $membership->id,
-                    'plan_id'         => $plan->id,
-                    'membership_type' => $plan->membership_type ?? '',
-                    'type'            => $plan->interval ?? '',
-                    'price'           => $plan->price,
-                    'start_at'        => now(),
-                    'end_at'          => $endDate,
+                    'order_id'      => $orderID,
+                    'user_id'       => $user->id,
+                    'membership_id' => $membership->id,
+                    'plan_id'       => $plan->id,
+                    'price'         => $plan->price,
+                    'start_at'      => now(),
+                    'end_at'        => $endDate,
                 ]);
 
-                return $this->success([], 'Payment captured and membership created successfully', 200);
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Payment captured successfully',
+                    'data' => $membership
+                ]);
             }
-            Log::warning('PayPal capture not COMPLETED', ['response' => $capture, 'orderID' => $orderID]);
-            return $this->error([], 'Payment capture failed', 500);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Payment not completed',
+                'paypal_status' => $capture['status'] ?? null,
+                'raw' => $capture
+            ], 422);
         } catch (\Exception $e) {
-            Log::error('PayPal capture error: ' . $e->getMessage(), ['capture' => $capture ?? null]);
-            return $this->error([], 'Exception: ' . $e->getMessage(), 500);
+            Log::error('PayPal capture error', ['message' => $e->getMessage()]);
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+
+
+
+
 
 
 
