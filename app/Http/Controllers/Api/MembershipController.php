@@ -79,7 +79,20 @@ class MembershipController extends Controller
         try {
             $this->paypal->setApiCredentials(config('paypal'));
             $this->paypal->getAccessToken();
-            
+
+            // Step A: Check order status first
+            $order = $this->paypal->showOrderDetails($orderID);
+            Log::info('PayPal Order Details', $order);
+
+            if (($order['status'] ?? null) !== 'APPROVED') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Order not approved yet',
+                    'paypal_status' => $order['status'] ?? null,
+                    'raw' => $order
+                ], 200);
+            }
+
             // Step B: Capture payment
             $capture = $this->paypal->capturePaymentOrder($orderID);
 
