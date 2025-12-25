@@ -58,6 +58,7 @@ class MembershipController extends Controller
             'amount'  => $plan->price,
             'plan_id' => $plan->id,
             'status' => $order['status'],
+            'links' => $order['links']
         ];
 
         return $this->success($data, 'Order created successfully', 200);
