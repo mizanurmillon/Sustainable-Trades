@@ -73,27 +73,14 @@ class MembershipController extends Controller
         $plan = SubscriptionPlan::find($planID);
 
         if (!$plan || !$user) {
-            return response()->json(['status' => false, 'message' => 'Invalid plan or user'], 400);
+            return $this->error(['status' => false, 'message' => 'Invalid plan or user'], 400);
         }
 
         try {
             $this->paypal->setApiCredentials(config('paypal'));
             $this->paypal->getAccessToken();
 
-            // Step A: Check order status first
-            $order = $this->paypal->showOrderDetails($orderID);
-            Log::info('PayPal Order Details', $order);
-
-            if (($order['status'] ?? null) !== 'APPROVED') {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Order not approved yet',
-                    'paypal_status' => $order['status'] ?? null,
-                    'raw' => $order
-                ], 200);
-            }
-
-            // Step B: Capture payment
+            // DIRECTLY CAPTURE (no approved check)
             $capture = $this->paypal->capturePaymentOrder($orderID);
 
             if (($capture['status'] ?? null) === 'COMPLETED') {
@@ -128,17 +115,16 @@ class MembershipController extends Controller
                 ]);
             }
 
-            return response()->json([
+            return $this->error([
                 'status' => false,
                 'message' => 'Payment not completed',
-                'paypal_status' => $capture['status'] ?? null,
-                'raw' => $capture
             ], 422);
         } catch (\Exception $e) {
             Log::error('PayPal capture error', ['message' => $e->getMessage()]);
-            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+            return $this->error(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
 
 
 
