@@ -250,18 +250,6 @@ class PaymentController extends Controller
                         'paypal_order_id' => $paypalOrder->getId(),          // Use getter
                         'paypal_order_status' => $paypalOrder->getStatus(),  // Use getter
                     ]);
-
-                    // // Find approval link
-                    // $approvalLink = null;
-                    // if (isset($paypalOrder->links) && is_array($paypalOrder->links)) {
-                    //     foreach ($paypalOrder->links as $link) {
-                    //         if ($link->rel === 'approve') {  // Note: 'rel' might be private too – if error, use $link->getRel()
-                    //             $approvalLink = $link->href;  // 'href' might need $link->getHref()
-                    //             break;
-                    //         }
-                    //     }
-                    // }
-
                     DB::commit();
 
                     // Clear the cart
@@ -273,6 +261,7 @@ class PaymentController extends Controller
                         'message' => 'PayPal order created successfully',
                         'order_id' => $order->id,
                         'paypal_order_id' => $paypalOrder->getId(),
+                        'approve_link' => $paypalOrder->getLinks(),
                     ]);
                 } else {
                     throw new \Exception('Failed to create PayPal order. Status: ' . $response->getStatusCode());
@@ -308,16 +297,24 @@ class PaymentController extends Controller
 
                 $result = $response->getResult();
 
+                $paypalStatus = $result->getStatus();
+
                 $order->update([
                     'payment_status' => 'completed',
-                    'status' => 'processing', // better than pending
-                    'paypal_order_status' => $result->status,
+                    'status' => 'pending', // better than pending
+                    'paypal_order_status' => $paypalStatus,
                 ]);
 
-                // Capture ID
+                //Capture ID safely
                 $captureId = null;
-                if (!empty($result->purchase_units[0]->payments->captures[0]->id)) {
-                    $captureId = $result->purchase_units[0]->payments->captures[0]->id;
+                $purchaseUnits = $result->getPurchaseUnits();
+
+                if (
+                    !empty($purchaseUnits) &&
+                    !empty($purchaseUnits[0]->getPayments()) &&
+                    !empty($purchaseUnits[0]->getPayments()->getCaptures())
+                ) {
+                    $captureId = $purchaseUnits[0]->getPayments()->getCaptures()[0]->getId();
                     $order->update(['paypal_capture_id' => $captureId]);
                 }
 
