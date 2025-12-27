@@ -73,6 +73,8 @@ class MembershipController extends Controller
         $user = $request->user();
         $plan = SubscriptionPlan::find($planID);
 
+        // dd($plan);
+
         if (!$plan || !$user) {
             return $this->error(['status' => false, 'message' => 'Invalid plan or user'], 400);
         }
@@ -96,7 +98,7 @@ class MembershipController extends Controller
                     'plan_id'  => $plan->id,
                     'price'    => $plan->price,
                     'membership_type' => $plan->membership_type,
-                    'type' => $plan->type,
+                    'type' => $plan->interval,
                     'start_at' => now(),
                     'end_at'   => $endDate,
                 ]);
@@ -108,7 +110,7 @@ class MembershipController extends Controller
                     'plan_id'       => $plan->id,
                     'price'         => $plan->price,
                     'membership_type' => $plan->membership_type,
-                    'type' => $plan->type,
+                    'type' => $plan->interval,
                     'start_at'      => now(),
                     'end_at'        => $endDate,
                 ]);
