@@ -14,6 +14,6 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: ftp.reigeeky.com
-          username: melissabooth123@melissabooth123.reigeeky.com
-          password: "reigeeky_melissabooth123"
+          server: ftp.thewarriors.team
+          username: melissabooth123@melissabooth123.thewarriors.team
+          password: "thewarriors_melissabooth123"

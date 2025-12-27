@@ -63,4 +63,9 @@ class ShopInfo extends Model
     {
         return $this->hasOne(ShopTax::class, 'shop_id');
     }
+
+    public function WeightRangeRates()
+    {
+        return $this->hasMany(WeightRangeRat::class, 'shop_id');
+    }
 }

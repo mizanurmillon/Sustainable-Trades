@@ -95,6 +95,8 @@ class MembershipController extends Controller
                     'user_id'  => $user->id,
                     'plan_id'  => $plan->id,
                     'price'    => $plan->price,
+                    'membership_type' => $plan->membership_type,
+                    'type' => $plan->type,
                     'start_at' => now(),
                     'end_at'   => $endDate,
                 ]);
@@ -105,6 +107,8 @@ class MembershipController extends Controller
                     'membership_id' => $membership->id,
                     'plan_id'       => $plan->id,
                     'price'         => $plan->price,
+                    'membership_type' => $plan->membership_type,
+                    'type' => $plan->type,
                     'start_at'      => now(),
                     'end_at'        => $endDate,
                 ]);

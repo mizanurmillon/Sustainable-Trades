@@ -37,8 +37,6 @@ class PaymentController extends Controller
     public function checkout(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'shipping_amount' => 'nullable|numeric',
-            'discount_amount' => 'nullable|numeric',
             'payment_method' => 'required|string',
             'shipping_option' => 'nullable|in:pickup,delivery',
             'first_name' => 'required|string|max:100',
@@ -78,8 +76,26 @@ class PaymentController extends Controller
         }
         // dd($calculated_tax);
 
+        $product_weight = (float) $cart->CartItems
+            ->sum(fn($item) => $item->product->weight * $item->quantity);
+
+        $shipping_cost = 0;
+
+        $rate = $cart->shop->weightRangeRates
+            ->first(function ($rate) use ($product_weight) {
+                return (float)$rate->min_weight <= $product_weight
+                    && (float)$rate->max_weight >= $product_weight;
+            });
+        if ($rate) {
+            $shipping_cost = (float) $rate->cost;
+        } else {
+            $shipping_cost = 0; // or default
+        }
+
+        $discount_amount = ;
+
         $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
-        $total_amount = $sub_total + ($request->shipping_amount ?? 0) + ($calculated_tax ?? 0) - ($request->discount_amount ?? 0);
+        $total_amount = $sub_total + $shipping_cost + ($calculated_tax ?? 0) - ($request->discount_amount ?? 0);
 
         try {
             DB::beginTransaction();
@@ -93,7 +109,7 @@ class PaymentController extends Controller
                     'sub_total' => $sub_total,
                     'total_amount' => $total_amount,
                     'tax_amount' => $calculated_tax ?? 0,
-                    'shipping_amount' => $request->shipping_amount,
+                    'shipping_amount' => $shipping_cost,
                     'discount_amount' => $request->discount_amount,
                     'payment_method' => $request->payment_method,
                     'payment_status' => 'pending',
@@ -148,7 +164,7 @@ class PaymentController extends Controller
                     'sub_total' => $sub_total,
                     'total_amount' => $total_amount,
                     'tax_amount' => $calculated_tax ?? 0,
-                    'shipping_amount' => $request->shipping_amount ?? 0,
+                    'shipping_amount' => $shipping_cost,
                     'discount_amount' => $request->discount_amount ?? 0,
                     'payment_method' => 'paypal',
                     'payment_status' => 'pending',
