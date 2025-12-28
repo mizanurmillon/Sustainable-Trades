@@ -126,6 +126,12 @@ class PaymentController extends Controller
                 $cart->CartItems()->delete();
                 $cart->delete();
                 DB::commit();
+
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'content' => 'Order placed successfully',
+                ]);
+
                 return $this->success($order, 'Order placed successfully', 200);
             }
 
@@ -271,7 +277,7 @@ class PaymentController extends Controller
 
                 OrderStatusHistory::create([
                     'order_id' => $order->id,
-                    'content' => 'Payment completed via PayPal. Capture ID: ' . ($captureId ?? 'N/A'),
+                    'content' => 'Payment captured successfully from PayPal',
                 ]);
 
                 return $this->success($order, 'Payment successful');
