@@ -8,27 +8,22 @@ use App\Enum\OrderStatus;
 use App\Models\OrderItem;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Models\PaypalAccount;
+use App\Service\PayPalClient;
 use App\Models\shippingAddress;
 use App\Models\OrderStatusHistory;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
-use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
-use PayPalCheckoutSdk\Core\PayPalHttpClient;
-use PayPalCheckoutSdk\Core\SandboxEnvironment;
-use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
-use App\Service\PayPalClient;
-use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
+use PayPalCheckoutSdk\Payouts\PayoutsPostRequest;
 use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
-use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
-use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
-use PaypalServerSdkLib\Models\Builders\MoneyBuilder;
-use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
-use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
-use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
 use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
-use PaypalServerSdkLib\Models\ShippingPreference;
-use PaypalServerSdkLib\Models\Payee;
+use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
+use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
+use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
+use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
 
 class PaymentController extends Controller
 {
@@ -56,169 +51,104 @@ class PaymentController extends Controller
         }
 
         $user = auth()->user();
-
         if (!$user) {
             return $this->error([], 'User not found', 404);
         }
 
-        $cart = Cart::with('CartItems')->where('id', $id)->first();
-
+        $cart = Cart::with('CartItems.product', 'shop.shopTax', 'shop.weightRangeRates')->where('id', $id)->first();
         if (!$cart) {
             return $this->error([], 'Cart not found', 404);
         }
 
-        if ($cart->shop->shopTax->country == $request->country && $cart->shop->shopTax->state == $request->state) {
+        // Tax Calculation
+        $tax_rate = 0;
+        if ($cart->shop->shopTax && $cart->shop->shopTax->country == $request->country && $cart->shop->shopTax->state == $request->state) {
             $tax_rate = $cart->shop->shopTax->rate;
-            $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
-            $calculated_tax = ($sub_total * $tax_rate) / 100;
-        } else {
-            $calculated_tax = 0;
         }
-        // dd($calculated_tax);
-
-        $product_weight = (float) $cart->CartItems
-            ->sum(fn($item) => $item->product->weight * $item->quantity);
-
-        $shipping_cost = 0;
-
-        $rate = $cart->shop->weightRangeRates
-            ->first(function ($rate) use ($product_weight) {
-                return (float)$rate->min_weight <= $product_weight
-                    && (float)$rate->max_weight >= $product_weight;
-            });
-        if ($rate) {
-            $shipping_cost = (float) $rate->cost;
-        } else {
-            $shipping_cost = 0; // or default
-        }
-
-        $discount_amount = ;
-
         $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
-        $total_amount = $sub_total + $shipping_cost + ($calculated_tax ?? 0) - ($request->discount_amount ?? 0);
+        $calculated_tax = ($sub_total * $tax_rate) / 100;
+
+        // Shipping cost
+        $product_weight = (float) $cart->CartItems->sum(fn($item) => $item->product->weight * $item->quantity);
+        $rate = $cart->shop->weightRangeRates->first(fn($rate) => (float)$rate->min_weight <= $product_weight && (float)$rate->max_weight >= $product_weight);
+        $shipping_cost = $rate ? (float)$rate->cost : 0;
+
+        $total_amount = $sub_total + $shipping_cost + $calculated_tax;
 
         try {
             DB::beginTransaction();
-            // Payment processing logic goes here
+
+            // Create Order
+            $order = Order::create([
+                'user_id' => $user->id,
+                'shop_id' => $cart->shop_id,
+                'order_number' => 'ORD' . time(),
+                'total_quantity' => $cart->CartItems->sum('quantity'),
+                'sub_total' => $sub_total,
+                'total_amount' => $total_amount,
+                'tax_amount' => $calculated_tax,
+                'shipping_amount' => $shipping_cost,
+                'discount_amount' => '0.00',
+                'payment_method' => $request->payment_method,
+                'payment_status' => 'pending',
+                'currency' => 'USD',
+                'shipping_option' => $request->shipping_option ?? 'delivery',
+                'status' => 'pending',
+            ]);
+
+            // Create Order Items
+            foreach ($cart->CartItems as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->product->product_price,
+                    'total_price' => $item->product->product_price * $item->quantity,
+                ]);
+            }
+
+            // Shipping Address
+            shippingAddress::create([
+                'order_id' => $order->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'address' => $request->address,
+                'city' => $request->city,
+                'state' => $request->state,
+                'postal_code' => $request->postal_code,
+                'country' => $request->country,
+                'apt' => $request->apt,
+                'phone' => $request->phone,
+            ]);
+
+            // Order Status History
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'content' => 'Order Created',
+            ]);
+
+            // Payment Processing
             if ($request->payment_method == 'cash_on_delivery') {
-                $data = Order::create([
-                    'user_id' => $user->id,
-                    'shop_id' => $cart->shop_id,
-                    'order_number' => 'ORD' . time(),
-                    'total_quantity' => $cart->CartItems->sum('quantity'),
-                    'sub_total' => $sub_total,
-                    'total_amount' => $total_amount,
-                    'tax_amount' => $calculated_tax ?? 0,
-                    'shipping_amount' => $shipping_cost,
-                    'discount_amount' => $request->discount_amount,
-                    'payment_method' => $request->payment_method,
-                    'payment_status' => 'pending',
-                    'currency' => 'USD',
-                    'shipping_option' => $request->shipping_option ?? 'delivery',
-                    'status' => 'pending',
-                ]);
-
-                foreach ($cart->CartItems as $item) {
-                    OrderItem::create([
-                        'order_id' => $data->id,
-                        'product_id' => $item->product_id,
-                        'quantity' => $item->quantity,
-                        'unit_price' => $item->product->product_price,
-                        'total_price' => $item->product->product_price * $item->quantity,
-                    ]);
-                }
-
-                shippingAddress::create([
-                    'order_id' => $data->id,
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-                    'email' => $request->email,
-                    'address' => $request->address,
-                    'city' => $request->city,
-                    'state' => $request->state,
-                    'postal_code' => $request->postal_code,
-                    'country' => $request->country,
-                    'apt' => $request->apt,
-                    'phone' => $request->phone,
-                ]);
-
-                OrderStatusHistory::create([
-                    'order_id' => $data->id,
-                    'content' => 'Order Created',
-                ]);
-
-                // Clear the cart after order placement
+                $order->update(['payment_status' => 'pending']);
+                // Clear Cart
                 $cart->CartItems()->delete();
                 $cart->delete();
-
                 DB::commit();
+                return $this->success($order, 'Order placed successfully', 200);
+            } elseif ($request->payment_method == 'paypal') {
 
-                return $this->success($data, 'Order placed successfully', 200);
-            } elseif ($request->payment_method === 'paypal') {
-
-                $order = Order::create([
-                    'user_id' => $user->id,
-                    'shop_id' => $cart->shop_id,
-                    'order_number' => 'ORD' . time(),
-                    'total_quantity' => $cart->CartItems->sum('quantity'),
-                    'sub_total' => $sub_total,
-                    'total_amount' => $total_amount,
-                    'tax_amount' => $calculated_tax ?? 0,
-                    'shipping_amount' => $shipping_cost,
-                    'discount_amount' => $request->discount_amount ?? 0,
-                    'payment_method' => 'paypal',
-                    'payment_status' => 'pending',
-                    'currency' => 'USD',
-                    'shipping_option' => $request->shipping_option ?? 'delivery',
-                    'status' => 'pending',
-                ]);
-
-                foreach ($cart->CartItems as $item) {
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $item->product_id,
-                        'quantity' => $item->quantity,
-                        'unit_price' => $item->product->product_price,
-                        'total_price' => $item->product->product_price * $item->quantity,
-                    ]);
-                }
-
-                shippingAddress::create([
-                    'order_id' => $order->id,
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-                    'email' => $request->email,
-                    'address' => $request->address,
-                    'city' => $request->city,
-                    'state' => $request->state,
-                    'postal_code' => $request->postal_code,
-                    'country' => $request->country,
-                    'apt' => $request->apt,
-                    'phone' => $request->phone,
-                ]);
-
+                // PayPal Client
                 $client = PayPalClient::client();
-
-                // Format total amount for PayPal (2 decimal places)
                 $formattedAmount = number_format($total_amount, 2, '.', '');
 
-                // Create amount with breakdown - CORRECTED: Pass 2 arguments
-                $amount = AmountWithBreakdownBuilder::init(
-                    "USD",  // currency code
-                    $formattedAmount  // value
-                )->build();
-
-                // Create purchase unit
+                // Create PayPal Order
+                $amount = AmountWithBreakdownBuilder::init("USD", $formattedAmount)->build();
                 $purchaseUnit = PurchaseUnitRequestBuilder::init($amount)
-                    ->referenceId((string) $order->id)
+                    ->referenceId((string)$order->id)
                     ->description("Order #" . $order->order_number)
                     ->build();
-
-                // Create PayPal order request
-                $orderRequest = OrderRequestBuilder::init(
-                    CheckoutPaymentIntent::CAPTURE,
-                    [$purchaseUnit]
-                )
+                $orderRequest = OrderRequestBuilder::init(CheckoutPaymentIntent::CAPTURE, [$purchaseUnit])
                     ->paymentSource(
                         PaymentSourceBuilder::init()
                             ->paypal(
@@ -226,7 +156,6 @@ class PaymentController extends Controller
                                     ->experienceContext(
                                         PaypalWalletExperienceContextBuilder::init()
                                             ->userAction(PaypalExperienceUserAction::PAY_NOW)
-                                            // ->returnUrl(route('success.payment', ['order_id' => $order->id]))
                                             ->cancelUrl(route('payment.cancel', ['order_id' => $order->id]))
                                             ->build()
                                     )
@@ -236,51 +165,60 @@ class PaymentController extends Controller
                     )
                     ->build();
 
-                // Create the PayPal order
                 $ordersController = $client->getOrdersController();
+                $response = $ordersController->createOrder(['body' => $orderRequest, 'prefer' => 'return=representation']);
 
-                $options = [
-                    'body' => $orderRequest,
-                    'prefer' => 'return=representation',
-                ];
-
-                $ordersController = $client->getOrdersController();
-
-                $options = [
-                    'body' => $orderRequest,
-                    'prefer' => 'return=representation',
-                ];
-
-                $response = $ordersController->createOrder($options);
-
-                // dd($response);
-
-                // Check if response was successful
                 if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
                     $paypalOrder = $response->getResult();
-
-                    // dd($paypalOrder);
-
-                    // Store PayPal order ID in your database – FIXED
                     $order->update([
-                        'paypal_order_id' => $paypalOrder->getId(),          // Use getter
-                        'paypal_order_status' => $paypalOrder->getStatus(),  // Use getter
+                        'paypal_order_id' => $paypalOrder->getId(),
+                        'paypal_order_status' => $paypalOrder->getStatus(),
                     ]);
-                    DB::commit();
 
-                    // Clear the cart
+                    // Vendor Payout
+                    $vendorPayPalAccount = PaypalAccount::where('user_id', $cart->shop->user_id)->first();
+                    if ($vendorPayPalAccount && $vendorPayPalAccount->paypal_email_verified) {
+                        $vendorEmail = $vendorPayPalAccount->paypal_email;
+
+                        // Payout
+                        $payouts = new PayoutsPostRequest();
+                        $payouts->body = [
+                            "sender_batch_header" => [
+                                "sender_batch_id" => uniqid(),
+                                "email_subject" => "You have a payout!",
+                                "email_message" => "You have received a payout for your order."
+                            ],
+                            "items" => [
+                                [
+                                    "recipient_type" => "EMAIL",
+                                    "amount" => [
+                                        "value" => $formattedAmount,
+                                        "currency" => "USD"
+                                    ],
+                                    "receiver" => $vendorEmail,
+                                    "note" => "Order payment for order #" . $order->order_number,
+                                    "sender_item_id" => $order->id
+                                ]
+                            ]
+                        ];
+                        $client->execute($payouts);
+                    }
+
+                    // Clear Cart
                     $cart->CartItems()->delete();
                     $cart->delete();
 
+                    DB::commit();
+
                     return response()->json([
                         'status' => true,
-                        'message' => 'PayPal order created successfully',
+                        'message' => 'PayPal order created and vendor payout sent successfully',
                         'order_id' => $order->id,
                         'paypal_order_id' => $paypalOrder->getId(),
                         'approve_link' => $paypalOrder->getLinks(),
                     ]);
                 } else {
-                    throw new \Exception('Failed to create PayPal order. Status: ' . $response->getStatusCode());
+                    throw new \Exception('Failed to create PayPal order.');
                 }
             }
         } catch (\Exception $e) {
@@ -288,6 +226,7 @@ class PaymentController extends Controller
             return $this->error([], $e->getMessage(), 500);
         }
     }
+
 
     public function paymentSuccess(Request $request)
     {
