@@ -145,6 +145,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::controller(ReviewController::class)->group(function () {
         Route::post('/add-review/{id}', 'addReview');
+        Route::get('/my-reviews', 'myReviews');
     });
 });
 

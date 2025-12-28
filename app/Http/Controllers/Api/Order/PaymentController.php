@@ -51,16 +51,12 @@ class PaymentController extends Controller
         }
 
         $user = auth()->user();
-        if (!$user) {
-            return $this->error([], 'User not found', 404);
-        }
+        if (!$user) return $this->error([], 'User not found', 404);
 
         $cart = Cart::with('CartItems.product', 'shop.shopTax', 'shop.weightRangeRates')->where('id', $id)->first();
-        if (!$cart) {
-            return $this->error([], 'Cart not found', 404);
-        }
+        if (!$cart) return $this->error([], 'Cart not found', 404);
 
-        // Tax Calculation
+        // Tax
         $tax_rate = 0;
         if ($cart->shop->shopTax && $cart->shop->shopTax->country == $request->country && $cart->shop->shopTax->state == $request->state) {
             $tax_rate = $cart->shop->shopTax->rate;
@@ -68,17 +64,16 @@ class PaymentController extends Controller
         $sub_total = $cart->CartItems->sum(fn($item) => $item->product->product_price * $item->quantity);
         $calculated_tax = ($sub_total * $tax_rate) / 100;
 
-        // Shipping cost
+        // Shipping
         $product_weight = (float) $cart->CartItems->sum(fn($item) => $item->product->weight * $item->quantity);
         $rate = $cart->shop->weightRangeRates->first(fn($rate) => (float)$rate->min_weight <= $product_weight && (float)$rate->max_weight >= $product_weight);
         $shipping_cost = $rate ? (float)$rate->cost : 0;
 
         $total_amount = $sub_total + $shipping_cost + $calculated_tax;
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-            // Create Order
+            // Order creation
             $order = Order::create([
                 'user_id' => $user->id,
                 'shop_id' => $cart->shop_id,
@@ -96,7 +91,6 @@ class PaymentController extends Controller
                 'status' => 'pending',
             ]);
 
-            // Create Order Items
             foreach ($cart->CartItems as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -107,7 +101,6 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Shipping Address
             shippingAddress::create([
                 'order_id' => $order->id,
                 'first_name' => $request->first_name,
@@ -122,32 +115,31 @@ class PaymentController extends Controller
                 'phone' => $request->phone,
             ]);
 
-            // Order Status History
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'content' => 'Order Created',
             ]);
 
-            // Payment Processing
+            // Cash on delivery
             if ($request->payment_method == 'cash_on_delivery') {
                 $order->update(['payment_status' => 'pending']);
-                // Clear Cart
                 $cart->CartItems()->delete();
                 $cart->delete();
                 DB::commit();
                 return $this->success($order, 'Order placed successfully', 200);
-            } elseif ($request->payment_method == 'paypal') {
+            }
 
-                // PayPal Client
-                $client = PayPalClient::client();
+            // PayPal payment
+            if ($request->payment_method == 'paypal') {
+                $client = PayPalClient::client(); // <-- Sandbox / Live correctly configured
                 $formattedAmount = number_format($total_amount, 2, '.', '');
 
-                // Create PayPal Order
                 $amount = AmountWithBreakdownBuilder::init("USD", $formattedAmount)->build();
                 $purchaseUnit = PurchaseUnitRequestBuilder::init($amount)
                     ->referenceId((string)$order->id)
                     ->description("Order #" . $order->order_number)
                     ->build();
+
                 $orderRequest = OrderRequestBuilder::init(CheckoutPaymentIntent::CAPTURE, [$purchaseUnit])
                     ->paymentSource(
                         PaymentSourceBuilder::init()
@@ -176,11 +168,13 @@ class PaymentController extends Controller
                     ]);
 
                     // Vendor Payout
-                    $vendorPayPalAccount = PaypalAccount::where('user_id', $cart->shop->user_id)->first();
-                    if ($vendorPayPalAccount && $vendorPayPalAccount->paypal_email_verified) {
-                        $vendorEmail = $vendorPayPalAccount->paypal_email;
+                    $vendorAccount = PaypalAccount::where('user_id', $cart->shop->user_id)
+                        ->where('paypal_email_verified', 1)
+                        ->first();
 
-                        // Payout
+                    if ($vendorAccount) {
+                        $vendorEmail = $vendorAccount->paypal_email;
+
                         $payouts = new PayoutsPostRequest();
                         $payouts->body = [
                             "sender_batch_header" => [
@@ -191,17 +185,18 @@ class PaymentController extends Controller
                             "items" => [
                                 [
                                     "recipient_type" => "EMAIL",
+                                    "receiver" => $vendorEmail,
                                     "amount" => [
                                         "value" => $formattedAmount,
                                         "currency" => "USD"
                                     ],
-                                    "receiver" => $vendorEmail,
                                     "note" => "Order payment for order #" . $order->order_number,
                                     "sender_item_id" => $order->id
                                 ]
                             ]
                         ];
-                        $client->execute($payouts);
+
+                        $client->execute($payouts); // <-- This will send payout to verified vendor email
                     }
 
                     // Clear Cart
@@ -226,6 +221,7 @@ class PaymentController extends Controller
             return $this->error([], $e->getMessage(), 500);
         }
     }
+
 
 
     public function paymentSuccess(Request $request)

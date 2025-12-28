@@ -10,12 +10,12 @@ use App\Http\Controllers\Controller;
 class MyOrderController extends Controller
 {
     use ApiResponse;
-    
+
     public function index(Request $request)
     {
-        $user = auth()->user(); 
+        $user = auth()->user();
 
-        $query = Order::with('shop:id,shop_name,shop_image','orderItems','orderItems.product:id,product_name,product_price','orderItems.product.images')->where('user_id', $user->id);
+        $query = Order::with('shop:id,user_id,shop_name,shop_image', 'shop.user:id,first_name,last_name', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images')->where('user_id', $user->id);
 
         if ($request->query('status')) {
             $query->where('status', $request->status);
@@ -32,17 +32,34 @@ class MyOrderController extends Controller
 
     public function show($id)
     {
-        $user = auth()->user(); 
+        $user = auth()->user();
 
-        $order = Order::with('shippingAddress','paymentHistory','shop:id,shop_name,shop_image','orderItems','orderItems.product:id,product_name,product_price','orderItems.product.images')
-                      ->where('user_id', $user->id)
-                      ->where('id', $id)
-                      ->first();
+        $order = Order::with('shippingAddress', 'paymentHistory', 'shop:id,user_id,shop_name,shop_image', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images')
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
 
         if (!$order) {
             return $this->error([], 'Order not found', 404);
         }
 
         return $this->success($order, 'Order retrieved successfully');
+    }
+
+    public function orderHistory($id)
+    {
+        $user = auth()->user();
+
+        $order = Order::where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return $this->error([], 'Order not found', 404);
+        }
+
+        $history = $order->OrderStatusHistory()->get();
+
+        return $this->success($history, 'Order history retrieved successfully');
     }
 }

@@ -28,7 +28,7 @@ class ReviewController extends Controller
 
         $user = auth()->user();
 
-        if(!$user) {
+        if (!$user) {
             return $this->error([], 'User not found', 404);
         }
 
@@ -38,8 +38,8 @@ class ReviewController extends Controller
             return $this->error([], 'Product not found', 404);
         }
 
-        try{
-           
+        try {
+
             $data = Review::create([
                 'title' => $request->title,
                 'rating' => $request->rating,
@@ -65,11 +65,25 @@ class ReviewController extends Controller
             $data->load('images');
 
             return $this->success($data, 'Review added successfully', 200);
-
-        }catch(\Exception $e) {
+        } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
-        
+    }
+
+    public function myReviews()
+    {
+        $user = auth()->user();
+
+        $reviews = Review::with('product:id,product_name', 'product.images', 'images')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(10);
+
+        if ($reviews->isEmpty()) {
+            return $this->error([], 'No reviews found', 200);
+        }
+
+        return $this->success($reviews, 'My reviews retrieved successfully', 200);
     }
 
     public function shopReviews($id)
@@ -99,6 +113,4 @@ class ReviewController extends Controller
 
         return $this->success($reviews, 'Product reviews retrieved successfully', 200);
     }
-
-    
 }

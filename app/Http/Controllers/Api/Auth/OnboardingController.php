@@ -165,6 +165,8 @@ class OnboardingController extends Controller
                 'paypal_merchant_id' => $merchantId,
                 'paypal_tracking_id' => $trackingId,
                 'paypal_email' => $data['primary_email'] ?? null,
+                'paypal_email_verified' => $data['primary_email_confirmed'] ?? null,
+                'paypal_payments_receivable' => $data['payments_receivable'] ?? null,
             ]
         );
 
