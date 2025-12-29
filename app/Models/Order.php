@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class Order extends Model
 {
@@ -46,5 +47,14 @@ class Order extends Model
     public function paymentHistory()
     {
         return $this->hasOne(PaymentHistory::class);
+    }
+
+    public function generateInvoicePdf()
+    {
+        $pdf = Pdf::loadView('backend.layouts.invoices.order', [
+            'order' => $this
+        ]);
+
+        return $pdf->output();
     }
 }

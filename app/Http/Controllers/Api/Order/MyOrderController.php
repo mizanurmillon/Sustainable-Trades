@@ -62,4 +62,33 @@ class MyOrderController extends Controller
 
         return $this->success($history, 'Order history retrieved successfully');
     }
+
+    public function generateInvoice($id)
+    {
+        $user = auth()->user();
+
+        $order = Order::with([
+            'shippingAddress',
+            'paymentHistory',
+            'shop:id,user_id,shop_name,shop_image',
+            'orderItems',
+            'orderItems.product:id,product_name,product_price',
+            'orderItems.product.images'
+        ])
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return $this->error([], 'Order not found', 404);
+        }
+
+        $invoicePdf = $order->generateInvoicePdf();
+
+        return response()->streamDownload(
+            fn() => print($invoicePdf),
+            "invoice_order_{$order->id}.pdf",
+            ['Content-Type' => 'application/pdf']
+        );
+    }
 }
