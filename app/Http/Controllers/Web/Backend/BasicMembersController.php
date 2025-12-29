@@ -58,7 +58,7 @@ class BasicMembersController extends Controller
                 })
                 ->addColumn('action', function ($data) {
                     return '<div class="text-center"><div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-                              <a href="' . route('admin.categories.edit', ['id' => $data->id]) . '" class="text-white btn btn-warning" title="Suspend">
+                              <a href="#" class="text-white btn btn-warning" title="Suspend">
                               Suspend
                               </a>
                               <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" type="button" class="text-white btn btn-danger" title="Delete">

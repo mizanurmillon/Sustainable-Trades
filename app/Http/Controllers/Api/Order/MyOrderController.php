@@ -15,7 +15,7 @@ class MyOrderController extends Controller
     {
         $user = auth()->user();
 
-        $query = Order::with('shop:id,user_id,shop_name,shop_image', 'shop.user:id,first_name,last_name', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images')->where('user_id', $user->id);
+        $query = Order::with('shop:id,user_id,shop_name,shop_image', 'shop.user:id,first_name,last_name', 'shop.user.membership', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images')->where('user_id', $user->id);
 
         if ($request->query('status')) {
             $query->where('status', $request->status);
