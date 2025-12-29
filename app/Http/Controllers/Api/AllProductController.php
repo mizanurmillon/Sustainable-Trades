@@ -12,32 +12,36 @@ class AllProductController extends Controller
 {
     use ApiResponse;
 
-    public function allProducts(Request $request) {
+    public function allProducts(Request $request)
+    {
 
         $lat = $request->input('lat');
         $lng = $request->input('lng');
-        
-        $query = Product::with('images', 'shop:id,user_id,shop_name','shop.address')
-        ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')
-        ->selectRaw(
-            'products.id, products.shop_info_id, products.product_name, products.product_price, products.product_quantity, products.unlimited_stock, products.out_of_stock, products.selling_option,
+
+        $query = Product::with('images', 'shop:id,user_id,shop_name', 'shop.address')
+            ->join('shop_addresses', 'products.shop_info_id', '=', 'shop_addresses.shop_info_id')
+            ->selectRaw(
+                'products.id, products.shop_info_id, products.product_name, products.product_price, products.product_quantity, products.unlimited_stock, products.out_of_stock, products.selling_option,
             (3959 * acos(
                 cos(radians(?)) * cos(radians(shop_addresses.latitude)) *
                 cos(radians(shop_addresses.longitude) - radians(?)) +
                 sin(radians(?)) * sin(radians(shop_addresses.latitude))
             )) AS distance',
-            [$lat, $lng, $lat]
-        )
-        ->where('status', 'approved')
-        ->withAvg('reviews', 'rating');
+                [$lat, $lng, $lat]
+            )
+            ->where('products.status', 'approved')
+            ->whereHas('shop.user', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->withAvg('reviews', 'rating');
 
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('product_name', 'like', "%{$search}%")
-                ->orWhereHas('metaTags', function ($q2) use ($search) {
-                    $q2->where('tag', 'like', "%{$search}%");
-                });
+                    ->orWhereHas('metaTags', function ($q2) use ($search) {
+                        $q2->where('tag', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -61,13 +65,16 @@ class AllProductController extends Controller
             $product->is_favorite = in_array($product->id, $favorites);
         }
 
-        return $this->success($data,'Data fetched successfully',200);
+        return $this->success($data, 'Data fetched successfully', 200);
     }
 
     public function isFeaturedProduct()
     {
-        
-        $data = Product::with('images')->where('is_featured', true)->where('status', 'approved')->withAvg('reviews', 'rating')->latest()->get();
+
+        $data = Product::with('images')->where('is_featured', true)->where('status', 'approved')
+            ->whereHas('shop.user', function ($query) {
+                $query->where('status', 'active');
+            })->withAvg('reviews', 'rating')->latest()->get();
 
         if ($data->isEmpty()) {
             return $this->error([], 'No featured products found', 200);
@@ -87,7 +94,7 @@ class AllProductController extends Controller
             $product->is_favorite = in_array($product->id, $favorites);
         }
 
-        return $this->success($data,'Data fetched successfully',200);
+        return $this->success($data, 'Data fetched successfully', 200);
     }
 
     /**
@@ -121,7 +128,10 @@ class AllProductController extends Controller
             )) AS distance',
                 [$lat, $lng, $lat]
             )
-            ->where('products.status', 'approved');
+            ->where('products.status', 'approved')
+            ->whereHas('shop.user', function ($query) {
+                $query->where('status', 'active');
+            });
 
         $data = $query->having('distance', '<=', $radius)->orderBy('distance', 'ASC')
             ->withAvg('reviews', 'rating')

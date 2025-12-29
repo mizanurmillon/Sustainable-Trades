@@ -160,53 +160,48 @@
 
                     dTable.buttons().container().appendTo('#file_exports');
                     new DataTable('#example', {
-                         responsive: true
+                        responsive: true
                     });
                 }
             });
 
-            // Status Change Confirm Alert
-            function showStatusChangeAlert(id) {
+            // Suspend Confirm
+            function toggleSuspendPro(id, status) {
                 event.preventDefault();
-
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: 'You want to update the status?',
-                    icon: 'info',
+                    title: `Are you sure you want to ${status.toLowerCase()} this user?`,
+                    icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: `Yes, ${status}!`,
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        statusChange(id);
+                        toggleSuspendProConfirm(id);
                     }
                 });
             }
 
-            // Status Change
-            function statusChange(id) {
-                let url = "{{ route('admin.categories.status', ':id') }}";
+            function toggleSuspendProConfirm(id) {
                 $.ajax({
+                    url: "{{ route('admin.suspend_pro.toggle', ':id') }}".replace(':id', id),
                     type: "POST",
-                    url: url.replace(':id', id),
-                    success: function(resp) {
-                        console.log(resp);
-                        // Reloade DataTable
+                    data: {
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function(res) {
                         $('#data-table').DataTable().ajax.reload();
-                        if (resp.success === true) {
-                            // show toast message
-                            toastr.success(resp.message);
-                        } else if (resp.errors) {
-                            toastr.error(resp.errors[0]);
-                        } else {
-                            toastr.error(resp.message);
+                        if (res.success) {
+                            toastr.success('User has been ' + res.status);
                         }
                     },
-                    error: function(error) {
-                        // location.reload();
+                    error: function() {
+                        toastr.error('Something went wrong!');
                     }
                 });
             }
+
+
 
             // delete Confirm
             function showDeleteConfirm(id) {

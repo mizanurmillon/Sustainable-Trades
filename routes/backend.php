@@ -118,11 +118,15 @@ Route::controller(OurMissoinController::class)->group(function () {
 //Pro Members route
 Route::controller(ProMembersController::class)->group(function () {
     Route::get('/pro-members', 'index')->name('admin.pro_members.index');
+    Route::post('/suspend-toggle-pro/{id}', 'suspendTogglePro')
+        ->name('admin.suspend_pro.toggle');
 });
 
 //Basic_members route
 Route::controller(BasicMembersController::class)->group(function () {
     Route::get('/basic-members', 'index')->name('admin.basic_members.index');
+    Route::post('/suspend-toggle/{id}', 'suspendToggle')
+        ->name('admin.suspend.toggle');
 });
 
 //sustainable_shoppers route

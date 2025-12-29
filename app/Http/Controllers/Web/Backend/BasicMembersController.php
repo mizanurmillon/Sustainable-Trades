@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
-use App\Models\Membership;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Membership;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
 class BasicMembersController extends Controller
@@ -40,7 +41,7 @@ class BasicMembersController extends Controller
                     $shopName = $data->user->shopInfo->shop_name ?? 'N/A';
                     $frontendUrl = env('FRONTEND_BASE_URL');
 
-                    $viewType = 'customer'; 
+                    $viewType = 'customer';
                     $userId = $data->user->id;
                     $listingId = $data->user->shopInfo->id;
 
@@ -57,19 +58,43 @@ class BasicMembersController extends Controller
                     return '<img src="' . $url . '" class="img-fluid rounded object-fit-cover" style="width: 50px;">';
                 })
                 ->addColumn('action', function ($data) {
-                    return '<div class="text-center"><div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-                              <a href="#" class="text-white btn btn-warning" title="Suspend">
-                              Suspend
-                              </a>
-                              <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" type="button" class="text-white btn btn-danger" title="Delete">
-                              <i class="bi bi-trash"></i>
-                            </a>
-                            </div></div>';
+                    $btn = '';
+                    if ($data->user->status == "inactive") {
+                        $btn .= '<a href="#" onclick="toggleSuspend(' . $data->user->id . ', \'Unsuspend\')" 
+                        class="text-white btn btn-danger btn-sm" title="Unsuspend">
+                        Unsuspend
+                        </a>';
+                    } else {
+                        $btn .= '<a href="#" onclick="toggleSuspend(' . $data->user->id . ', \'Suspend\')" 
+                        class="text-white btn btn-success btn-sm" title="Suspend">
+                        Suspend
+                        </a>';
+                    }
+
+                    $btn .= ' <a href="#" onclick="showDeleteConfirm(' . $data->id . ')" 
+                    class="text-white btn btn-danger btn-sm" title="Delete">
+                    <i class="bi bi-trash"></i>
+                    </a>';
+
+                    return '<div class="text-center">' . $btn . '</div>';
                 })
 
                 ->rawColumns(['avatar', 'action', 'owner_name', 'email', 'total_products', 'shop_name', 'created_at'])
                 ->make(true);
         }
         return view('backend.layouts.basic_members.index');
+    }
+
+    public function suspendToggle($id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->status = $user->status === 'active' ? 'inactive' : 'active';
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'status'  => ucfirst($user->status) // Active / Inactive
+        ]);
     }
 }

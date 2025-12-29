@@ -47,6 +47,9 @@ class CategoryController extends Controller
             ->join('shop_addresses', 'shop_infos.id', '=', 'shop_addresses.shop_info_id')
             ->where('products.category_id', $id)
             ->where('products.status', 'approved')
+            ->whereHas('shop.user', function ($query) {
+                $query->where('status', 'active');
+            })
             ->select(
                 'products.id',
                 'products.category_id',
