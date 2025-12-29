@@ -275,6 +275,15 @@ class PaymentController extends Controller
                     $order->update(['paypal_capture_id' => $captureId]);
                 }
 
+                $order->paymentHistory()->create([
+                    'order_id' => $order->id,
+                    'user_id' => $order->user_id,
+                    'payment_method' => 'paypal',
+                    'payment_status' => 'completed',
+                    'currency' => 'USD',
+                    'amount' => $order->total_amount,
+                ]);
+
                 OrderStatusHistory::create([
                     'order_id' => $order->id,
                     'content' => 'Payment captured successfully from PayPal',

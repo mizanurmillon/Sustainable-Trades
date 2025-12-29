@@ -255,7 +255,7 @@
                         <span class="menu-title">Discounts</span>
                     </a>
                 </div>
-                <div class="menu-item">
+                {{--  <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.members_spotlight.*') ? 'active' : '' }}"
                         href="#">
                         <span class="menu-icon">
@@ -274,7 +274,7 @@
                         </span>
                         <span class="menu-title">Accounting</span>
                     </a>
-                </div>
+                </div>  --}}
 
                 <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.our_missions.*') ? 'active' : '' }}"
