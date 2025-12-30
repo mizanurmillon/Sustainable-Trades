@@ -39,6 +39,11 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class);
     }
 
+    public function LatestOrderStatus()
+    {
+        return $this->hasOne(OrderStatusHistory::class)->latestOfMany();
+    }
+
     public function shippingAddress()
     {
         return $this->hasOne(ShippingAddress::class);
