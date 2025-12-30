@@ -26,7 +26,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/my-orders', 'index');
             Route::get('/my-order/{id}', 'show');
             Route::get('/my-order/{id}/history', 'orderHistory');
-            Route::get('/invoice-generate/{id}', 'generateInvoice');
+            Route::post('/invoice-generate/{id}', 'generateInvoice');
         });
     });
 
