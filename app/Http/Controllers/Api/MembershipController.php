@@ -77,8 +77,11 @@ class MembershipController extends Controller
 
             // Check subscription status
             $details = $this->paypal->showSubscriptionDetails($subscriptionID);
+            // dd($details);
 
-            if (($details['status'] ?? null) === 'ACTIVE') {
+            $status = $details['status'] ?? null;
+
+            if ($status === 'ACTIVE' || $status === 'APPROVED') {
 
                 // 1. Update User
                 $user->update(['is_premium' => true]);
