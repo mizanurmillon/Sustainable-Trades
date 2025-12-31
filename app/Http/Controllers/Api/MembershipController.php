@@ -9,7 +9,7 @@ use App\Models\MembershipHistory;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
-use App\Traits\ApiResponse; 
+use App\Traits\ApiResponse;
 
 class MembershipController extends Controller
 {
@@ -43,7 +43,7 @@ class MembershipController extends Controller
         ]);
 
         $data = [
-            'orderID' => $subscription['id'],
+            'subscriptionID' => $subscription['id'],
             'amount'  => $plan->price,
             'plan_id' => $plan->id,
             'status' => $subscription['status'],
@@ -56,7 +56,7 @@ class MembershipController extends Controller
     // Capture order
     public function confirmSubscription(Request $request)
     {
-        $subscriptionID = $request->input('orderID');
+        $subscriptionID = $request->input('subscriptionID');
         $planID         = $request->input('plan_id');
         $user           = auth()->user();
         $plan           = SubscriptionPlan::find($planID);
@@ -77,7 +77,7 @@ class MembershipController extends Controller
             if ($status === 'ACTIVE' || $status === 'APPROVED') {
 
                 // 1. Update User
-                $user->update(['is_premium' => true]);
+                $user->update(['is_premium' => true, 'status' => 'active']);
 
                 // 2. Calculate End Date (PayPal handles the cycle, but you track it)
                 $endDate = now()->addDays($plan->interval_days ?? 30);
@@ -152,10 +152,11 @@ class MembershipController extends Controller
 
             $membership->update([
                 'status' => 'cancelled',
+                'end_at' => now(),
                 'cancel_at' => now()
             ]);
 
-            $user->update(['is_premium' => false]);
+            $user->update(['is_premium' => false, 'status' => 'inactive']);
 
             return $this->success([], 'Subscription has been cancelled successfully on PayPal and our system.', 200);
         } catch (\Exception $e) {
