@@ -32,7 +32,7 @@ class PaymentController extends Controller
     public function checkout(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'payment_method' => 'required|string',
+            'payment_method' => 'nullable|string',
             'shipping_option' => 'nullable|in:pickup,delivery',
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
@@ -84,7 +84,7 @@ class PaymentController extends Controller
                 'tax_amount' => $calculated_tax,
                 'shipping_amount' => $shipping_cost,
                 'discount_amount' => '0.00',
-                'payment_method' => $request->payment_method,
+                'payment_method' => $request->payment_method ?? 'paypal',
                 'payment_status' => 'pending',
                 'currency' => 'USD',
                 'shipping_option' => $request->shipping_option ?? 'delivery',
@@ -133,10 +133,7 @@ class PaymentController extends Controller
                 ]);
 
                 return $this->success($order, 'Order placed successfully', 200);
-            }
-
-            // PayPal payment
-            if ($request->payment_method == 'paypal') {
+            } else {
                 $client = PayPalClient::client(); // <-- Sandbox / Live correctly configured
                 $formattedAmount = number_format($total_amount, 2, '.', '');
 

@@ -2,20 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use Carbon\Carbon;
-use App\Models\User;
 use App\Models\Membership;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\SubscriptionPlan;
 use App\Models\MembershipHistory;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Validator;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
-use App\Traits\ApiResponse; // Assuming this is your trait for API responses
+use App\Traits\ApiResponse; 
 
 class MembershipController extends Controller
 {
@@ -62,7 +56,7 @@ class MembershipController extends Controller
     // Capture order
     public function confirmSubscription(Request $request)
     {
-        $subscriptionID = $request->input('orderID'); // From frontend after approval
+        $subscriptionID = $request->input('orderID');
         $planID         = $request->input('plan_id');
         $user           = auth()->user();
         $plan           = SubscriptionPlan::find($planID);
@@ -77,7 +71,6 @@ class MembershipController extends Controller
 
             // Check subscription status
             $details = $this->paypal->showSubscriptionDetails($subscriptionID);
-            // dd($details);
 
             $status = $details['status'] ?? null;
 
@@ -91,9 +84,9 @@ class MembershipController extends Controller
 
                 // 3. Save Membership
                 $membership = Membership::updateOrCreate(
-                    ['user_id' => $user->id], // Assuming one active membership
+                    ['user_id' => $user->id],
                     [
-                        'order_id' => $subscriptionID, // Store this for canceling later
+                        'order_id' => $subscriptionID,
                         'plan_id'  => $plan->id,
                         'price'    => $plan->price,
                         'membership_type' => $plan->membership_type,
@@ -136,22 +129,38 @@ class MembershipController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return $this->error(['status' => false, 'message' => 'User not found'], 404);
+            return $this->error([], 'User not found', 404);
         }
 
-        $membership = Membership::where('user_id', $user->id)->latest()->first();
+        $membership = Membership::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->latest()
+            ->first();
 
-        if (!$membership) {
-            return $this->error(['status' => false, 'message' => 'Membership not found'], 404);
+        if (!$membership || !$membership->order_id) {
+            return $this->error([], 'No active subscription found to cancel', 404);
         }
 
-        // Here you can add logic to cancel the membership in PayPal if needed
-        // For example, you might call a PayPal API endpoint to cancel the subscription
+        try {
 
-        // Update user and membership status
-        $user->update(['is_premium' => false]);
-        $membership->update(['end_at' => now()]);
+            $this->paypal->setApiCredentials(config('paypal'));
+            $this->paypal->getAccessToken();
 
-        return $this->success(['status' => true, 'message' => 'Membership cancelled successfully'], 200);
+
+            $response = $this->paypal->cancelSubscription($membership->order_id, 'User requested cancellation');
+
+
+            $membership->update([
+                'status' => 'cancelled',
+                'cancel_at' => now()
+            ]);
+
+            $user->update(['is_premium' => false]);
+
+            return $this->success([], 'Subscription has been cancelled successfully on PayPal and our system.', 200);
+        } catch (\Exception $e) {
+            Log::error('PayPal Cancellation Error: ' . $e->getMessage());
+            return $this->error([], 'Failed to cancel subscription', 500);
+        }
     }
 }
