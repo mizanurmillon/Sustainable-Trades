@@ -83,8 +83,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 
     Route::controller(MembershipController::class)->group(function () {
-        Route::post('/paypal/create-order', 'createOrder');
-        Route::post('/paypal/capture-order', 'captureOrder');
+        Route::post('/paypal/create-order', 'createSubscription');
+        Route::post('/paypal/capture-order', 'confirmSubscription');
+        Route::post('/paypal/cancel-membership', 'cancelMembership');
     });
 });
 
