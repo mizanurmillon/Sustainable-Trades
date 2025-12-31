@@ -10,7 +10,7 @@
             <img alt="Logo" src="{{ asset($systemSetting->logo ?? 'backend/media/logos/logo-default.svg') }}"
                 class="max-h-50px logo-default theme-light-show" style="width: 45px;height: 45px;" />
             <img alt="Logo" src="{{ asset($systemSetting->logo ?? 'backend/media/logos/logo-default.svg') }}"
-                class="max-h-50px logo-minimize" style="width: 45px;height: 45px;"/>
+                class="max-h-50px logo-minimize" style="width: 45px;height: 45px;" />
         </a>
         <!--end::Logo-->
     </div>
@@ -236,7 +236,7 @@
                     </a>
                 </div>
 
-                <div class="menu-item">
+                {{--  <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.members_spotlight.*') ? 'active' : '' }}"
                         href="#">
                         <span class="menu-icon">
@@ -254,7 +254,7 @@
                         </span>
                         <span class="menu-title">Discounts</span>
                     </a>
-                </div>
+                </div>  --}}
                 {{--  <div class="menu-item">
                     <a class="menu-link {{ request()->routeIs('admin.members_spotlight.*') ? 'active' : '' }}"
                         href="#">
