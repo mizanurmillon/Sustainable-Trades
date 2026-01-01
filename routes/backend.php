@@ -120,6 +120,7 @@ Route::controller(ProMembersController::class)->group(function () {
     Route::get('/pro-members', 'index')->name('admin.pro_members.index');
     Route::post('/suspend-toggle-pro/{id}', 'suspendTogglePro')
         ->name('admin.suspend_pro.toggle');
+    Route::delete('/pro-members/destroy/{id}', 'destroy')->name('admin.pro_members.destroy');
 });
 
 //Basic_members route
@@ -127,6 +128,7 @@ Route::controller(BasicMembersController::class)->group(function () {
     Route::get('/basic-members', 'index')->name('admin.basic_members.index');
     Route::post('/suspend-toggle/{id}', 'suspendToggle')
         ->name('admin.suspend.toggle');
+    Route::delete('/basic-members/destroy/{id}', 'destroy')->name('admin.basic_members.destroy');
 });
 
 //sustainable_shoppers route

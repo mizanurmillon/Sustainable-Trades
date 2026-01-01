@@ -142,23 +142,40 @@ class MembershipController extends Controller
         }
 
         try {
-
             $this->paypal->setApiCredentials(config('paypal'));
             $this->paypal->getAccessToken();
 
+            $subscription = $this->paypal->showSubscriptionDetails($membership->order_id);
 
-            $response = $this->paypal->cancelSubscription($membership->order_id, 'User requested cancellation');
+            Log::info('PayPal subscription status: ' . $subscription['status']);
 
+            if (!in_array($subscription['status'], ['ACTIVE', 'SUSPENDED'])) {
+                return $this->error([], 'Subscription cannot be cancelled; current PayPal status: ' . $subscription['status'], 422);
+            }
 
+            // Cancel subscription
+            $this->paypal->cancelSubscription($membership->order_id, 'User requested cancellation');
+
+            // Verify cancellation
+            $subscription = $this->paypal->showSubscriptionDetails($membership->order_id);
+
+            if ($subscription['status'] !== 'CANCELLED') {
+                return $this->error([], 'Failed to cancel subscription on PayPal', 500);
+            }
+
+            // Update local DB
             $membership->update([
                 'status' => 'cancelled',
                 'end_at' => now(),
                 'cancel_at' => now()
             ]);
 
-            $user->update(['is_premium' => false, 'status' => 'inactive']);
+            $user->update([
+                'is_premium' => false,
+                'status' => 'inactive'
+            ]);
 
-            return $this->success([], 'Subscription has been cancelled successfully on PayPal and our system.', 200);
+            return $this->success([], 'Subscription cancelled successfully on PayPal and in our system.', 200);
         } catch (\Exception $e) {
             Log::error('PayPal Cancellation Error: ' . $e->getMessage());
             return $this->error([], 'Failed to cancel subscription', 500);

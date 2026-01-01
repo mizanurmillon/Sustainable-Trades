@@ -223,10 +223,10 @@
 
             // Delete Button
             function deleteItem(id) {
-                let url = "{{ route('admin.categories.destroy', ':id') }}";
+                let url = "{{ route('admin.pro_members.destroy', ':id') }}";
                 let csrfToken = '{{ csrf_token() }}';
                 $.ajax({
-                    type: "POST",
+                    type: "DELETE",
                     url: url.replace(':id', id),
                     headers: {
                         'X-CSRF-TOKEN': csrfToken
