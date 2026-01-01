@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\ShopOwnerController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\Product\ImportExportController;
 use App\Http\Controllers\Api\TradeOfferController;
+use App\Http\Controllers\Api\Vendor\DashboardController;
 use App\Http\Controllers\Api\Vendor\DiscountController;
 use App\Http\Controllers\Api\Vendor\ProductController;
 use App\Http\Controllers\Api\Vendor\ShippingController;
@@ -16,9 +17,14 @@ use Illuminate\Support\Facades\Route;
 
 
 
+
 Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::group(['middleware' => ['vendor']], function () {
+
+        Route::controller(DashboardController::class)->group(function () {
+            Route::get('/vendor/dashboard', 'index');
+        });
 
         Route::controller(ShopOwnerController::class)->group(function () {
             Route::post('/shop/owner-data-update', 'shopOwnerDataUpdate');
