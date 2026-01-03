@@ -126,12 +126,7 @@ class PaymentController extends Controller
                 $cart->CartItems()->delete();
                 $cart->delete();
                 DB::commit();
-
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'content' => 'Order placed successfully',
-                ]);
-
+                
                 return $this->success($order, 'Order placed successfully', 200);
             } else {
                 $client = PayPalClient::client(); // <-- Sandbox / Live correctly configured
@@ -279,11 +274,6 @@ class PaymentController extends Controller
                     'payment_status' => 'completed',
                     'currency' => 'USD',
                     'amount' => $order->total_amount,
-                ]);
-
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'content' => 'Payment captured successfully from PayPal',
                 ]);
 
                 return $this->success($order, 'Payment successful');

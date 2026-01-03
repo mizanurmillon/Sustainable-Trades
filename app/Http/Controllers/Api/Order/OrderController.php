@@ -11,10 +11,10 @@ use App\Http\Controllers\Controller;
 class OrderController extends Controller
 {
     use ApiResponse;
-    
+
     public function index(Request $request)
     {
-        $user = auth()->user(); 
+        $user = auth()->user();
 
         $query = Order::with('user:id,first_name,last_name,email')->where('shop_id', $user->shopInfo->id);
 
@@ -31,11 +31,11 @@ class OrderController extends Controller
         return $this->success($order, 'Orders retrieved successfully');
     }
 
-    public function show(Request $request, $id)
+    public function show($id)
     {
-        $user = auth()->user(); 
+        $user = auth()->user();
 
-        $order = Order::with('user:id,first_name,last_name,email,phone,avatar','orderItems','orderItems.product:id,product_name,product_price', 'orderItems.product','shippingAddress', 'OrderStatusHistory')
+        $order = Order::with('user:id,first_name,last_name,email,phone,avatar', 'user.membership', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images', 'shippingAddress', 'OrderStatusHistory')
             ->where('shop_id', $user->shopInfo->id)
             ->where('id', $id)
             ->first();
@@ -53,7 +53,7 @@ class OrderController extends Controller
             'status' => 'required|string|in:confirmed,processing,shipped,delivered,cancelled',
         ]);
 
-        $user = auth()->user(); 
+        $user = auth()->user();
 
         $order = Order::where('shop_id', $user->shopInfo->id)
             ->where('id', $id)
@@ -63,49 +63,77 @@ class OrderController extends Controller
             return $this->error([], 'Order not found', 404);
         }
 
-       try {
+        if ($order->status == $request->status) {
+            return $this->error([], 'Order status is already ' . $request->status, 400);
+        }
+
+        if ($order->status == 'delivered') {
+            return $this->error([], 'Order has already been delivered', 400);
+        }
+
+        if ($order->status == 'cancelled') {
+            return $this->error([], 'Order has already been cancelled', 400);
+        }
+
+        if ($request->status == 'processing' && $order->status != 'confirmed') {
+            return $this->error([], 'Order must be confirmed before it can be processed', 400);
+        }
+
+        if ($request->status == 'shipped' && $order->status != 'processing') {
+            return $this->error([], 'Order must be processed before it can be shipped', 400);
+        }
+
+        if ($request->status == 'cancelled' && $order->status == 'shipped') {
+            return $this->error([], 'Shipped orders cannot be cancelled', 400);
+        }
+
+        if ($request->status == 'delivered' && $order->status != 'shipped') {
+            return $this->error([], 'Order must be shipped before it can be marked as delivered', 400);
+        }
+
+        /* ---------------------------------
+        | Status history messages
+        ---------------------------------*/
+        $statusMessages = [
+            'confirmed'  => 'Order confirmed.',
+            'processing' => 'Order is being processed.',
+            'shipped'    => 'Order has been shipped.',
+            'delivered'  => 'Order has been delivered.',
+            'cancelled'  => 'Order has been cancelled.',
+        ];
+
+        if ($order->OrderStatusHistory()->where('content', $statusMessages[$request->status])->exists()) {
+            return $this->error([], 'Order has already been updated to ' . $request->status . ' status', 400);
+        }
+
+        try {
             DB::beginTransaction();
-            $order->status = $request->status;
-            $order->save();
 
-            if(!$order) {
-                return $this->error([], 'Failed to update order status', 500);
-            }
+            // Update order status
+            $order->update([
+                'status' => $request->status,
+            ]);
 
-            if($order->status == 'confirmed') {
-                $order->OrderStatusHistory()->create([
-                    'order_id' => $order->id,
-                    'content' => 'Your order has been confirmed.',
-                ]);
-            } elseif($order->status == 'processing') {
-                $order->OrderStatusHistory()->create([
-                    'order_id' => $order->id,
-                    'content' => 'Your order is being processed.',
-                ]);
-            } elseif($order->status == 'shipped') {
-                $order->OrderStatusHistory()->create([
-                    'order_id' => $order->id,
-                    'content' => 'Your order has been shipped.',
-                ]);
-            } elseif($order->status == 'delivered') {
-                $order->OrderStatusHistory()->create([
-                    'order_id' => $order->id,
-                    'content' => 'Your order has been delivered.',
-                ]);
-            } elseif($order->status == 'cancelled') {
-                $order->OrderStatusHistory()->create([
-                    'order_id' => $order->id,
-                    'content' => 'Your order has been cancelled.',
-                ]);
-            }
+            // Save status history
+            $order->OrderStatusHistory()->create([
+                'order_id' => $order->id,
+                'content'  => $statusMessages[$request->status],
+            ]);
 
             DB::commit();
+
             return $this->success($order, 'Order status updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error([], 'Failed to update order status', 500);
+
+            return $this->error(
+                ['error' => $e->getMessage()],
+                'Failed to update order status',
+                500
+            );
         }
     }
+
 
     public function addNote(Request $request, $id)
     {
@@ -129,7 +157,7 @@ class OrderController extends Controller
             $order->note = $request->note;
             $order->save();
 
-            if(!$order) {
+            if (!$order) {
                 return $this->error([], 'Failed to add order note', 500);
             }
 

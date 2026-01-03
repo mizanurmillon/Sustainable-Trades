@@ -25,9 +25,12 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::controller(MyOrderController::class)->group(function () {
             Route::get('/my-orders', 'index');
             Route::get('/my-order/{id}', 'show');
-            Route::get('/my-order/{id}/history', 'orderHistory');
-            Route::post('/invoice-generate/{id}', 'generateInvoice');
         });
+    });
+
+    Route::controller(MyOrderController::class)->group(function () {
+        Route::get('/my-order/{id}/history', 'orderHistory');
+        Route::post('/invoice-generate/{id}', 'generateInvoice');
     });
 
 
