@@ -126,6 +126,16 @@ class PaymentController extends Controller
                 $order->update(['payment_status' => 'pending']);
                 $cart->CartItems()->delete();
                 $cart->delete();
+
+                $order->paymentHistory()->create([
+                    'order_id' => $order->id,
+                    'user_id' => $order->user_id,
+                    'payment_method' => 'cash_on_delivery',
+                    'payment_status' => 'pending',
+                    'currency' => 'USD',
+                    'amount' => $order->total_amount,
+                ]);
+
                 DB::commit();
 
                 $order->user->notify(new OrderNotification(
@@ -181,36 +191,36 @@ class PaymentController extends Controller
                     ]);
 
                     // Vendor Payout
-                    $vendorAccount = PaypalAccount::where('user_id', $cart->shop->user_id)
-                        ->where('paypal_email_verified', 1)
-                        ->first();
+                    // $vendorAccount = PaypalAccount::where('user_id', $cart->shop->user_id)
+                    //     ->where('paypal_merchant_id', '!=', null)
+                    //     ->first();
 
-                    if ($vendorAccount) {
-                        $vendorEmail = $vendorAccount->paypal_email;
+                    // if ($vendorAccount) {
+                    //     $vendorPaypalMerchantId = $vendorAccount->paypal_merchant_id;
 
-                        $payouts = new PayoutsPostRequest();
-                        $payouts->body = [
-                            "sender_batch_header" => [
-                                "sender_batch_id" => uniqid(),
-                                "email_subject" => "You have a payout!",
-                                "email_message" => "You have received a payout for your order."
-                            ],
-                            "items" => [
-                                [
-                                    "recipient_type" => "EMAIL",
-                                    "receiver" => $vendorEmail,
-                                    "amount" => [
-                                        "value" => $formattedAmount,
-                                        "currency" => "USD"
-                                    ],
-                                    "note" => "Order payment for order #" . $order->order_number,
-                                    "sender_item_id" => $order->id
-                                ]
-                            ]
-                        ];
+                    //     $payouts = new PayoutsPostRequest();
+                    //     $payouts->body = [
+                    //         "sender_batch_header" => [
+                    //             "sender_batch_id" => uniqid(),
+                    //             "email_subject" => "You have a payout!",
+                    //             "email_message" => "You have received a payout for your order."
+                    //         ],
+                    //         "items" => [
+                    //             [
+                    //                 "recipient_type" => "MERCHANT_ID",
+                    //                 "receiver" => $vendorPaypalMerchantId,
+                    //                 "amount" => [
+                    //                     "value" => $formattedAmount,
+                    //                     "currency" => "USD"
+                    //                 ],
+                    //                 "note" => "Order payment for order #" . $order->order_number,
+                    //                 "sender_item_id" => $order->id
+                    //             ]
+                    //         ]
+                    //     ];
 
-                        $client->execute($payouts); // <-- This will send payout to verified vendor email
-                    }
+                    //     $client->execute($payouts); // <-- This will send payout to verified vendor email
+                    // }
 
                     // Clear Cart
                     $cart->CartItems()->delete();
@@ -256,7 +266,6 @@ class PaymentController extends Controller
             $response = $client->getOrdersController()->captureOrder([
                 'id' => $paypalOrderId
             ]);
-
             if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
 
                 $result = $response->getResult();
@@ -305,6 +314,43 @@ class PaymentController extends Controller
                     'amount' => $order->total_amount,
                 ]);
 
+                // /**
+                //  * -------------------------------
+                //  * Vendor Payout (safe)
+                //  * -------------------------------
+                //  */
+                // $vendorAccount = PaypalAccount::where('user_id', $order->shop->user_id)
+                //     ->whereNotNull('paypal_merchant_id')
+                //     ->first();
+
+                // if ($vendorAccount && $paypalStatus === 'COMPLETED') {
+
+                //     $vendorPaypalMerchantId = $vendorAccount->paypal_merchant_id;
+
+                //     $payoutRequest = new PayoutsPostRequest();
+                //     $payoutRequest->body = [
+                //         "sender_batch_header" => [
+                //             "sender_batch_id" => uniqid(),
+                //             "email_subject" => "You have received a payout!",
+                //             "email_message" => "You have received a payout for your order."
+                //         ],
+                //         "items" => [
+                //             [
+                //                 "recipient_type" => "MERCHANT_ID",
+                //                 "receiver" => $vendorPaypalMerchantId,
+                //                 "amount" => [
+                //                     "value" => number_format($order->total_amount, 2, '.', ''),
+                //                     "currency" => $order->currency ?? 'USD'
+                //                 ],
+                //                 "note" => "Order payment for order #" . $order->order_number,
+                //                 "sender_item_id" => $order->id
+                //             ]
+                //         ]
+                //     ];
+
+                //     $client->execute($payoutRequest);
+                // }
+
                 return $this->success($order, 'Payment successful');
             }
 
@@ -333,6 +379,15 @@ class PaymentController extends Controller
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'content' => 'Payment canceled by user from PayPal'
+            ]);
+
+            $order->paymentHistory()->create([
+                'order_id' => $order->id,
+                'user_id' => $order->user_id,
+                'payment_method' => 'paypal',
+                'payment_status' => 'failed',
+                'currency' => 'USD',
+                'amount' => $order->total_amount,
             ]);
 
             return $this->success($order, 'Payment canceled successfully', 200);

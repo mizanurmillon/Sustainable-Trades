@@ -18,6 +18,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('/order/{id}', 'show');
             Route::post('/order-status-update/{id}', 'updateStatus');
             Route::post('/order-note/{id}', 'addNote');
+
+            Route::get('/payment-report', 'paymentReport');
         });
     });
 

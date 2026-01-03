@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api\Order;
 
 use App\Models\Order;
 use App\Traits\ApiResponse;
+use Faker\Provider\Payment;
 use Illuminate\Http\Request;
+use App\Models\PaymentHistory;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Notifications\OrderNotification;
 
 class OrderController extends Controller
 {
@@ -114,6 +117,17 @@ class OrderController extends Controller
                 'status' => $request->status,
             ]);
 
+            if ($order->payment_method == 'cash_on_delivery' && $request->status == 'delivered') {
+                
+                $order->update([
+                    'payment_status' => 'completed',
+                ]);
+
+                $order->paymentHistory()->update([
+                    'payment_status' => 'completed',
+                ]);
+            }
+
             // Save status history
             $order->OrderStatusHistory()->create([
                 'order_id' => $order->id,
@@ -121,6 +135,13 @@ class OrderController extends Controller
             ]);
 
             DB::commit();
+
+            $order->user->notify(new OrderNotification(
+                subject: 'Order status updated',
+                message: 'Your order status has been updated to ' . $request->status . '.',
+                type: 'success',
+                order: $order
+            ));
 
             return $this->success($order, 'Order status updated successfully');
         } catch (\Exception $e) {
@@ -167,5 +188,26 @@ class OrderController extends Controller
             DB::rollBack();
             return $this->error([], 'Failed to add order note', 500);
         }
+    }
+
+    public function paymentReport(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = PaymentHistory::with('order:id,user_id,shop_id,order_number', 'order.user:id,first_name,last_name,email')->whereHas('order', function ($q) use ($user) {
+            $q->where('shop_id', $user->shopInfo->id);
+        });
+
+        if ($request->query('status')) {
+            $query->where('payment_status', $request->status);
+        }
+
+        $payments = $query->latest()->get();
+
+        if ($payments->isEmpty()) {
+            return $this->error([], 'No payment records found', 200);
+        }
+
+        return $this->success($payments, 'Payment records retrieved successfully');
     }
 }
