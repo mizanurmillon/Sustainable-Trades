@@ -35,7 +35,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        $order = Order::with('user:id,first_name,last_name,email,phone,avatar', 'user.membership', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images', 'shippingAddress', 'OrderStatusHistory')
+        $order = Order::with('user:id,first_name,last_name,email,phone,avatar,role', 'user.membership', 'orderItems', 'orderItems.product:id,product_name,product_price', 'orderItems.product.images', 'shippingAddress', 'OrderStatusHistory')
             ->where('shop_id', $user->shopInfo->id)
             ->where('id', $id)
             ->first();
