@@ -50,8 +50,7 @@ class MyOrderController extends Controller
     {
         $user = auth()->user();
 
-        $order = Order::where('user_id', $user->id)
-            ->where('id', $id)
+        $order = Order::where('id', $id)
             ->first();
 
         if (!$order) {
@@ -75,7 +74,6 @@ class MyOrderController extends Controller
             'orderItems.product:id,product_name,product_price',
             'orderItems.product.images'
         ])
-            ->where('user_id', $user->id)
             ->where('id', $id)
             ->first();
 

@@ -2,28 +2,29 @@
 
 namespace App\Http\Controllers\Api\Order;
 
+use App\Enum\OrderStatus;
+use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
-use App\Enum\OrderStatus;
 use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
+use App\Models\PaypalAccount;
+use App\Models\shippingAddress;
+use App\Notifications\OrderNotification;
+use App\Service\PayPalClient;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use App\Models\PaypalAccount;
-use App\Service\PayPalClient;
-use App\Models\shippingAddress;
-use App\Models\OrderStatusHistory;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use PayPalCheckoutSdk\Payouts\PayoutsPostRequest;
+use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
+use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
+use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
+use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
+use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
 use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
 use PaypalServerSdkLib\Models\PaypalExperienceUserAction;
-use PaypalServerSdkLib\Models\Builders\OrderRequestBuilder;
-use PaypalServerSdkLib\Models\Builders\PaypalWalletBuilder;
-use PaypalServerSdkLib\Models\Builders\PaymentSourceBuilder;
-use PaypalServerSdkLib\Models\Builders\AmountWithBreakdownBuilder;
-use PaypalServerSdkLib\Models\Builders\PurchaseUnitRequestBuilder;
-use PaypalServerSdkLib\Models\Builders\PaypalWalletExperienceContextBuilder;
 
 class PaymentController extends Controller
 {
@@ -126,7 +127,21 @@ class PaymentController extends Controller
                 $cart->CartItems()->delete();
                 $cart->delete();
                 DB::commit();
-                
+
+                $order->user->notify(new OrderNotification(
+                    subject: 'Order placed successfully',
+                    message: 'Your order has been placed successfully.',
+                    type: 'success',
+                    order: $order
+                ));
+
+                $order->shop->user->notify(new OrderNotification(
+                    subject: 'New order received',
+                    message: 'You have received a new order.',
+                    type: 'success',
+                    order: $order
+                ));
+
                 return $this->success($order, 'Order placed successfully', 200);
             } else {
                 $client = PayPalClient::client(); // <-- Sandbox / Live correctly configured
@@ -253,6 +268,20 @@ class PaymentController extends Controller
                     'status' => 'pending', // better than pending
                     'paypal_order_status' => $paypalStatus,
                 ]);
+
+                $order->user->notify(new OrderNotification(
+                    subject: 'Order placed successfully',
+                    message: 'Your order has been placed successfully.',
+                    type: 'success',
+                    order: $order
+                ));
+
+                $order->shop->user->notify(new OrderNotification(
+                    subject: 'New order received',
+                    message: 'You have received a new order.',
+                    type: 'success',
+                    order: $order
+                ));
 
                 //Capture ID safely
                 $captureId = null;
