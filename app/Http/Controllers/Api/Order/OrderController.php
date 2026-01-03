@@ -118,7 +118,7 @@ class OrderController extends Controller
             ]);
 
             if ($order->payment_method == 'cash_on_delivery' && $request->status == 'delivered') {
-                
+
                 $order->update([
                     'payment_status' => 'completed',
                 ]);
@@ -194,7 +194,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        $query = PaymentHistory::with('order:id,user_id,shop_id,order_number', 'order.user:id,first_name,last_name,email')->whereHas('order', function ($q) use ($user) {
+        $query = PaymentHistory::with('order:id,user_id,shop_id,order_number,created_at', 'order.user:id,first_name,last_name,email')->whereHas('order', function ($q) use ($user) {
             $q->where('shop_id', $user->shopInfo->id);
         });
 
