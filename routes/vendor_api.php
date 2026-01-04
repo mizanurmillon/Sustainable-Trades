@@ -15,15 +15,16 @@ use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
 use Illuminate\Support\Facades\Route;
 
 
-
-
-
 Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::group(['middleware' => ['vendor']], function () {
 
         Route::controller(DashboardController::class)->group(function () {
             Route::get('/vendor/dashboard', 'index');
+            Route::get('/vendor/dashboard/visits', 'getVisits');
+            Route::get('/vendor/dashboard/order', 'getOrderStats');
+            Route::get('/vendor/dashboard/listings', 'getListingsStats');
+            Route::get('/vendor/dashboard/trades', 'getTradesStats');
         });
 
         Route::controller(ShopOwnerController::class)->group(function () {
@@ -38,11 +39,12 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::controller(ProductController::class)->group(function () {
             Route::post('/products-store', 'productStore');
             Route::get('/products', 'productList');
-            Route::get('/product/{id}', 'productDetails', '');
+            Route::get('/product/{id}', 'productDetails');
             Route::get('/product/request-approval/{id}', 'productRequestApproval');
             Route::post('/product/update/{id}', 'productUpdate');
             Route::delete('/product/delete/{id}', 'productDelete');
             Route::delete('/image-delete/{id}', 'productImageDelete');
+            Route::get('/latest-products', 'latestProducts');
         });
 
         Route::controller(ImportExportController::class)->group(function () {

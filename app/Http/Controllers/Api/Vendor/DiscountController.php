@@ -34,7 +34,7 @@ class DiscountController extends Controller
         $data = $query->latest()->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'Failed to fetch discounts', 500);
+            return $this->error([], 'No discounts found', 404);
         }
 
         return $this->success($data, 'Discounts fetched successfully', 200);
@@ -225,7 +225,6 @@ class DiscountController extends Controller
         }
 
         return $this->success($data, 'Discount updated successfully', 200);
-
     }
 
     public function bulkDelete(Request $request)
@@ -270,5 +269,5 @@ class DiscountController extends Controller
         $data->save();
 
         return $this->success($data, 'Discount status updated successfully', 200);
-    }   
+    }
 }

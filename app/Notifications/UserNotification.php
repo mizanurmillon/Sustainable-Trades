@@ -90,15 +90,6 @@ class UserNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        Log::info([
-            'from' => $this->from,
-            'owner' => $this->owner,
-            'subject' => $this->subject,
-            'message' => $this->message,
-            'actionText' => $this->actionText,
-            'actionUrl' => $this->actionUrl,
-            'type' => $this->type,
-        ]);
         return [
             'from' => $this->from,
             'owner' => $this->owner,

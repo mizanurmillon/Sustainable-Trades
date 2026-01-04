@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Review;
+use App\Models\Product;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Notifications\ReviewNotification;
 
 class ReviewController extends Controller
 {
@@ -40,7 +41,7 @@ class ReviewController extends Controller
 
         try {
 
-            $data = Review::create([
+            $review = Review::create([
                 'title' => $request->title,
                 'rating' => $request->rating,
                 'message' => $request->message,
@@ -52,19 +53,28 @@ class ReviewController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $imageName = uploadImage($image, 'reviews');
-                    $data->images()->create([
+                    $review->images()->create([
                         'image' => $imageName,
                     ]);
                 }
             }
 
-            if (!$data) {
+            if (!$review) {
                 return $this->error([], 'Failed to add review', 500);
             }
 
-            $data->load('images');
+            // Notify shop owner
 
-            return $this->success($data, 'Review added successfully', 200);
+            $review->shop->user->notify(new ReviewNotification(
+                subject: 'New review added',
+                message: 'A new review has been added for ' . $review->product->product_name,
+                type: 'success',
+                review: $review
+            ));
+
+            $review->load('images');
+
+            return $this->success($review, 'Review added successfully', 200);
         } catch (\Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }

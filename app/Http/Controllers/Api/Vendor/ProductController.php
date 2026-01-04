@@ -404,4 +404,27 @@ class ProductController extends Controller
             return $this->error([], $e->getMessage(), 500);
         }
     }
+
+    public function latestProducts()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $this->error([], 'User Not Found', 400);
+        }
+
+        $data = Product::where('shop_info_id', $user->shopInfo->id)
+            ->select('id', 'category_id', 'product_name', 'product_price', 'product_quantity', 'unlimited_stock', 'out_of_stock', 'selling_option')
+            ->where('status', 'approved')
+            ->with(['images', 'category'])
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+
+        if ($data->isEmpty()) {
+            return $this->error([], 'No products found', 200);
+        }
+
+        return $this->success($data, 'Latest products retrieved successfully', 200);
+    }
 }

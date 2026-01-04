@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Shop;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\MyFavorit;
+use App\Models\ShopVisit;
 use App\Models\FollowShop;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -135,6 +136,7 @@ class ShopController extends Controller
             ->where('role', 'vendor')
             ->where('status', 'active')
             ->first();
+
         if ($data && $data->shopInfo) {
             $data->rating_avg = $data->shopInfo->reviews()->avg('rating');
         }
@@ -145,6 +147,28 @@ class ShopController extends Controller
             $data->is_followed = $shopFollow;
         } else {
             $data->is_followed = false;
+        }
+
+        /* -------------------------
+        | Shop Visit (prevent spam)
+        | one visit per IP per day
+        --------------------------*/
+        $shopVisit = ShopVisit::where('shop_id', $data->shopInfo->id)
+            ->where('visitor_ip', request()->ip())
+            ->whereDate('visited_at', now()->toDateString())
+            ->first();
+
+        if (!$shopVisit) {
+            ShopVisit::firstOrCreate(
+                [
+                    'shop_id'    => $data->shopInfo->id,
+                    'visitor_ip' => request()->ip(),
+                    'visited_at' => now()->toDateString(),
+                ],
+                [
+                    'visited_at' => now(),
+                ]
+            );
         }
 
         if (!$data) {

@@ -2,30 +2,31 @@
 
 namespace App\Notifications;
 
+use App\Models\TradeOffer;
 use Illuminate\Bus\Queueable;
-use App\Models\SpotlightApplication;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class SpotlightApplicationNotification extends Notification
+class TradeOfferNotification extends Notification
 {
     use Queueable;
+
     protected $subject;
     public string $message;
-    public SpotlightApplication $application;
+    public TradeOffer $tradeOffer;
     protected $type;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $message, string $subject, string $type, SpotlightApplication $application)
+    public function __construct(string $message, string $subject, string $type, TradeOffer $tradeOffer)
     {
-        $this->message = $message;
         $this->subject = $subject;
-        $this->application = $application;
+        $this->message = $message;
         $this->type = $type;
+        $this->tradeOffer = $tradeOffer;
     }
 
     /**
@@ -35,7 +36,7 @@ class SpotlightApplicationNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database','broadcast'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -44,9 +45,9 @@ class SpotlightApplicationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+            ->line('The introduction to the notification.')
+            ->action('Notification Action', url('/'))
+            ->line('Thank you for using our application!');
     }
 
     /**
@@ -57,24 +58,22 @@ class SpotlightApplicationNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'application'=> $this->application->id,
-            'subject'=> $this->subject,
-            'message'=> $this->message,
-            'type'=> $this->type,
-            'status' => 'spotlight-application',
+            'tradeOffer' => $this->tradeOffer->id,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'type' => $this->type,
+            'status' => 'trade_offer',
         ];
     }
 
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'subject'=> $this->subject,
-            'message'=> $this->message,
-            'type'=> $this->type,
-            'status' => 'spotlight-application',
-            'created_at' => $this->application->created_at,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'type' => $this->type,
+            'status' => 'trade_offer',
+            'created_at' => $this->tradeOffer->created_at,
         ]);
     }
-
-    
 }
