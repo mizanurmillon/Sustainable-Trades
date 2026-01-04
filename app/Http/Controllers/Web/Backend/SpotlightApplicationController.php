@@ -29,7 +29,7 @@ class SpotlightApplicationController extends Controller
         $approved = SpotlightApplication::where('status', 'approved')->count();
         $pending = SpotlightApplication::where('status', 'pending')->count();
 
-        return view('backend.layouts.spotlight.index', compact('applications','approved','pending'));
+        return view('backend.layouts.spotlight.index', compact('applications', 'approved', 'pending'));
     }
 
     public function show($id)
@@ -48,7 +48,8 @@ class SpotlightApplicationController extends Controller
             subject: 'Spotlight application approved',
             message: 'Your spotlight application has been approved.',
             type: 'success',
-            application: $application
+            application: $application,
+            user_id: Auth::user()->id
         ));
 
         return response()->json([
@@ -64,15 +65,15 @@ class SpotlightApplicationController extends Controller
         $application->save();
 
         $application->user->notify(new SpotlightApplicationNotification(
-            subject:'Spotlight application save for later',
-            message:'Your spotlight application has been save for later.',
+            subject: 'Spotlight application save for later',
+            message: 'Your spotlight application has been save for later.',
             type: 'success',
             application: $application,
             user_id: Auth::user()->id
         ));
 
         return response()->json([
-            'success' => true,,
+            'success' => true,
             'message' => 'Spotlight application save for later.'
         ]);
     }
@@ -81,7 +82,7 @@ class SpotlightApplicationController extends Controller
     {
         $data = SpotlightApplication::findOrFail($id);
 
-        if(file_exists(public_path($data->image))){
+        if (file_exists(public_path($data->image))) {
             unlink(public_path($data->image));
         }
 
@@ -91,13 +92,13 @@ class SpotlightApplicationController extends Controller
             subject: 'Spotlight application deleted',
             message: 'Your spotlight application has been deleted.',
             type: 'success',
-            application: $data
+            application: $data,
+            user_id: Auth::user()->id
         ));
-        
+
         return response()->json([
             'success' => true,
             'message'   => 'Deleted successfully.',
         ]);
     }
-
 }
