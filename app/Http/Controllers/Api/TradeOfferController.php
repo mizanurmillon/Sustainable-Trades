@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use App\Models\Product;
 use App\Models\TradeOffer;
 use App\Traits\ApiResponse;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use App\Notifications\TradeOfferNotification;
 
 class TradeOfferController extends Controller
 {
@@ -74,6 +75,21 @@ class TradeOfferController extends Controller
                 }
             }
             DB::commit();
+
+            $offer->receiver->notify(new TradeOfferNotification(
+                subject: 'New trade offer received',
+                message: 'You have received a new trade offer.',
+                type: 'success',
+                tradeOffer: $offer
+            ));
+
+            $offer->sender->notify(new TradeOfferNotification(
+                subject: 'New trade counter offer sent',
+                message: 'You have sent a new trade counter offer.',
+                type: 'success',
+                tradeOffer: $offer
+            ));
+
             $offer->load(['items', 'attachments']);
             return $this->success($offer, 'Trade offer created successfully', 201);
         } catch (\Exception $e) {
@@ -168,6 +184,20 @@ class TradeOfferController extends Controller
         $offer->status = 'accepted';
         $offer->save();
 
+        $offer->sender->notify(new TradeOfferNotification(
+            subject: 'Trade offer accepted',
+            message: 'Your trade offer has been accepted.',
+            type: 'success',
+            tradeOffer: $offer
+        ));
+
+        $offer->receiver->notify(new TradeOfferNotification(
+            subject: 'Trade offer accepted',
+            message: 'You have accepted a trade offer.',
+            type: 'success',
+            tradeOffer: $offer
+        ));
+
         // For now, we will just return a success message
         return $this->success($offer, 'Trade offer accepted successfully');
     }
@@ -198,6 +228,20 @@ class TradeOfferController extends Controller
         // This could involve updating the status of the offer, notifying users, etc.
         $offer->status = 'cancelled';
         $offer->save();
+
+        $offer->sender->notify(new TradeOfferNotification(
+            subject: 'Trade offer cancelled',
+            message: 'A trade offer has been cancelled.',
+            type: 'error',
+            tradeOffer: $offer
+        ));
+
+        $offer->receiver->notify(new TradeOfferNotification(
+            subject: 'Trade offer cancelled',
+            message: 'A trade offer has been cancelled.',
+            type: 'error',
+            tradeOffer: $offer
+        ));
 
         return $this->success($offer, 'Trade offer cancelled successfully');
     }
@@ -321,6 +365,20 @@ class TradeOfferController extends Controller
             }
 
             DB::commit();
+
+            $counterOffer->receiver->notify(new TradeOfferNotification(
+                subject: 'New trade counter offer received',
+                message: 'You have received a new trade counter offer.',
+                type: 'success',
+                tradeOffer: $counterOffer
+            ));
+
+            $counterOffer->sender->notify(new TradeOfferNotification(
+                subject: 'New trade counter offer sent',
+                message: 'You have sent a new trade counter offer.',
+                type: 'success',
+                tradeOffer: $counterOffer
+            ));
 
             $counterOffer->load('parentOffer.items', 'parentOffer.attachments');
 

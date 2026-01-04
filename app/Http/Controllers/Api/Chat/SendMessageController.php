@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Api\Chat;
 
-use App\Models\User;
-use App\Models\Message;
-use App\Traits\ApiResponse;
-use App\Models\Conversation;
-use Illuminate\Http\Request;
-use App\Events\MessageSentEvent;
 use App\Events\ConversationEvent;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
 use App\Events\LocalPickupConversationEvent;
+use App\Events\MessageSentEvent;
+use App\Http\Controllers\Controller;
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\User;
+use App\Notifications\MessageNotification;
+use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class SendMessageController extends Controller
 {
@@ -134,11 +135,18 @@ class SendMessageController extends Controller
         broadcast(new MessageSentEvent($messageSend));
 
         # Broadcast the Conversation and Unread Message Count
-        broadcast(new ConversationEvent($messageSend->sender_id, $messageSend->receiver_id, $messageSend,$unreadMessageCount))->toOthers();
+        broadcast(new ConversationEvent($messageSend->sender_id, $messageSend->receiver_id, $messageSend, $unreadMessageCount))->toOthers();
 
-        if($conversation->type == 'order') {
-            broadcast(new LocalPickupConversationEvent($messageSend->sender_id, $messageSend->receiver_id, $messageSend,$unreadMessageCount))->toOthers(); 
+        if ($conversation->type == 'order') {
+            broadcast(new LocalPickupConversationEvent($messageSend->sender_id, $messageSend->receiver_id, $messageSend, $unreadMessageCount))->toOthers();
         }
+
+        $messageSend->receiver->notify(new MessageNotification(
+            subject: 'New Message Received',
+            message: $messageSend->message ?? 'You have received a new message',
+            type: 'success',
+            messageModel: $messageSend
+        ));
 
         return $this->success([
             'message' => $messageSend,
@@ -211,7 +219,7 @@ class SendMessageController extends Controller
      * @param int|null $conversation_id
      * @return Conversation|null
      */
-    private function getConversation(User $user, $receiver_id = null, $conversation_id = null, $request=null)
+    private function getConversation(User $user, $receiver_id = null, $conversation_id = null, $request = null)
     {
         if ($conversation_id) {
             $conversation = Conversation::where('id', $conversation_id)
@@ -230,10 +238,10 @@ class SendMessageController extends Controller
         } elseif ($request && $request->type === 'order') {
             $receiver = User::find($receiver_id);
             $conversation = Conversation::whereHas('participants', function ($query) use ($user) {
-                    $query->where('participant_id', $user->id)
-                        ->where('participant_type', User::class);
-                })
-                 ->whereHas('participants', function ($q) use ($receiver) {
+                $query->where('participant_id', $user->id)
+                    ->where('participant_type', User::class);
+            })
+                ->whereHas('participants', function ($q) use ($receiver) {
                     $q->where('participant_id', $receiver->id)
                         ->where('participant_type', User::class);
                 })
@@ -256,10 +264,10 @@ class SendMessageController extends Controller
                     ],
                 ]);
                 return $conversation;
-            }else {
+            } else {
                 return $conversation;
             }
-        }elseif ($receiver_id) {
+        } elseif ($receiver_id) {
             $receiver = User::find($receiver_id);
             if (!$receiver) {
                 return $this->error([], 'Receiver not found', 404);

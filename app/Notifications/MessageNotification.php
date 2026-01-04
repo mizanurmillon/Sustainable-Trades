@@ -2,31 +2,31 @@
 
 namespace App\Notifications;
 
-use App\Models\Order;
+use App\Models\Message;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OrderNotification extends Notification implements ShouldQueue
+class MessageNotification extends Notification
 {
     use Queueable;
 
     protected $subject;
     public string $message;
-    public Order $order;
+    public Message $messageModel;
     protected $type;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $message, string $subject, string $type, Order $order)
+    public function __construct(string $message, string $subject, string $type, Message $messageModel)
     {
         $this->message = $message;
         $this->subject = $subject;
-        $this->order = $order;
         $this->type = $type;
+        $this->messageModel = $messageModel;
     }
 
     /**
@@ -58,12 +58,11 @@ class OrderNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'order' => $this->order->id,
-            'order_number' => $this->order->order_number,
+            'message_id' => $this->messageModel->id,
             'subject' => $this->subject,
             'message' => $this->message,
             'type' => $this->type,
-            'status' => 'order',
+            'status' => 'message',
         ];
     }
 
@@ -73,8 +72,8 @@ class OrderNotification extends Notification implements ShouldQueue
             'subject' => $this->subject,
             'message' => $this->message,
             'type' => $this->type,
-            'status' => 'order',
-            'created_at' => $this->order->created_at,
+            'status' => 'message',
+            'created_at' => $this->messageModel->created_at,
         ]);
     }
 }

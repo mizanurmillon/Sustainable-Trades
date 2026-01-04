@@ -34,7 +34,7 @@ class DiscountController extends Controller
         $data = $query->latest()->get();
 
         if ($data->isEmpty()) {
-            return $this->error([], 'No discounts found', 404);
+            return $this->error([], 'No discounts found', 200);
         }
 
         return $this->success($data, 'Discounts fetched successfully', 200);
