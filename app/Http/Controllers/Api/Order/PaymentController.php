@@ -138,18 +138,12 @@ class PaymentController extends Controller
 
                 DB::commit();
 
-                $order->user->notify(new OrderNotification(
-                    subject: 'Order placed successfully',
-                    message: 'Your order has been placed successfully.',
-                    type: 'success',
-                    order: $order
-                ));
-
                 $order->shop->user->notify(new OrderNotification(
                     subject: 'New order received',
                     message: 'You have received a new order.',
                     type: 'success',
-                    order: $order
+                    order: $order,
+                    user_id: auth()->user()->id
                 ));
 
                 return $this->success($order, 'Order placed successfully', 200);
@@ -278,18 +272,12 @@ class PaymentController extends Controller
                     'paypal_order_status' => $paypalStatus,
                 ]);
 
-                $order->user->notify(new OrderNotification(
-                    subject: 'Order placed successfully',
-                    message: 'Your order has been placed successfully.',
-                    type: 'success',
-                    order: $order
-                ));
-
                 $order->shop->user->notify(new OrderNotification(
                     subject: 'New order received',
                     message: 'You have received a new order.',
                     type: 'success',
-                    order: $order
+                    order: $order,
+                    user_id: auth()->user()->id
                 ));
 
                 //Capture ID safely

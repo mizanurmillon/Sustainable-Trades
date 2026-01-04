@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Backend;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\SpotlightApplication;
+use Illuminate\Support\Facades\Auth;
 use App\Notifications\SpotlightApplicationNotification;
 
 class SpotlightApplicationController extends Controller
@@ -66,11 +67,12 @@ class SpotlightApplicationController extends Controller
             subject:'Spotlight application save for later',
             message:'Your spotlight application has been save for later.',
             type: 'success',
-            application: $application
+            application: $application,
+            user_id: Auth::user()->id
         ));
 
         return response()->json([
-            'success' => true,
+            'success' => true,,
             'message' => 'Spotlight application save for later.'
         ]);
     }

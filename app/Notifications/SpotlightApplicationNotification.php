@@ -16,16 +16,18 @@ class SpotlightApplicationNotification extends Notification
     public string $message;
     public SpotlightApplication $application;
     protected $type;
+    protected $user_id;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $message, string $subject, string $type, SpotlightApplication $application)
+    public function __construct(string $message, string $subject, string $type, SpotlightApplication $application, int $user_id)
     {
         $this->message = $message;
         $this->subject = $subject;
         $this->application = $application;
         $this->type = $type;
+        $this->user_id = $user_id;
     }
 
     /**
@@ -35,7 +37,7 @@ class SpotlightApplicationNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database','broadcast'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -44,9 +46,9 @@ class SpotlightApplicationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+            ->line('The introduction to the notification.')
+            ->action('Notification Action', url('/'))
+            ->line('Thank you for using our application!');
     }
 
     /**
@@ -57,10 +59,11 @@ class SpotlightApplicationNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'application'=> $this->application->id,
-            'subject'=> $this->subject,
-            'message'=> $this->message,
-            'type'=> $this->type,
+            'application' => $this->application->id,
+            'user_id' => $this->user_id,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'type' => $this->type,
             'status' => 'spotlight-application',
         ];
     }
@@ -68,13 +71,11 @@ class SpotlightApplicationNotification extends Notification
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'subject'=> $this->subject,
-            'message'=> $this->message,
-            'type'=> $this->type,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'type' => $this->type,
             'status' => 'spotlight-application',
             'created_at' => $this->application->created_at,
         ]);
     }
-
-    
 }

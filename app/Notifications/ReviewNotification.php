@@ -59,6 +59,7 @@ class ReviewNotification extends Notification implements ShouldQueue
     {
         return [
             'review' => $this->review->id,
+            'user_id' => $this->review->user_id,
             'rating' => $this->review->rating,
             'subject' => $this->subject,
             'message' => $this->message,

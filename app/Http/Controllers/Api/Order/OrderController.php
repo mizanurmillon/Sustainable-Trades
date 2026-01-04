@@ -140,7 +140,8 @@ class OrderController extends Controller
                 subject: 'Order status updated',
                 message: 'Your order status has been updated to ' . $request->status . '.',
                 type: 'success',
-                order: $order
+                order: $order,
+                user_id: auth()->user()->id
             ));
 
             return $this->success($order, 'Order status updated successfully');

@@ -49,7 +49,8 @@ class ListingController extends Controller
             message: 'Your product has been approved.',
             subject: 'Product Approved',
             type: 'success',
-            product: $product
+            product: $product,
+            user_id: auth()->user()->id
         ));
 
         return response()->json([
@@ -68,7 +69,8 @@ class ListingController extends Controller
             message: 'Your product has been rejected.',
             subject: 'Product Rejected',
             type: 'danger',
-            product: $product
+            product: $product,
+            user_id: auth()->user()->id
         ));
 
         return response()->json([

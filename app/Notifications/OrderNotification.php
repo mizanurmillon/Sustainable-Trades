@@ -17,16 +17,18 @@ class OrderNotification extends Notification implements ShouldQueue
     public string $message;
     public Order $order;
     protected $type;
+    protected $user_id;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $message, string $subject, string $type, Order $order)
+    public function __construct(string $message, string $subject, string $type, Order $order, int $user_id)
     {
         $this->message = $message;
         $this->subject = $subject;
         $this->order = $order;
         $this->type = $type;
+        $this->user_id = $user_id;
     }
 
     /**
@@ -59,6 +61,7 @@ class OrderNotification extends Notification implements ShouldQueue
     {
         return [
             'order' => $this->order->id,
+            'user_id' => $this->user_id,
             'order_number' => $this->order->order_number,
             'subject' => $this->subject,
             'message' => $this->message,

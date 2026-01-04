@@ -17,18 +17,21 @@ class ProductNotification extends Notification implements ShouldQueue
     public string $message;
     public Product $product;
     protected $type;
-    
-    
+
+    protected $user_id;
+
+
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $message, string $subject, string $type,Product $product)
+    public function __construct(string $message, string $subject, string $type, Product $product, int $user_id)
     {
         $this->subject = $subject;
         $this->message = $message;
         $this->product = $product;
         $this->type = $type;
+        $this->user_id = $user_id;
     }
 
     /**
@@ -38,7 +41,7 @@ class ProductNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database','broadcast'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -47,9 +50,9 @@ class ProductNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+            ->line('The introduction to the notification.')
+            ->action('Notification Action', url('/'))
+            ->line('Thank you for using our application!');
     }
 
     /**
@@ -61,9 +64,10 @@ class ProductNotification extends Notification implements ShouldQueue
     {
         return [
             'product' => $this->product->id,
-            'subject'=> $this->subject,
-            'message'=> $this->message,
-            'type'=> $this->type,
+            'user_id' => $this->product->user_id,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'type' => $this->type,
             'status' => 'product',
         ];
     }
@@ -71,9 +75,9 @@ class ProductNotification extends Notification implements ShouldQueue
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'subject'=> $this->subject,
-            'message'=> $this->message,
-            'type'=> $this->type,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'type' => $this->type,
             'status' => 'product',
             'created_at' => $this->product->created_at,
         ]);

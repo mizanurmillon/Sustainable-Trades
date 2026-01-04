@@ -59,6 +59,7 @@ class TradeOfferNotification extends Notification
     {
         return [
             'tradeOffer' => $this->tradeOffer->id,
+            'user_id' => $this->tradeOffer->sender_id,
             'subject' => $this->subject,
             'message' => $this->message,
             'type' => $this->type,

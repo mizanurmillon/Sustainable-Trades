@@ -59,6 +59,7 @@ class MessageNotification extends Notification
     {
         return [
             'message_id' => $this->messageModel->id,
+            'user_id' => $this->messageModel->sender_id,
             'subject' => $this->subject,
             'message' => $this->message,
             'type' => $this->type,
