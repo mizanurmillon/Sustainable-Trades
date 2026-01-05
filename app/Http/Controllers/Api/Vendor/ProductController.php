@@ -136,14 +136,14 @@ class ProductController extends Controller
                 'status',
             ]);
 
-        if ($request->has('status')) {
+        if ($request->query('status')) {
             $products->where('status', $request->status);
         }
 
-        if ($request->has('short_by') == 'a-z') {
+        if ($request->query('short_by') == 'a-z') {
             $products->orderBy('product_name', 'asc');
-        } elseif ($request->has('short_by') == 'z-a') {
-            $products->where('product_name', 'desc');
+        } elseif ($request->query('short_by') == 'z-a') {
+            $products->orderBy('product_name', 'desc');
         }
 
         $data = $products->get();

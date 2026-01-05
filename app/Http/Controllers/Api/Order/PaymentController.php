@@ -138,13 +138,7 @@ class PaymentController extends Controller
 
                 DB::commit();
 
-                $order->shop->user->notify(new OrderNotification(
-                    subject: 'New order received',
-                    message: 'You have received a new order.',
-                    type: 'success',
-                    order: $order,
-                    user_id: auth()->user()->id
-                ));
+                $this->notifyVendor($order);
 
                 return $this->success($order, 'Order placed successfully', 200);
             } else {
@@ -183,38 +177,6 @@ class PaymentController extends Controller
                         'paypal_order_id' => $paypalOrder->getId(),
                         'paypal_order_status' => $paypalOrder->getStatus(),
                     ]);
-
-                    // Vendor Payout
-                    // $vendorAccount = PaypalAccount::where('user_id', $cart->shop->user_id)
-                    //     ->where('paypal_merchant_id', '!=', null)
-                    //     ->first();
-
-                    // if ($vendorAccount) {
-                    //     $vendorPaypalMerchantId = $vendorAccount->paypal_merchant_id;
-
-                    //     $payouts = new PayoutsPostRequest();
-                    //     $payouts->body = [
-                    //         "sender_batch_header" => [
-                    //             "sender_batch_id" => uniqid(),
-                    //             "email_subject" => "You have a payout!",
-                    //             "email_message" => "You have received a payout for your order."
-                    //         ],
-                    //         "items" => [
-                    //             [
-                    //                 "recipient_type" => "MERCHANT_ID",
-                    //                 "receiver" => $vendorPaypalMerchantId,
-                    //                 "amount" => [
-                    //                     "value" => $formattedAmount,
-                    //                     "currency" => "USD"
-                    //                 ],
-                    //                 "note" => "Order payment for order #" . $order->order_number,
-                    //                 "sender_item_id" => $order->id
-                    //             ]
-                    //         ]
-                    //     ];
-
-                    //     $client->execute($payouts); // <-- This will send payout to verified vendor email
-                    // }
 
                     // Clear Cart
                     $cart->CartItems()->delete();
@@ -260,26 +222,21 @@ class PaymentController extends Controller
             $response = $client->getOrdersController()->captureOrder([
                 'id' => $paypalOrderId
             ]);
+
+            // dd($response);
             if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
 
                 $result = $response->getResult();
 
                 $paypalStatus = $result->getStatus();
 
+                // dd($result);
+
                 $order->update([
                     'payment_status' => 'completed',
                     'status' => 'pending', // better than pending
                     'paypal_order_status' => $paypalStatus,
                 ]);
-
-                $order->shop->user->notify(new OrderNotification(
-                    subject: 'New order received',
-                    message: 'You have received a new order.',
-                    type: 'success',
-                    order: $order,
-                    user_id: auth()->user()->id
-                ));
-
                 //Capture ID safely
                 $captureId = null;
                 $purchaseUnits = $result->getPurchaseUnits();
@@ -302,44 +259,18 @@ class PaymentController extends Controller
                     'amount' => $order->total_amount,
                 ]);
 
-                // /**
-                //  * -------------------------------
-                //  * Vendor Payout (safe)
-                //  * -------------------------------
-                //  */
-                // $vendorAccount = PaypalAccount::where('user_id', $order->shop->user_id)
-                //     ->whereNotNull('paypal_merchant_id')
-                //     ->first();
+                // --- VENDOR PAYOUT LOGIC ---
+                $vendorAccount = PaypalAccount::where('user_id', $order->shop->user_id)
+                    ->whereNotNull('paypal_merchant_id')
+                    ->first();
 
-                // if ($vendorAccount && $paypalStatus === 'COMPLETED') {
+                if ($vendorAccount && $paypalStatus === 'COMPLETED') {
+                    $this->processPayout($order, $vendorAccount->paypal_merchant_id);
+                }
 
-                //     $vendorPaypalMerchantId = $vendorAccount->paypal_merchant_id;
+                $this->notifyVendor($order);
 
-                //     $payoutRequest = new PayoutsPostRequest();
-                //     $payoutRequest->body = [
-                //         "sender_batch_header" => [
-                //             "sender_batch_id" => uniqid(),
-                //             "email_subject" => "You have received a payout!",
-                //             "email_message" => "You have received a payout for your order."
-                //         ],
-                //         "items" => [
-                //             [
-                //                 "recipient_type" => "MERCHANT_ID",
-                //                 "receiver" => $vendorPaypalMerchantId,
-                //                 "amount" => [
-                //                     "value" => number_format($order->total_amount, 2, '.', ''),
-                //                     "currency" => $order->currency ?? 'USD'
-                //                 ],
-                //                 "note" => "Order payment for order #" . $order->order_number,
-                //                 "sender_item_id" => $order->id
-                //             ]
-                //         ]
-                //     ];
-
-                //     $client->execute($payoutRequest);
-                // }
-
-                return $this->success($order, 'Payment successful');
+                return $this->success($order, 'Payment successful', 200);
             }
 
             return $this->error([], 'Payment capture failed', 500);
@@ -349,6 +280,74 @@ class PaymentController extends Controller
             ]);
             return $this->error([], $e->getMessage(), 500);
         }
+    }
+
+    protected function processPayout($order, $merchantId)
+    {
+        try {
+            $clientId = config('services.paypal.sandbox.client_id');
+            $secret = config('services.paypal.sandbox.client_secret');
+            $mode = config('services.paypal.mode', 'sandbox');
+
+            $baseUrl = ($mode === 'live')
+                ? 'https://api-m.paypal.com'
+                : 'https://api-m.sandbox.paypal.com';
+
+            $httpClient = new \GuzzleHttp\Client();
+
+            // 1. Get Access Token
+            $tokenResponse = $httpClient->post($baseUrl . '/v1/oauth2/token', [
+                'auth' => [$clientId, $secret],
+                'form_params' => ['grant_type' => 'client_credentials']
+            ]);
+
+            $accessToken = json_decode($tokenResponse->getBody())->access_token;
+
+            // 2. Send Payout Request
+            $payoutResponse = $httpClient->post($baseUrl . '/v1/payouts', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    "sender_batch_header" => [
+                        "sender_batch_id" => "ORD_" . $order->order_number . "_" . time(),
+                        "email_subject" => "You have a payout!",
+                    ],
+                    "items" => [
+                        [
+                            "recipient_type" => "MERCHANT_ID",
+                            "receiver" => $merchantId,
+                            "amount" => [
+                                "value" => number_format($order->total_amount, 2, '.', ''),
+                                "currency" => "USD"
+                            ],
+                            "note" => "Order #" . $order->order_number,
+                            "sender_item_id" => (string)$order->id
+                        ]
+                    ]
+                ]
+            ]);
+
+            logger()->info("Payout successful: " . $payoutResponse->getBody());
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            // This will capture the EXACT error message from PayPal (e.g., PERMISSION_DENIED)
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            logger()->error("PayPal API Error Body: " . $responseBody);
+        } catch (\Exception $e) {
+            logger()->error('General Payout Error: ' . $e->getMessage());
+        }
+    }
+
+    protected function notifyVendor($order)
+    {
+        $order->shop->user->notify(new OrderNotification(
+            subject: 'New order received',
+            message: 'You have received a new order #' . $order->order_number,
+            type: 'success',
+            order: $order,
+            user_id: $order->user_id
+        ));
     }
 
 
