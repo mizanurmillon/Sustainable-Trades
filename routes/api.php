@@ -120,6 +120,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::controller(GetNotificationController::class)->prefix('notifications')->group(function () {
         Route::get('/', 'getNotifications');
+        Route::get('/today', 'todayNotifications');
+        Route::delete('/clear-all', 'clearAllNotifications');
+        Route::delete('/clear/{id}', 'clearNotification');
     });
 
     Route::group(['middleware' => ['customer']], function () {});
