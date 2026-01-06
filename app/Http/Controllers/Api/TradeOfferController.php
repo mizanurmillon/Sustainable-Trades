@@ -148,7 +148,30 @@ class TradeOfferController extends Controller
             return $this->error([], 'User not found', 404);
         }
 
-        $data = TradeOffer::with(['items.product:id,shop_info_id,product_name,product_price,description', 'items.product.shop:id,user_id,shop_name', 'items.product.images', 'attachments', 'sender:id,first_name,last_name', 'sender.shopInfo:id,user_id,shop_name,shop_image', 'sender.shopInfo.address', 'receiver:id,first_name,last_name', 'receiver.shopInfo:id,user_id,shop_name,shop_image', 'receiver.shopInfo.address', 'parentOffer:id,receiver_id,sender_id,inquiry,message,created_at', 'parentOffer.items.product:id,product_name,product_price,description', 'parentOffer.items.product.images'])->where('id', $id)->first();
+        $data = TradeOffer::with([
+            'items.product:id,shop_info_id,product_name,product_price,description',
+            'items.product.shop:id,user_id,shop_name',
+            'items.product.images',
+            'items.product.reviews',
+            'attachments',
+            'sender:id,first_name,last_name',
+            'sender.shopInfo:id,user_id,shop_name,shop_image',
+            'sender.shopInfo.address',
+            'receiver:id,first_name,last_name',
+            'receiver.shopInfo:id,user_id,shop_name,shop_image',
+            'receiver.shopInfo.address',
+            'parentOffer:id,receiver_id,sender_id,inquiry,message,created_at',
+            'parentOffer.items.product:id,product_name,product_price,description',
+            'parentOffer.items.product.images',
+            'parentOffer.items.product.reviews'
+        ])
+            ->with(['items.product' => function ($query) {
+                $query->withAvg('reviews', 'rating');
+            }, 'parentOffer.items.product' => function ($query) {
+                $query->withAvg('reviews', 'rating');
+            }])
+            ->where('id', $id)
+            ->first();
 
         if (!$data) {
             return $this->error([], 'Trade offer not found', 200);
@@ -156,6 +179,7 @@ class TradeOfferController extends Controller
 
         return $this->success($data, 'Trade offer retrieved successfully');
     }
+
 
     public function approveTradeOffer($id)
     {

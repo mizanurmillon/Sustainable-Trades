@@ -146,7 +146,7 @@ class PayPalSubscriptionService
 
     public function makeRequest($method, $url, $body)
     {
-        $token = $this->getAccessToken(); // Token যোগ করো
+        $token = $this->getAccessToken();
 
         $response = Http::withToken($token)->send($method, $url, [
             'json' => $body,
