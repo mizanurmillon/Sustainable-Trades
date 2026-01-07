@@ -96,7 +96,7 @@ class CartController extends Controller
             return $this->error([], 'Unauthorized', 401);
         }
 
-        $cart = Cart::where('user_id', $user->id)
+        $carts = Cart::where('user_id', $user->id)
             ->with([
                 'shop:id,user_id,shop_name,shop_image',
                 'shop.address',
@@ -105,45 +105,49 @@ class CartController extends Controller
             ])
             ->get();
 
-        if ($cart->isEmpty()) {
+        if ($carts->isEmpty()) {
             return $this->error([], 'Cart is empty', 404);
         }
 
-        if($cart->CartItems->product->fulfillment == "Shipping"){
-            $is_shippable = true;
-        }else{
-            $is_shippable = false;
-        }
-        if($cart->CartItems->product->fulfillment == "Arrange Local Pickup"){
-            $is_local_pickup = true;
-        }else{
-            $is_local_pickup = false;
+        // 2. Initialize tracking variables
+        $hasShipping = false;
+        $hasLocalPickup = false;
+        $totalCartItems = 0;
+
+        // 3. Loop through carts and items to determine fulfillment and count
+        foreach ($carts as $cart) {
+            foreach ($cart->CartItems as $item) {
+                $totalCartItems++;
+                $fulfillment = $item->product->fulfillment ?? '';
+
+                if (str_contains($fulfillment, 'Shipping')) {
+                    $hasShipping = true;
+                }
+                if (str_contains($fulfillment, 'Local Pickup')) {
+                    $hasLocalPickup = true;
+                }
+            }
         }
 
-        if ($cart->CartItems->product->fulfillment == "Arrange Local Pickup and Shipping") {
-            $is_both = true;
-        } else {
-            $is_both = false;
-        }
-
-        $fulfillment_type = "Not Specified";
-
-        if ($is_both) {
+        // 4. Determine final fulfillment type logic
+        if ($hasShipping && $hasLocalPickup) {
             $fulfillment_type = "Both";
-        } elseif ($is_shippable) {
+        } elseif ($hasShipping) {
             $fulfillment_type = "Shipping";
-        } elseif ($is_local_pickup) {
+        } elseif ($hasLocalPickup) {
             $fulfillment_type = "Arrange Local Pickup";
+        } else {
+            $fulfillment_type = "Not Specified";
         }
 
-        $totalCartItems = $cart->sum(function ($c) {
+        $totalCartItems = $carts->sum(function ($c) {
             return $c->CartItems->count();
         });
 
         return $this->success(
             [
                 'total_cart_items' => $totalCartItems,
-                'cart' => $cart,
+                'cart' => $carts,
                 'fulfillment_type' => $fulfillment_type
             ],
             'Cart retrieved successfully',
