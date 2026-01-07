@@ -121,7 +121,7 @@ class CartController extends Controller
                 if (str_contains($fulfillment, 'Shipping')) {
                     $hasShipping = true;
                 }
-                if (str_contains($fulfillment, 'Local Pickup')) {
+                if (str_contains($fulfillment, 'Arrange Local Pickup')) {
                     $hasLocalPickup = true;
                 }
                 if (str_contains($fulfillment, 'Arrange Local Pickup and Shipping')) {
@@ -136,9 +136,9 @@ class CartController extends Controller
                 $type = "Shipping";
             } elseif ($hasLocalPickup) {
                 $type = "Arrange Local Pickup";
-            } elseif ($hasShipping || $hasLocalPickup || $hesBoth) {
+            } elseif ($hasShipping && $hasLocalPickup && $hesBoth) {
                 $type = "Arrange Local Pickup";
-            }else {
+            } else {
                 $type = "Not Specified";
             }
 
