@@ -109,15 +109,13 @@ class CartController extends Controller
             return $this->error([], 'Cart is empty', 404);
         }
 
-        // 2. Initialize tracking variables
-        $hasShipping = false;
-        $hasLocalPickup = false;
-        $totalCartItems = 0;
-
-        // 3. Loop through carts and items to determine fulfillment and count
+        // Process each cart individually
         foreach ($carts as $cart) {
+            $hasShipping = false;
+            $hasLocalPickup = false;
+            $hesBoth = false;
+
             foreach ($cart->CartItems as $item) {
-                $totalCartItems++;
                 $fulfillment = $item->product->fulfillment ?? '';
 
                 if (str_contains($fulfillment, 'Shipping')) {
@@ -126,18 +124,24 @@ class CartController extends Controller
                 if (str_contains($fulfillment, 'Local Pickup')) {
                     $hasLocalPickup = true;
                 }
+                if (str_contains($fulfillment, 'Arrange Local Pickup and Shipping')) {
+                    $hesBoth = true;
+                }
             }
-        }
 
-        // 4. Determine final fulfillment type logic
-        if ($hasShipping && $hasLocalPickup) {
-            $fulfillment_type = "Both";
-        } elseif ($hasShipping) {
-            $fulfillment_type = "Shipping";
-        } elseif ($hasLocalPickup) {
-            $fulfillment_type = "Arrange Local Pickup";
-        } else {
-            $fulfillment_type = "Not Specified";
+            // Determine fulfillment for THIS specific cart/shop
+            if ($hesBoth) {
+                $type = "Both";
+            } elseif ($hasShipping) {
+                $type = "Shipping";
+            } elseif ($hasLocalPickup) {
+                $type = "Arrange Local Pickup";
+            } else {
+                $type = "Not Specified";
+            }
+
+            // Attach it directly to this cart instance
+            $cart->fulfillment_type = $type;
         }
 
         $totalCartItems = $carts->sum(function ($c) {
@@ -147,8 +151,7 @@ class CartController extends Controller
         return $this->success(
             [
                 'total_cart_items' => $totalCartItems,
-                'cart' => $carts,
-                'fulfillment_type' => $fulfillment_type
+                'cart' => $carts
             ],
             'Cart retrieved successfully',
             200
