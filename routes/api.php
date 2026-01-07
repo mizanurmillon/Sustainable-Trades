@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Auth\ShopOwnerController;
 use App\Http\Controllers\Api\GetNotificationController;
 use App\Http\Controllers\Api\Product\ProductController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
+use App\Http\Controllers\Api\Order\ArrangeLocalPickupController;
 use App\Http\Controllers\Api\Vendor\SpotlightApplicationController;
 
 
@@ -150,6 +151,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::post('/add-review/{id}', 'addReview');
         Route::get('/my-reviews', 'myReviews');
     });
+});
+
+Route::controller(ArrangeLocalPickupController::class)->group(function () {
+    Route::post('/arrange-local-pickup/{id}', 'arrangeLocalPickup');
 });
 
 
