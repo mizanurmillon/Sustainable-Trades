@@ -100,13 +100,40 @@ class CartController extends Controller
             ->with([
                 'shop:id,user_id,shop_name,shop_image',
                 'shop.address',
-                'CartItems.product:id,product_name,product_price,product_quantity',
+                'CartItems.product:id,product_name,product_price,product_quantity,fulfillment',
                 'CartItems.product.images'
             ])
             ->get();
 
         if ($cart->isEmpty()) {
             return $this->error([], 'Cart is empty', 404);
+        }
+
+        if($cart->CartItems->product->fulfillment == "Shipping"){
+            $is_shippable = true;
+        }else{
+            $is_shippable = false;
+        }
+        if($cart->CartItems->product->fulfillment == "Arrange Local Pickup"){
+            $is_local_pickup = true;
+        }else{
+            $is_local_pickup = false;
+        }
+
+        if ($cart->CartItems->product->fulfillment == "Arrange Local Pickup and Shipping") {
+            $is_both = true;
+        } else {
+            $is_both = false;
+        }
+
+        $fulfillment_type = "Not Specified";
+
+        if ($is_both) {
+            $fulfillment_type = "Both";
+        } elseif ($is_shippable) {
+            $fulfillment_type = "Shipping";
+        } elseif ($is_local_pickup) {
+            $fulfillment_type = "Arrange Local Pickup";
         }
 
         $totalCartItems = $cart->sum(function ($c) {
@@ -116,7 +143,8 @@ class CartController extends Controller
         return $this->success(
             [
                 'total_cart_items' => $totalCartItems,
-                'cart' => $cart
+                'cart' => $cart,
+                'fulfillment_type' => $fulfillment_type
             ],
             'Cart retrieved successfully',
             200
