@@ -154,26 +154,34 @@
                                     </option>
                                     <option value="Arrange Local Pickup" @if ($product->fulfillment == 'Arrange Local Pickup') selected @endif>
                                         Arrange Local Pickup</option>
-                                    <option value="Arrange Local Pickup or Shipping"
-                                        @if ($product->fulfillment == 'Arrange Local Pickup or Shipping') selected @endif>Arrange Local Pickup or
+                                    <option value="Arrange Local Pickup and Shipping"
+                                        @if ($product->fulfillment == 'Arrange Local Pickup and Shipping') selected @endif>Arrange Local Pickup and
                                         Shipping
                                     </option>
                                 </select>
                             </div>
-                            @if($product->metaTags->count() > 0)
-                            <div class="mb-5">
-                                <label class="form-label">Meta Tags:</label>
-                                <br>
-                                @php
-                                    $colors = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark']; // Bootstrap colors
-                                    $i = 0;
-                                @endphp
-                                @foreach ($product->metaTags as $metaTag)
-                                    <span
-                                        class="badge bg-{{ $colors[$i % count($colors)] }} me-2 text-white">{{ $metaTag->tag }}</span>
-                                    @php $i++; @endphp
-                                @endforeach
-                            </div>
+                            @if ($product->metaTags->count() > 0)
+                                <div class="mb-5">
+                                    <label class="form-label">Meta Tags:</label>
+                                    <br>
+                                    @php
+                                        $colors = [
+                                            'primary',
+                                            'secondary',
+                                            'success',
+                                            'danger',
+                                            'warning',
+                                            'info',
+                                            'dark',
+                                        ]; // Bootstrap colors
+                                        $i = 0;
+                                    @endphp
+                                    @foreach ($product->metaTags as $metaTag)
+                                        <span
+                                            class="badge bg-{{ $colors[$i % count($colors)] }} me-2 text-white">{{ $metaTag->tag }}</span>
+                                        @php $i++; @endphp
+                                    @endforeach
+                                </div>
                             @endif
                             <div class="mb-5">
                                 <label class="form-label">Selling Option</label>
@@ -284,10 +292,10 @@
                         let buttonsHtml = `
                     <div class="d-flex gap-2 w-100">
                         ${action === 'approve' ? `
-                                                    <button type="button" class="btn btn-danger w-100" style="background-color: #8B200C"
-                                                        onclick="showRejectConfirm(${id})">Deny</button>` : `
-                                                    <button type="button" class="btn btn-primary w-100"
-                                                        onclick="showApproveConfirm(${id})">Approve</button>`}
+                                                                <button type="button" class="btn btn-danger w-100" style="background-color: #8B200C"
+                                                                    onclick="showRejectConfirm(${id})">Deny</button>` : `
+                                                                <button type="button" class="btn btn-primary w-100"
+                                                                    onclick="showApproveConfirm(${id})">Approve</button>`}
                         <a href="{{ route('admin.listing_requests.index') }}" class="btn text-dark w-100"
                             style="background-color: #E48872">Back</a>
                     </div>`;
