@@ -136,7 +136,9 @@ class CartController extends Controller
                 $type = "Shipping";
             } elseif ($hasLocalPickup) {
                 $type = "Arrange Local Pickup";
-            } else {
+            } elseif ($hasShipping && $hasLocalPickup && $hesBoth) {
+                $type = "Arrange Local Pickup";
+            }else {
                 $type = "Not Specified";
             }
 
