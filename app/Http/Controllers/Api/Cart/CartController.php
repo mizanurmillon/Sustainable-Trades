@@ -117,7 +117,7 @@ class CartController extends Controller
             if (count($fulfillments) === 1) {
                 $type = $fulfillments[0] ?? "None";
             } else {
-                $type = "Arrange Local Pickup";
+                $type = "Mixed";
             }
 
             $cart->fulfillment_type = $type;
