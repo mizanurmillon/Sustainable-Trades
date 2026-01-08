@@ -109,40 +109,17 @@ class CartController extends Controller
             return $this->error([], 'Cart is empty', 404);
         }
 
-        // Process each cart individually
         foreach ($carts as $cart) {
-            $hasShipping = false;
-            $hasLocalPickup = false;
-            $hesBoth = false;
 
-            foreach ($cart->CartItems as $item) {
-                $fulfillment = $item->product->fulfillment ?? '';
+            $fulfillments = $cart->CartItems->pluck('product.fulfillment')->unique()->toArray();
 
-                if (str_contains($fulfillment, 'Shipping')) {
-                    $hasShipping = true;
-                }
-                if (str_contains($fulfillment, 'Arrange Local Pickup')) {
-                    $hasLocalPickup = true;
-                }
-                if (str_contains($fulfillment, 'Arrange Local Pickup and Shipping')) {
-                    $hesBoth = true;
-                }
-            }
 
-            // Determine fulfillment for THIS specific cart/shop
-            if ($hesBoth) {
-                $type = "Both";
-            } elseif ($hasShipping) {
-                $type = "Shipping";
-            } elseif ($hasLocalPickup) {
-                $type = "Arrange Local Pickup";
-            } elseif ($hasShipping && $hasLocalPickup && $hesBoth) {
-                $type = "Arrange Local Pickup";
+            if (count($fulfillments) === 1) {
+                $type = $fulfillments[0] ?? "None";
             } else {
-                $type = "Not Specified";
+                $type = "Arrange Local Pickup";
             }
 
-            // Attach it directly to this cart instance
             $cart->fulfillment_type = $type;
         }
 
