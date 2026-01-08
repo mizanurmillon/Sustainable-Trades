@@ -25,7 +25,7 @@
         }
 
         .header {
-            background-color: #2c3e50;
+            background-color: #274F45;
             color: #ffffff;
             padding: 25px;
             text-align: center;
@@ -159,7 +159,7 @@
         </div>
 
         <div class="footer">
-            <p>This is an automated notification from <strong>{{ config('app.name') }}</strong>.</p>
+            <p>This is notification from <strong>{{ config('app.name') }}</strong>.</p>
             <p>&copy; {{ date('Y') }} Your Company. All rights reserved.</p>
         </div>
     </div>
