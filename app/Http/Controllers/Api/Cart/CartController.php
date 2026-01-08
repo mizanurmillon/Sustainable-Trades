@@ -103,6 +103,7 @@ class CartController extends Controller
                 'CartItems.product:id,product_name,product_price,product_quantity,fulfillment',
                 'CartItems.product.images'
             ])
+            ->whereHas('CartItems')
             ->get();
 
         if ($carts->isEmpty()) {
