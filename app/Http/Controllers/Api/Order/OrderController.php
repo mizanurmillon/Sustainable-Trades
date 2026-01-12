@@ -25,7 +25,7 @@ class OrderController extends Controller
             $query->where('status', $request->status);
         }
 
-        $order = $query->latest()->get();
+        $order = $query->latest()->paginate(15);
 
         if ($order->isEmpty()) {
             return $this->error([], 'No orders found', 200);
