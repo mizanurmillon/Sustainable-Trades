@@ -62,11 +62,11 @@ class ProductController extends Controller
         $lat = $request->query('lat');
         $lng = $request->query('lng');
 
-        $distance_formula = "(3959 * acos(
-            cos(radians({$lat}))
+        $distanceFormula = "(3959 * acos(
+            cos(radians(?))
             * cos(radians(shopAddress.latitude))
-            * cos(radians(shopAddress.longitude) - radians({$lng}))
-            + sin(radians({$lat}))
+            * cos(radians(shopAddress.longitude) - radians(?))
+            + sin(radians(?))
             * sin(radians(shopAddress.latitude))
         ))";
 
@@ -78,13 +78,13 @@ class ProductController extends Controller
             'shop:id,user_id,shop_name,shop_image',
             'shop.user:id,first_name,last_name,avatar,role'
         ])
-        ->withAvg('reviews', 'rating')
-        ->withCount('reviews')
-        ->join('shop_addresses AS shopAddress', 'products.shop_info_id', '=', 'shopAddress.shop_info_id')
-        ->select('products.*')
-        ->selectRaw("{$distance_formula} AS distance_in_miles")
-        ->where('products.id', $id)   
-        ->first();           
+            ->join('shop_addresses as shopAddress', 'products.shop_info_id', '=', 'shopAddress.shop_info_id')
+            ->select('products.*')
+            ->selectRaw("$distanceFormula AS distance_in_miles", [$lat, $lng, $lat])
+            ->where('products.id', $id)
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->first();
 
         if (!$data) {
             return $this->error([], 'Product not found', 200);
